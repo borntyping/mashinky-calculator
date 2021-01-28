@@ -136,8 +136,9 @@ def transport(state: State, material_name: str):
 
     # This filters out trains made entirely from dining cars.
     trains = [train for train in trains if train.capacity != 0]
-
     trains = sorted(trains, key=operator.attrgetter("capacity"))
+
+    max_capacity = max(train.capacity for train in trains)
 
     print(
         tabulate.tabulate(
@@ -151,13 +152,13 @@ def transport(state: State, material_name: str):
                     mashinky.style.wagon_name(train),
                     train.wagon.cargo,
                     # Train
-                    train.capacity,
-                    train.format_usage(),
-                    train.length,
-                    train.wagon_limit,
-                    Payment.payments(train.engine.cost),
-                    Payment.payments(train.wagon.cost),
-                    Payment.payments(train.engine.operating_cost),
+                    mashinky.style.compare(train.capacity, max_capacity),
+                    mashinky.style.usage(train),
+                    mashinky.style.length(train.length, state.station_length),
+                    mashinky.style.limit(train.wagon_limit),
+                    mashinky.style.payments(train.engine.cost),
+                    mashinky.style.payments(train.wagon.cost),
+                    mashinky.style.payments(train.engine.operating_cost),
                 )
                 for train in trains
             ],

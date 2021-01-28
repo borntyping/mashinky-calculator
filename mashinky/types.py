@@ -5,7 +5,6 @@ import decimal
 import enum
 import math
 import typing
-import click
 
 
 MPH = typing.NewType("MPH", int)
@@ -94,31 +93,6 @@ class Payment:
     amount: int
     token: Token
 
-    def __str__(self) -> str:
-        return f"{self.colourful_amount()} {self.token} tokens"
-
-    def colourful_amount(self) -> str:
-        amount = f"{self.amount} {self.token}".ljust(13)
-
-        if self.token is Token.MONEY:
-            return click.style(amount, fg="black", bg="green")
-        elif self.token is Token.TIMBER:
-            return click.style(amount, fg="black", bg="bright_white")
-        elif self.token is Token.COAL:
-            return click.style(amount, fg="white", bg="black")
-        elif self.token is Token.IRON:
-            return click.style(amount, fg="black", bg="bright_black")
-        elif self.token is Token.DIESEL:
-            return click.style(amount, fg="black", bg="magenta")
-        elif self.token is Token.STEEL:
-            return click.style(amount, fg="black", bg="white")
-        elif self.token is Token.ELECTRIC:
-            return click.style(amount, fg="black", bg="yellow")
-
-    @staticmethod
-    def payments(payments: typing.Sequence[Payment]) -> str:
-        return "".join([payment.colourful_amount() for payment in payments])
-
 
 @dataclasses.dataclass(frozen=True)
 class Stock:
@@ -162,10 +136,6 @@ class Limit(enum.Enum):
     LENGTH = "length"
     WEIGHT = "weight"
 
-    def __str__(self) -> str:
-        fg = "bright_black" if self is Limit.WEIGHT else "white"
-        return click.style(self.value, fg=fg)
-
 
 @dataclasses.dataclass(frozen=True)
 class Train:
@@ -206,14 +176,6 @@ class Train:
 
     def loaded_usage(self) -> float:
         return self.loaded_weight() / (self.engine.capacity * self.engine_count)
-
-    def format_usage(self) -> str:
-        loaded_usage = self.loaded_usage()
-        if loaded_usage >= 0.75:
-            return click.style(str(loaded_usage), fg="green")
-        if loaded_usage >= 0.50:
-            return click.style(str(loaded_usage), fg="yellow")
-        return click.style(str(loaded_usage), fg="red")
 
     def _weight(self, wagon_weight: int) -> int:
         engine = self.engine.weight * self.engine_count
