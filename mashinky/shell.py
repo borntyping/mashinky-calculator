@@ -13,7 +13,7 @@ from .wagons import WAGONS
 import mashinky.style
 
 
-tabulate.MIN_PADDING = 0
+tabulate.MIN_PADDING = 0  # type: ignore
 
 
 def display(
