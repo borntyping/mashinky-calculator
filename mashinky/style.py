@@ -37,28 +37,28 @@ def limit(l: Limit) -> str:
 
 
 def payment(payment: Payment) -> str:
-    amount = f"{payment.amount} {payment.token}".ljust(13)
-
+    symbol = "⦿ "
+    symbol = "●"
     if payment.token is Token.MONEY:
-        return click.style(amount, fg="black", bg="green")
+        symbol = click.style(symbol, fg="green")
     elif payment.token is Token.TIMBER:
-        return click.style(amount, fg="black", bg="bright_white")
+        symbol = click.style(symbol, fg="bright_yellow")
     elif payment.token is Token.COAL:
-        return click.style(amount, fg="white", bg="black")
+        symbol = click.style(symbol, fg="black")
     elif payment.token is Token.IRON:
-        return click.style(amount, fg="black", bg="bright_black")
+        symbol = click.style(symbol, fg="bright_black")
     elif payment.token is Token.DIESEL:
-        return click.style(amount, fg="black", bg="magenta")
+        symbol = click.style(symbol, fg="magenta")
     elif payment.token is Token.STEEL:
-        return click.style(amount, fg="black", bg="white")
+        symbol = click.style(symbol, fg="bright_white")
     elif payment.token is Token.ELECTRIC:
-        return click.style(amount, fg="black", bg="yellow")
+        symbol = click.style(symbol, fg="yellow")
 
-    raise NotImplementedError
+    return f"{symbol} {payment.amount} {payment.token}".ljust(13)
 
 
 def payments(cost: typing.Sequence[Payment]) -> str:
-    return "".join([payment(p) for p in cost])
+    return ", ".join([payment(p) for p in cost])
 
 
 def compare(value: int, max: int) -> str:
