@@ -1,0 +1,9 @@
+{
+    "python.linting.pylintEnabled": false,
+    "python.linting.mypyEnabled": true,
+    "python.linting.enabled": true,
+    "python.formatting.provider": "black",
+    "python.pythonPath": "/home/sam/.cache/pypoetry/virtualenvs/mashinky-calculator-1q7k9Cgo-py3.8/bin/python",
+    "python.venvPath": "~/.cache/pypoetry/virtualenvs",
+    "editor.fontLigatures": true
+}
