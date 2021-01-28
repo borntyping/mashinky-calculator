@@ -31,7 +31,7 @@ class State:
 
 
 @click_shell.shell(prompt="> ")
-@click.option("-e", "--era", "era_name", default="early steam", type=click.STRING)
+@click.option("-e", "--era", "era_name", default="early electric", type=click.STRING)
 @click.option("-d", "--depot", "depot_extension", default=True, is_flag=True)
 @click.option("-s", "--station", "station_length", default=6, type=click.IntRange(1, 8))
 @click.pass_context
@@ -110,18 +110,21 @@ def wagons(state: State):
 
 
 @main.command()
-@click.argument("material_name", type=click.STRING)
+@click.argument("material_name", default=None, required=False, type=click.STRING)
 @click.pass_obj
-def transport(state: State, material_name: str):
-    material = Material(material_name.capitalize())
+def transport(state: State, material_name: typing.Optional[str]):
     engines = [
         engine
         for engine in ENGINES
         if engine.era <= state.era and engine.quest_reward is False
     ]
-    wagons = [
-        wagon for wagon in WAGONS if wagon.era <= state.era and wagon.cargo == material
-    ]
+    wagons = [wagon for wagon in WAGONS if wagon.era <= state.era]
+
+    # Filter wagons based on the selected material.
+    # Shows all combinations if no material is selected.
+    if material_name is not None:
+        material = Material(material_name.capitalize())
+        wagons = [wagon for wagon in wagons if wagon.cargo == material]
 
     trains = [
         Train.build(
@@ -147,9 +150,11 @@ def transport(state: State, material_name: str):
                     # Engine
                     train.engine.era.numeral,
                     mashinky.style.engine_name(train),
+                    mashinky.style.count(train.engine_count),
                     # Wagon
                     train.wagon.era.numeral,
                     mashinky.style.wagon_name(train),
+                    mashinky.style.count(train.wagon_count),
                     train.wagon.cargo,
                     # Train
                     mashinky.style.compare(train.capacity, max_capacity),
@@ -164,11 +169,13 @@ def transport(state: State, material_name: str):
             ],
             headers=[
                 # Engine
-                click.style("Era", fg="red"),
+                click.style("#", fg="red"),
                 click.style("Engine", fg="red"),
+                click.style("#", fg="red"),
                 # Wagon
-                click.style("Era", fg="blue"),
+                click.style("#", fg="blue"),
                 click.style("Wagon", fg="blue"),
+                click.style("#", fg="blue"),
                 click.style("Cargo", fg="blue"),
                 # Train
                 click.style("Total", fg="magenta"),

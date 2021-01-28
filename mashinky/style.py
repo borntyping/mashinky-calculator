@@ -6,21 +6,15 @@ from .types import Train, Payment, Token, Limit
 
 
 def engine_name(train: Train) -> str:
-    name = click.style(train.engine.name, fg="red")
-
-    if train.engine_count > 1:
-        name += f" (x{train.engine_count})"
-
-    return name
+    return click.style(train.engine.name, fg="red")
 
 
 def wagon_name(train: Train) -> str:
-    name = click.style(f"{train.wagon.name:<10}", fg="red")
+    return click.style(f"{train.wagon.name:<17}", fg="blue")
 
-    if train.wagon_count > 1:
-        name += f" (x{train.wagon_count})"
 
-    return name
+def count(n: int) -> typing.Optional[int]:
+    return n if n > 1 else None
 
 
 def usage(train: Train) -> str:
