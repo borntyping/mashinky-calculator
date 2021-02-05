@@ -2,7 +2,20 @@ import typing
 
 import click
 
-from .types import Train, Payment, Token, Limit
+from .types import Era, Train, Payment, Token, Limit
+
+
+NUMERALS = {
+    Era.EARLY_STEAM: "Ⅰ",
+    Era.STEAM: "Ⅱ",
+    Era.EARLY_DIESEL: "Ⅲ",
+    Era.DIESEL: "Ⅳ",
+    Era.EARLY_ELECTRIC: "Ⅴ",
+}
+
+
+def era(era: Era) -> str:
+    return NUMERALS[era]
 
 
 def engine_name(train: Train) -> str:
@@ -31,28 +44,48 @@ def limit(l: Limit) -> str:
 
 
 def payment(payment: Payment) -> str:
-    symbol = "⦿ "
-    symbol = "●"
+    token = "●"
     if payment.token is Token.MONEY:
-        symbol = click.style(symbol, fg="green")
+        symbol = click.style(token, fg="green")
     elif payment.token is Token.TIMBER:
-        symbol = click.style(symbol, fg="bright_yellow")
+        symbol = click.style(token, fg="bright_yellow")
     elif payment.token is Token.COAL:
-        symbol = click.style(symbol, fg="black")
+        symbol = click.style(token, fg="black")
     elif payment.token is Token.IRON:
-        symbol = click.style(symbol, fg="bright_black")
+        symbol = click.style(token, fg="bright_black")
     elif payment.token is Token.DIESEL:
-        symbol = click.style(symbol, fg="magenta")
+        symbol = click.style(token, fg="magenta")
     elif payment.token is Token.STEEL:
-        symbol = click.style(symbol, fg="bright_white")
+        symbol = click.style(token, fg="bright_white")
     elif payment.token is Token.ELECTRIC:
-        symbol = click.style(symbol, fg="yellow")
+        symbol = click.style(token, fg="yellow")
 
     return f"{symbol} {payment.amount} {payment.token}".ljust(13)
 
 
 def payments(cost: typing.Sequence[Payment]) -> str:
     return ", ".join([payment(p) for p in cost])
+
+
+def engine_cost(train: Train) -> str:
+    costs = []
+
+    if train.engine.cost:
+        costs.append(payments(train.engine.cost))
+
+    if train.engine.quest_reward:
+        symbol = click.style("○", fg="yellow")
+        costs.append(f"{symbol} quest reward")
+
+    return " ".join(costs)
+
+
+def wagon_cost(train: Train) -> str:
+    return payments(train.wagon.cost)
+
+
+def operating_cost(train: Train) -> str:
+    return payments(train.engine.operating_cost)
 
 
 def compare(value: int, max: int) -> str:

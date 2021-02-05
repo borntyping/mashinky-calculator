@@ -110,15 +110,22 @@ def wagons(state: State):
 
 
 @main.command()
+@click.option(
+    "-q",
+    "--quest-rewards/--no-quest-rewards",
+    "quest_rewards",
+    is_flag=True,
+    default=False,
+    help="Include engines from quest rewards",
+)
 @click.argument("material_name", default=None, required=False, type=click.STRING)
 @click.pass_obj
-def transport(state: State, material_name: typing.Optional[str]):
-    engines = [
-        engine
-        for engine in ENGINES
-        if engine.era <= state.era and engine.quest_reward is False
-    ]
+def transport(state: State, material_name: typing.Optional[str], quest_rewards: bool):
+    engines = [engine for engine in ENGINES if engine.era <= state.era]
     wagons = [wagon for wagon in WAGONS if wagon.era <= state.era]
+
+    if not quest_rewards:
+        engines = [engine for engine in engines if not engine.quest_reward]
 
     # Filter wagons based on the selected material.
     # Shows all combinations if no material is selected.
@@ -148,11 +155,11 @@ def transport(state: State, material_name: typing.Optional[str]):
             [
                 (
                     # Engine
-                    train.engine.era.numeral,
+                    mashinky.style.era(train.engine.era),
                     mashinky.style.engine_name(train),
                     mashinky.style.count(train.engine_count),
                     # Wagon
-                    train.wagon.era.numeral,
+                    mashinky.style.era(train.wagon.era),
                     mashinky.style.wagon_name(train),
                     mashinky.style.count(train.wagon_count),
                     train.wagon.cargo,
@@ -161,9 +168,9 @@ def transport(state: State, material_name: typing.Optional[str]):
                     mashinky.style.usage(train),
                     mashinky.style.length(train.length, state.station_length),
                     mashinky.style.limit(train.wagon_limit),
-                    mashinky.style.payments(train.engine.cost),
-                    mashinky.style.payments(train.wagon.cost),
-                    mashinky.style.payments(train.engine.operating_cost),
+                    mashinky.style.engine_cost(train),
+                    mashinky.style.wagon_cost(train),
+                    mashinky.style.operating_cost(train),
                 )
                 for train in trains
             ],

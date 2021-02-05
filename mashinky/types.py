@@ -33,20 +33,6 @@ class Era(enum.IntEnum):
     def named(cls, name: str) -> Era:
         return Era(cls.names()[name])
 
-    @classmethod
-    def numerals(cls) -> typing.Mapping[Era, str]:
-        return {
-            cls.EARLY_STEAM: "Ⅰ",
-            cls.STEAM: "Ⅱ",
-            cls.EARLY_DIESEL: "Ⅲ",
-            cls.DIESEL: "Ⅳ",
-            cls.EARLY_ELECTRIC: "Ⅴ",
-        }
-
-    @property
-    def numeral(self) -> str:
-        return self.numerals()[self]
-
     def __str__(self) -> str:
         return self.numeral
 

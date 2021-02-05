@@ -197,6 +197,7 @@ ENGINES: typing.Sequence[Engine] = [
         length=0.95,
         cost=[],
         operating_cost=[Payment(2, Token.DIESEL)],
+        quest_reward=True,
     ),
     Engine(
         name="V220",
