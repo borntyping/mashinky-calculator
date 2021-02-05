@@ -34,7 +34,7 @@ class Era(enum.IntEnum):
         return Era(cls.names()[name])
 
     def __str__(self) -> str:
-        return self.numeral
+        return self.name
 
 
 class Material(enum.Enum):

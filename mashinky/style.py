@@ -92,6 +92,9 @@ def compare(value: int, max: int) -> str:
     if value == max:
         return click.style(str(value), fg="green")
 
+    if value >= max * 0.8:
+        return click.style(str(value), fg="yellow")
+
     return str(value)
 
 

@@ -53,8 +53,7 @@ def main(
 @click.pass_obj
 def unlock(state: State, era_name: str) -> None:
     state.era = Era.named(era_name)
-
-    value = click.style(state.era.numeral, fg="red")
+    value = click.style(state.era.name, fg="red")
     click.echo(f"Using engines and wagons up to the {value} era")
 
 
@@ -116,11 +115,24 @@ def wagons(state: State):
     "quest_rewards",
     is_flag=True,
     default=False,
-    help="Include engines from quest rewards",
+    help="Include engines from quest rewards.",
+)
+@click.option(
+    "-b",
+    "--best",
+    "best",
+    is_flag=True,
+    default=False,
+    help="Only show the best trains.",
 )
 @click.argument("material_name", default=None, required=False, type=click.STRING)
 @click.pass_obj
-def transport(state: State, material_name: typing.Optional[str], quest_rewards: bool):
+def transport(
+    state: State,
+    material_name: typing.Optional[str],
+    quest_rewards: bool,
+    best: bool,
+):
     engines = [engine for engine in ENGINES if engine.era <= state.era]
     wagons = [wagon for wagon in WAGONS if wagon.era <= state.era]
 
@@ -130,7 +142,7 @@ def transport(state: State, material_name: typing.Optional[str], quest_rewards: 
     # Filter wagons based on the selected material.
     # Shows all combinations if no material is selected.
     if material_name is not None:
-        material = Material(material_name.capitalize())
+        material = Material(material_name.title())
         wagons = [wagon for wagon in wagons if wagon.cargo == material]
 
     trains = [
@@ -149,6 +161,10 @@ def transport(state: State, material_name: typing.Optional[str], quest_rewards: 
     trains = sorted(trains, key=operator.attrgetter("capacity"))
 
     max_capacity = max(train.capacity for train in trains)
+    max_speed = max(train.engine.speed for train in trains)
+
+    if best:
+        trains = [train for train in trains if train.capacity == max_capacity]
 
     print(
         tabulate.tabulate(
@@ -166,6 +182,7 @@ def transport(state: State, material_name: typing.Optional[str], quest_rewards: 
                     # Train
                     mashinky.style.compare(train.capacity, max_capacity),
                     mashinky.style.usage(train),
+                    mashinky.style.compare(train.engine.speed, max_speed),
                     mashinky.style.length(train.length, state.station_length),
                     mashinky.style.limit(train.wagon_limit),
                     mashinky.style.engine_cost(train),
@@ -186,6 +203,7 @@ def transport(state: State, material_name: typing.Optional[str], quest_rewards: 
                 click.style("Cargo", fg="blue"),
                 # Train
                 click.style("Total", fg="magenta"),
+                click.style("Speed", fg="magenta"),
                 click.style("Usage", fg="magenta"),
                 click.style("Length", fg="magenta"),
                 click.style("Limit", fg="magenta"),
