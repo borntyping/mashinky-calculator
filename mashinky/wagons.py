@@ -136,7 +136,7 @@ WAGONS = [
         capacity=11,
         unloaded=18,
         loaded=29,
-        length=1.04,
+        length=1.05,
         cost=[Payment(10, Token.TIMBER)],
         requires_depot_extension=True,
     ),
