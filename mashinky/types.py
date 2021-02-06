@@ -79,6 +79,9 @@ class Payment:
     amount: int
     token: Token
 
+    def __mul__(self, other: int) -> Payment:
+        return dataclasses.replace(self, amount=self.amount * other)
+
 
 @dataclasses.dataclass(frozen=True)
 class Stock:

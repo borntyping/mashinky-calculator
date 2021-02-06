@@ -63,29 +63,24 @@ def payment(payment: Payment) -> str:
     return f"{symbol} {payment.amount} {payment.token}".ljust(13)
 
 
-def payments(cost: typing.Sequence[Payment]) -> str:
-    return ", ".join([payment(p) for p in cost])
+def payments(cost: typing.Iterable[Payment], multiplier: int) -> str:
+    return ", ".join([payment(p * multiplier) for p in cost])
 
 
 def engine_cost(train: Train) -> str:
-    costs = []
-
-    if train.engine.cost:
-        costs.append(payments(train.engine.cost))
-
     if train.engine.quest_reward:
         symbol = click.style("○", fg="yellow")
-        costs.append(f"{symbol} quest reward")
+        return f"{symbol} quest reward"
 
-    return " ".join(costs)
+    return payments(train.engine.cost, train.engine_count)
 
 
 def wagon_cost(train: Train) -> str:
-    return payments(train.wagon.cost)
+    return payments(train.wagon.cost, train.wagon_count)
 
 
 def operating_cost(train: Train) -> str:
-    return payments(train.engine.operating_cost)
+    return payments(train.engine.operating_cost, train.engine_count)
 
 
 def compare(value: int, max: int) -> str:
