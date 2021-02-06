@@ -7,7 +7,7 @@ import click
 import click_shell
 import tabulate
 
-from .types import Era, Material, Engine, Wagon, Train, Payment, Limit
+from .types import Era, Material, Engine, Wagon, Train, Payment, Limit, Token
 from .engines import ENGINES
 from .wagons import WAGONS
 import mashinky.style
@@ -125,6 +125,14 @@ def wagons(state: State):
     default=False,
     help="Only show the best trains.",
 )
+@click.option(
+    "-c",
+    "--cheap",
+    "cheap",
+    is_flag=True,
+    default=False,
+    help="Only show trains that cost money to operate.",
+)
 @click.argument("material_name", default=None, required=False, type=click.STRING)
 @click.pass_obj
 def transport(
@@ -132,9 +140,13 @@ def transport(
     material_name: typing.Optional[str],
     quest_rewards: bool,
     best: bool,
+    cheap: bool,
 ):
     engines = [engine for engine in ENGINES if engine.era <= state.era]
     wagons = [wagon for wagon in WAGONS if wagon.era <= state.era]
+
+    # engines = [engine for engine in ENGINES if engine.name == "074 Bangle"]
+    # wagons = [wagon for wagon in WAGONS if wagon.name == "Nossinger"]
 
     if not quest_rewards:
         engines = [engine for engine in engines if not engine.quest_reward]
@@ -165,6 +177,9 @@ def transport(
 
     if best:
         trains = [train for train in trains if train.capacity == max_capacity]
+
+    if cheap:
+        trains = [t for t in trains if t.engine.operating_cost_tokens == {Token.MONEY}]
 
     print(
         tabulate.tabulate(

@@ -106,6 +106,10 @@ class Engine(Stock):
     quest_reward: bool = False
     requires_depot_extension: bool = False
 
+    @property
+    def operating_cost_tokens(self) -> typing.Set[Token]:
+        return {payment.token for payment in self.operating_cost}
+
 
 @dataclasses.dataclass(frozen=True)
 class Wagon(Stock):
