@@ -13,14 +13,21 @@ Pint = "^0.16.1"
 inflect = "^5.0.2"
 click-shell = "^2.0"
 click = "^7.1.2"
+xdg = "^5.1.0"
+pydantic = "^1.8.2"
 
 [tool.poetry.dev-dependencies]
+types-tabulate = "*"
+types-click = "*"
 pytest = "*"
-mypy = "^0.800"
-black = "^20.8b1"
+mypy = "*"
+black = "*"
 
 [tool.poetry.scripts]
 mashinky = 'mashinky.shell:main'
+
+[tool.mypy]
+ignore_missing_imports = true
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

@@ -1,16 +1,27 @@
-import dataclasses
-from enum import Enum
+from __future__ import annotations
+
 import itertools
 import typing
 import operator
 
-import click
-import click_shell
+import xdg
 import tabulate
+import pydantic
+import pathlib
+import click_shell
+import click
 
-from .types import Era, Material, Engine, Wagon, Train, Payment, Limit, Token, Stock
-from .engines import ENGINES
-from .wagons import WAGONS
+from mashinky.types import (
+    Era,
+    Material,
+    Engine,
+    Wagon,
+    Train,
+    Token,
+    Stock,
+)
+from mashinky.engines import ENGINES
+from mashinky.wagons import WAGONS
 import mashinky.style
 
 
@@ -27,14 +38,13 @@ def display(
     print(tabulate.tabulate(table, headers, floatfmt=".2f", tablefmt="simple"))
 
 
-@dataclasses.dataclass()
-class State:
-    era: Era
-    depot_extension: bool
-    station_length: int
+class State(pydantic.BaseModel):
+    era: Era = Era.EARLY_STEAM
+    depot_extension: bool = False
+    station_length: int = 6
 
-    def select(self, stock: typing.Sequence[S]) -> typing.Sequence[S]:
-        return [x for x in stock if x.era <= self.era]
+    def select(self, items: typing.Sequence[S]) -> typing.Sequence[S]:
+        return [stock for stock in items if stock.era <= self.era]  # type: ignore
 
     def engines(self) -> typing.Sequence[Engine]:
         return self.select(ENGINES)
@@ -42,23 +52,26 @@ class State:
     def wagons(self) -> typing.Sequence[Wagon]:
         return self.select(WAGONS)
 
+    @staticmethod
+    def path() -> pathlib.Path:
+        return xdg.xdg_config_home() / "mashinky.json"
+
+    @classmethod
+    def load(cls) -> State:
+        if not cls.path().exists():
+            return State()
+
+        return cls.parse_file(cls.path())
+
+    def save(self) -> None:
+        self.path().write_text(self.json())
+
 
 @click_shell.shell(prompt="> ")
-@click.option("-e", "--era", "era", default="early electric", type=click.STRING)
-@click.option("-d", "--depot", "depot_extension", default=True, is_flag=True)
-@click.option("-s", "--station", "station_length", default=6, type=click.IntRange(1, 8))
 @click.pass_context
-def main(
-    ctx: click.Context,
-    era: str,
-    depot_extension: bool,
-    station_length: int,
-) -> None:
-    ctx.obj = State(
-        era=Era(era),
-        depot_extension=depot_extension,
-        station_length=station_length,
-    )
+def main(ctx: click.Context) -> None:
+    ctx.obj = State.load()
+    ctx.call_on_close(ctx.obj.save)
 
 
 @main.command(
@@ -70,18 +83,45 @@ def main(
         )
     )
 )
-@click.argument("era", type=click.STRING)
-@click.pass_obj
-def unlock(state: State, era: str) -> None:
-    state.era = Era(era)
-    value = click.style(state.era.value, fg="green")
-    click.echo(f"Using engines and wagons up to the {value} era.")
+@click.pass_context
+def unlock(ctx: click.Context) -> None:
+    ctx.obj.era = Era(
+        click.prompt(
+            "Current era?",
+            type=click.Choice([e.value for e in Era], case_sensitive=False),
+            default=ctx.obj.era.value,
+        )
+    )
+    ctx.obj.depot_extension = click.prompt(
+        "Depot extension?",
+        type=bool,
+        default=str(ctx.obj.depot_extension),
+    )
+    ctx.obj.station_length = click.prompt(
+        "Station length",
+        type=int,
+        default=str(ctx.obj.station_length),
+    )
+
+    click.echo()
+
+    era_name = click.style(ctx.obj.era.value, fg="green")
+    click.echo(f"Using engines and wagons up to the {era_name} era.")
+
+    if ctx.obj.depot_extension:
+        depot = click.style("depot extension", fg="green")
+        click.echo(f"Buying engines and wagons from the {depot}.")
+    else:
+        depot = click.style("basic depot", fg="red")
+        click.echo(f"Buying engines and wagons from the {depot}.")
+
+    n = click.style(str(ctx.obj.station_length), fg="blue")
+    click.echo(f"Using stations {n} tiles long.")
 
 
 @main.command()
 @click.pass_obj
 def engines(state: State):
-
     display(
         headers=["Name", "Era", "Speed", "Capacity", "Power", "Weight", "Length"],
         table=[
