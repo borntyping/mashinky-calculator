@@ -5,6 +5,7 @@ import enum
 import functools
 import math
 import typing
+import itertools
 
 
 MPH = typing.NewType("MPH", int)
@@ -112,6 +113,10 @@ class Engine(Stock):
     def operating_cost_tokens(self) -> typing.Set[Token]:
         return {payment.token for payment in self.operating_cost}
 
+    @property
+    def possible_counts(self) -> typing.Iterable[int]:
+        return (1,) if self.quest_reward else (1, 2)
+
 
 @dataclasses.dataclass(frozen=True)
 class Wagon(Stock):
@@ -204,3 +209,21 @@ class Train:
             wagon_count=wagon_count,
             wagon_limit=wagon_limit,
         )
+
+    @classmethod
+    def combinations(
+        cls,
+        engines: typing.Iterable[Engine],
+        wagons: typing.Iterable[Wagon],
+        station_length: int,
+        include_all_doubles: bool = False,
+    ) -> typing.Iterable[Train]:
+        for engine, wagon in itertools.product(engines, wagons):
+            single = cls.build(engine, wagon, station_length, 1)
+            double = cls.build(engine, wagon, station_length, 2)
+
+            yield single
+
+            # Only include double headers when they have a greater capacity.
+            if include_all_doubles or double.capacity > single.capacity:
+                yield double

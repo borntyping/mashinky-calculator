@@ -2,7 +2,8 @@ import typing
 
 import click
 
-from .types import Era, Train, Payment, Token, Limit
+from mashinky.types import Era, Train, Payment, Token, Limit
+from mashinky.state import State
 
 
 NUMERALS = {
@@ -101,3 +102,31 @@ def length(value: float, station_length: float) -> str:
         return click.style(str(value), fg="red")
 
     return click.style(str(value), fg="yellow")
+
+
+def state_era(state: State) -> str:
+    formatted_era = click.style(str(state.era), fg="green")
+    return f"Using engines and wagons up to the {formatted_era} era."
+
+
+def state_station_length(state: State) -> str:
+    formatted_station_length = click.style(str(state.station_length), fg="blue")
+    return f"Using stations {formatted_station_length} tiles long."
+
+
+def state_unlocks(state: State) -> str:
+    depot_extension = _unlock(
+        description="engines and wagons from the depot extension",
+        toggle=state.depot_extension,
+    )
+    quest_rewards = _unlock(
+        description="engines from quest rewards",
+        toggle=state.quest_rewards,
+    )
+    return "\n".join((depot_extension, quest_rewards))
+
+
+def _unlock(description: str, toggle: bool) -> str:
+    prefix = "Showing" if toggle else "Not showing"
+    colour = "green" if toggle else "red"
+    return click.style(f"{prefix} {description}.", fg=colour)

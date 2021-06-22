@@ -4,80 +4,25 @@ import itertools
 import typing
 import operator
 
-import xdg
 import tabulate
-import pydantic
-import pathlib
 import click_shell
 import click
 
-from mashinky.types import (
-    Era,
-    Material,
-    Engine,
-    Wagon,
-    Train,
-    Token,
-    Stock,
-)
+from mashinky.types import Era, Material, Train, Token
 from mashinky.engines import ENGINES
 from mashinky.wagons import WAGONS
+from mashinky.state import State
 import mashinky.style
 
 
 tabulate.MIN_PADDING = 0  # type: ignore
 
 
-S = typing.TypeVar("S", bound=Stock)
-
-
 def display(
     headers: typing.Sequence[str],
     table: typing.Sequence[typing.Sequence],
 ) -> None:
-    click.clear()
     click.echo(tabulate.tabulate(table, headers, floatfmt=".2f", tablefmt="simple"))
-
-
-class State(pydantic.BaseModel):
-    era: Era = pydantic.Field(default=Era.EARLY_STEAM)
-    station_length: int = pydantic.Field(default=6, ge=1, le=8)
-    depot_extension: bool = pydantic.Field(default=False)
-    quest_rewards: bool = pydantic.Field(default=False)
-
-    def select(self, items: typing.Sequence[S]) -> typing.Sequence[S]:
-        depot_extension = {True, False} if self.depot_extension else {False}
-        return [
-            stock
-            for stock in items
-            if stock.era <= self.era
-            and stock.requires_depot_extension in depot_extension
-        ]
-
-    def engines(self) -> typing.Sequence[Engine]:
-        quest_rewards = {True, False} if self.quest_rewards else {False}
-        return [
-            engine
-            for engine in self.select(ENGINES)
-            if engine.quest_reward in quest_rewards
-        ]
-
-    def wagons(self) -> typing.Sequence[Wagon]:
-        return self.select(WAGONS)
-
-    @staticmethod
-    def path() -> pathlib.Path:
-        return xdg.xdg_config_home() / "mashinky.json"
-
-    @classmethod
-    def load(cls) -> State:
-        if not cls.path().exists():
-            return State()
-
-        return cls.parse_file(cls.path())
-
-    def save(self) -> None:
-        self.path().write_text(self.json())
 
 
 @click_shell.shell(prompt="> ")
@@ -87,54 +32,71 @@ def main(ctx: click.Context) -> None:
     ctx.call_on_close(ctx.obj.save)
 
 
-@main.command(
-    help="\n".join(
-        (
-            "Set an era to use when calculating possible trains",
-            "\n\b",
-            *(f"- {era}" for era in Era),
-        )
-    )
-)
-@click.pass_context
-def unlock(ctx: click.Context) -> None:
-    ctx.obj.era = Era(
-        click.prompt(
-            "Current era?",
-            type=click.Choice([e.value for e in Era], case_sensitive=False),
-            default=ctx.obj.era.value,
-        )
-    )
-    ctx.obj.station_length = click.prompt(
-        "Station length",
-        type=click.IntRange(min=1, max=8),
-        default=ctx.obj.station_length,
-    )
-    ctx.obj.depot_extension = click.prompt(
-        "Depot extension?",
-        type=bool,
-        default=ctx.obj.depot_extension,
-    )
-    ctx.obj.quest_rewards = click.prompt(
-        "Show engines from quest rewards?",
-        type=bool,
-        default=ctx.obj.quest_rewards,
-    )
+class JoinedStringType(click.ParamType):
+    def convert(self, value, param, ctx):
+        raise Exception((value, param))
 
-    click.echo()
 
-    era_name = click.style(str(ctx.obj.era), fg="green")
-    length = click.style(str(ctx.obj.station_length), fg="blue")
-    click.echo(
-        f"Using engines and wagons up to the {era_name} era "
-        f"with stations {length} tiles long."
-    )
+@main.command(no_args_is_help=True)
+@click.argument("name", type=click.Choice([e.value for e in Era], case_sensitive=False))
+@click.pass_obj
+def era(state: State, name: typing.Sequence[str]) -> None:
+    """Set an era to use when listing engines and wagons."""
+    state.era = Era(name)
+    click.echo(mashinky.style.state_era(state))
 
-    if ctx.obj.depot_extension:
-        click.echo(f"Showing engines and wagons from the depot extension.")
 
-    if ctx.obj.quest_rewards:
-        click.echo("Showing engines from quest rewards.")
+era.help += "\n\n\b"
+for name in Era:
+    era.help += f"\n- {name}"
+
+
+def toggle(state: State, words: typing.Sequence[str], value: bool) -> None:
+    for word in words:
+        if word in {"quest", "rewards"}:
+            state.quest_rewards = value
+        elif word in {"depot", "extension"}:
+            state.depot_extension = value
+        else:
+            raise NotImplementedError(f"Unknown word {word}")
+
+    click.echo(mashinky.style.state_unlocks(state))
+
+
+@main.command(no_args_is_help=True)
+@click.argument("words", nargs=-1, type=click.STRING)
+@click.pass_obj
+def unlock(state: State, words: typing.Sequence[str]) -> None:
+    """
+    Unlock quest rewards or depot extensions.
+
+    \b
+    - "quest rewards"
+    - "depot extension"
+    """
+    toggle(state, words, True)
+
+
+@main.command(no_args_is_help=True)
+@click.argument("words", nargs=-1, type=click.STRING)
+@click.pass_obj
+def lock(state: State, words: typing.Sequence[str]) -> None:
+    """
+    Lock quest rewards or depot extensions.
+
+    \b
+    - "quest rewards"
+    - "depot extension"
+    """
+    toggle(state, words, False)
+
+
+@main.command()
+@click.argument("length", type=click.INT)
+@click.pass_obj
+def station(state: State, length: int) -> None:
+    state.station_length = length
+    click.echo(mashinky.style.state_station_length(state))
 
 
 @main.command()
@@ -221,20 +183,13 @@ def transport(
         material = Material(material_name.title())
         wagons = [wagon for wagon in wagons if wagon.cargo == material]
 
-    trains = [
-        Train.build(
-            engine=engine,
-            wagon=wagon,
-            station_length=state.station_length,
-            engine_count=engine_count,
-        )
-        for engine, wagon in itertools.product(engines, wagons)
-        for engine_count in (1, 2)
-    ]
-
     # This filters out trains made entirely from dining cars.
-    trains = [train for train in trains if train.capacity != 0]
-    trains = sorted(trains, key=operator.attrgetter("capacity"))
+    wagons = [wagon for wagon in wagons if wagon.capacity > 0]
+
+    # Generate a list of possible trains. The combinations() method filters
+    # double-header trains with a lower capacity than a single header train.
+    combinations = Train.combinations(engines, wagons, state.station_length)
+    trains = sorted(combinations, key=operator.attrgetter("capacity"))
 
     max_capacity = max(train.capacity for train in trains)
     max_speed = max(train.engine.speed for train in trains)
@@ -245,7 +200,6 @@ def transport(
     if cheap:
         trains = [t for t in trains if t.engine.operating_cost_tokens == {Token.MONEY}]
 
-    click.clear()
     click.echo(
         tabulate.tabulate(
             [
