@@ -1,4 +1,5 @@
 import dataclasses
+from enum import Enum
 import itertools
 import typing
 import operator
@@ -7,13 +8,16 @@ import click
 import click_shell
 import tabulate
 
-from .types import Era, Material, Engine, Wagon, Train, Payment, Limit, Token
+from .types import Era, Material, Engine, Wagon, Train, Payment, Limit, Token, Stock
 from .engines import ENGINES
 from .wagons import WAGONS
 import mashinky.style
 
 
 tabulate.MIN_PADDING = 0  # type: ignore
+
+
+S = typing.TypeVar("S", bound=Stock)
 
 
 def display(
@@ -29,32 +33,49 @@ class State:
     depot_extension: bool
     station_length: int
 
+    def select(self, stock: typing.Sequence[S]) -> typing.Sequence[S]:
+        return [x for x in stock if x.era <= self.era]
+
+    def engines(self) -> typing.Sequence[Engine]:
+        return self.select(ENGINES)
+
+    def wagons(self) -> typing.Sequence[Wagon]:
+        return self.select(WAGONS)
+
 
 @click_shell.shell(prompt="> ")
-@click.option("-e", "--era", "era_name", default="early electric", type=click.STRING)
+@click.option("-e", "--era", "era", default="early electric", type=click.STRING)
 @click.option("-d", "--depot", "depot_extension", default=True, is_flag=True)
 @click.option("-s", "--station", "station_length", default=6, type=click.IntRange(1, 8))
 @click.pass_context
 def main(
     ctx: click.Context,
-    era_name: str,
+    era: str,
     depot_extension: bool,
     station_length: int,
 ) -> None:
     ctx.obj = State(
-        era=Era.named(era_name),
+        era=Era(era),
         depot_extension=depot_extension,
         station_length=station_length,
     )
 
 
-@main.command()
-@click.argument("era_name", type=click.STRING)
+@main.command(
+    help="\n".join(
+        (
+            "Set an era to use when calculating possible trains",
+            "\n\b",
+            *(f"- {era}" for era in Era),
+        )
+    )
+)
+@click.argument("era", type=click.STRING)
 @click.pass_obj
-def unlock(state: State, era_name: str) -> None:
-    state.era = Era.named(era_name)
-    value = click.style(state.era.name, fg="red")
-    click.echo(f"Using engines and wagons up to the {value} era")
+def unlock(state: State, era: str) -> None:
+    state.era = Era(era)
+    value = click.style(state.era.value, fg="green")
+    click.echo(f"Using engines and wagons up to the {value} era.")
 
 
 @main.command()
@@ -73,7 +94,7 @@ def engines(state: State):
                 engine.weight,
                 engine.length,
             )
-            for engine in ENGINES
+            for engine in state.engines()
         ],
     )
 
@@ -103,7 +124,7 @@ def wagons(state: State):
                 wagon.length,
                 wagon.special,
             )
-            for wagon in WAGONS
+            for wagon in state.wagons()
         ],
     )
 
@@ -142,8 +163,8 @@ def transport(
     best: bool,
     cheap: bool,
 ):
-    engines = [engine for engine in ENGINES if engine.era <= state.era]
-    wagons = [wagon for wagon in WAGONS if wagon.era <= state.era]
+    engines = state.engines()
+    wagons = state.wagons()
 
     # engines = [engine for engine in ENGINES if engine.name == "074 Bangle"]
     # wagons = [wagon for wagon in WAGONS if wagon.name == "Nossinger"]

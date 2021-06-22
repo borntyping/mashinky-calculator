@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import dataclasses
-import decimal
 import enum
+import functools
 import math
 import typing
 
@@ -12,29 +12,23 @@ Tons = typing.NewType("Tons", int)
 HP = typing.NewType("HP", int)
 
 
-class Era(enum.IntEnum):
-    EARLY_STEAM = 1
-    STEAM = 2
-    EARLY_DIESEL = 3
-    DIESEL = 4
-    EARLY_ELECTRIC = 5
-
-    @classmethod
-    def names(cls) -> typing.Mapping[str, Era]:
-        return {
-            "early steam": cls.EARLY_STEAM,
-            "steam": cls.STEAM,
-            "early diesel": cls.EARLY_DIESEL,
-            "diesel": cls.DIESEL,
-            "early electric": cls.EARLY_ELECTRIC,
-        }
-
-    @classmethod
-    def named(cls, name: str) -> Era:
-        return Era(cls.names()[name])
+@enum.unique
+@functools.total_ordering
+class Era(enum.Enum):
+    EARLY_STEAM = "early steam"
+    STEAM = "steam"
+    EARLY_DIESEL = "early diesel"
+    DIESEL = "diesel"
+    EARLY_ELECTRIC = "early electric"
 
     def __str__(self) -> str:
-        return self.name
+        return self.value
+
+    def __lt__(self, other):
+        if self.__class__ is other.__class__:
+            values = list(self.__class__)
+            return values.index(self) < values.index(other)
+        return NotImplemented
 
 
 class Material(enum.Enum):
