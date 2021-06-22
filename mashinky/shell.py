@@ -35,7 +35,8 @@ def display(
     headers: typing.Sequence[str],
     table: typing.Sequence[typing.Sequence],
 ) -> None:
-    print(tabulate.tabulate(table, headers, floatfmt=".2f", tablefmt="simple"))
+    click.clear()
+    click.echo(tabulate.tabulate(table, headers, floatfmt=".2f", tablefmt="simple"))
 
 
 class State(pydantic.BaseModel):
@@ -45,18 +46,20 @@ class State(pydantic.BaseModel):
     quest_rewards: bool = pydantic.Field(default=False)
 
     def select(self, items: typing.Sequence[S]) -> typing.Sequence[S]:
+        depot_extension = {True, False} if self.depot_extension else {False}
         return [
             stock
             for stock in items
             if stock.era <= self.era
-            and stock.requires_depot_extension <= self.depot_extension
+            and stock.requires_depot_extension in depot_extension
         ]
 
     def engines(self) -> typing.Sequence[Engine]:
+        quest_rewards = {True, False} if self.quest_rewards else {False}
         return [
             engine
             for engine in self.select(ENGINES)
-            if engine.quest_reward <= self.quest_rewards
+            if engine.quest_reward in quest_rewards
         ]
 
     def wagons(self) -> typing.Sequence[Wagon]:
@@ -95,42 +98,43 @@ def main(ctx: click.Context) -> None:
 )
 @click.pass_context
 def unlock(ctx: click.Context) -> None:
-    ctx.obj.era = click.prompt(
-        "Current era?",
-        type=click.Choice([e.value for e in Era], case_sensitive=False),
-        default=ctx.obj.era.value,
-        value_proc=Era,
+    ctx.obj.era = Era(
+        click.prompt(
+            "Current era?",
+            type=click.Choice([e.value for e in Era], case_sensitive=False),
+            default=ctx.obj.era.value,
+        )
     )
     ctx.obj.station_length = click.prompt(
         "Station length",
         type=click.IntRange(min=1, max=8),
-        default=str(ctx.obj.station_length),
+        default=ctx.obj.station_length,
     )
     ctx.obj.depot_extension = click.prompt(
         "Depot extension?",
         type=bool,
-        default="yes" if ctx.obj.depot_extension else "no",
+        default=ctx.obj.depot_extension,
     )
     ctx.obj.quest_rewards = click.prompt(
         "Show engines from quest rewards?",
         type=bool,
-        default="yes" if ctx.obj.quest_rewards else "no",
+        default=ctx.obj.quest_rewards,
     )
 
     click.echo()
 
-    era_name = click.style(ctx.obj.era.value, fg="green")
-    click.echo(f"Using engines and wagons up to the {era_name} era.")
+    era_name = click.style(str(ctx.obj.era), fg="green")
+    length = click.style(str(ctx.obj.station_length), fg="blue")
+    click.echo(
+        f"Using engines and wagons up to the {era_name} era "
+        f"with stations {length} tiles long."
+    )
 
     if ctx.obj.depot_extension:
-        depot = click.style("depot extension", fg="green")
-        click.echo(f"Buying engines and wagons from the {depot}.")
-    else:
-        depot = click.style("basic depot", fg="red")
-        click.echo(f"Buying engines and wagons from the {depot}.")
+        click.echo(f"Showing engines and wagons from the depot extension.")
 
-    n = click.style(str(ctx.obj.station_length), fg="blue")
-    click.echo(f"Using stations {n} tiles long.")
+    if ctx.obj.quest_rewards:
+        click.echo("Showing engines from quest rewards.")
 
 
 @main.command()
@@ -185,14 +189,6 @@ def wagons(state: State):
 
 @main.command()
 @click.option(
-    "-q",
-    "--quest-rewards/--no-quest-rewards",
-    "quest_rewards",
-    is_flag=True,
-    default=False,
-    help="Include engines from quest rewards.",
-)
-@click.option(
     "-b",
     "--best",
     "best",
@@ -213,18 +209,11 @@ def wagons(state: State):
 def transport(
     state: State,
     material_name: typing.Optional[str],
-    quest_rewards: bool,
     best: bool,
     cheap: bool,
 ):
     engines = state.engines()
     wagons = state.wagons()
-
-    # engines = [engine for engine in ENGINES if engine.name == "074 Bangle"]
-    # wagons = [wagon for wagon in WAGONS if wagon.name == "Nossinger"]
-
-    if not quest_rewards:
-        engines = [engine for engine in engines if not engine.quest_reward]
 
     # Filter wagons based on the selected material.
     # Shows all combinations if no material is selected.
@@ -256,7 +245,8 @@ def transport(
     if cheap:
         trains = [t for t in trains if t.engine.operating_cost_tokens == {Token.MONEY}]
 
-    print(
+    click.clear()
+    click.echo(
         tabulate.tabulate(
             [
                 (

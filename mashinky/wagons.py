@@ -39,7 +39,7 @@ WAGONS = [
     ),
     Wagon(
         name="2nd Class",
-        era=Era.EARLY_STEAM,
+        era=Era.STEAM,
         requires_depot_extension=False,
         cargo=Material.PASSENGERS,
         capacity=25,
