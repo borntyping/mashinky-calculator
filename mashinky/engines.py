@@ -6,6 +6,7 @@ ENGINES: typing.Sequence[Engine] = [
     Engine(
         name="0-4-0 Elishka",
         era=Era.EARLY_STEAM,
+        requires_depot_extension=True,
         speed=28,
         capacity=159,
         power=170,
@@ -13,11 +14,11 @@ ENGINES: typing.Sequence[Engine] = [
         length=0.60,
         cost=[Payment(65, Token.MONEY)],
         operating_cost=[Payment(1, Token.MONEY)],
-        requires_depot_extension=True,
     ),
     Engine(
         name="2-6-0 Porter",
         era=Era.EARLY_STEAM,
+        requires_depot_extension=False,
         speed=40,
         capacity=168,
         power=260,
@@ -29,6 +30,7 @@ ENGINES: typing.Sequence[Engine] = [
     Engine(
         name="Red Dwarf",
         era=Era.EARLY_STEAM,
+        requires_depot_extension=False,
         speed=43,
         capacity=174,
         power=290,
@@ -41,6 +43,7 @@ ENGINES: typing.Sequence[Engine] = [
     Engine(
         name="4-6-0 Baldwin",
         era=Era.EARLY_STEAM,
+        requires_depot_extension=False,
         speed=47,
         capacity=224,
         power=400,
@@ -52,6 +55,7 @@ ENGINES: typing.Sequence[Engine] = [
     Engine(
         name="2-10-0 Rusian",
         era=Era.EARLY_STEAM,
+        requires_depot_extension=True,
         speed=60,
         capacity=306,
         power=700,
@@ -59,11 +63,11 @@ ENGINES: typing.Sequence[Engine] = [
         length=1.19,
         cost=[Payment(40, Token.COAL)],
         operating_cost=[Payment(1, Token.COAL)],
-        requires_depot_extension=True,
     ),
     Engine(
         name="Prussian T3",
         era=Era.STEAM,
+        requires_depot_extension=False,
         speed=31,
         capacity=202,
         power=240,
@@ -75,6 +79,7 @@ ENGINES: typing.Sequence[Engine] = [
     Engine(
         name="2-8-4 Class 65",
         era=Era.STEAM,
+        requires_depot_extension=False,
         speed=53,
         capacity=364,
         power=700,
@@ -86,6 +91,7 @@ ENGINES: typing.Sequence[Engine] = [
     Engine(
         name="Class 65 Ruined",
         era=Era.STEAM,
+        requires_depot_extension=False,
         speed=47,
         capacity=336,
         power=600,
@@ -98,6 +104,7 @@ ENGINES: typing.Sequence[Engine] = [
     Engine(
         name="GS-2",
         era=Era.STEAM,
+        requires_depot_extension=True,
         speed=62,
         capacity=863,
         power=2050,
@@ -105,11 +112,11 @@ ENGINES: typing.Sequence[Engine] = [
         length=1.81,
         cost=[Payment(145, Token.MONEY), Payment(75, Token.COAL)],
         operating_cost=[Payment(2, Token.COAL)],
-        requires_depot_extension=True,
     ),
     Engine(  # https://store.steampowered.com/news/app/598960/view/4738306083308446645
         name="Philip",
         era=Era.EARLY_DIESEL,
+        requires_depot_extension=True,
         speed=34,
         capacity=260,
         power=340,
@@ -117,11 +124,11 @@ ENGINES: typing.Sequence[Engine] = [
         length=0.47,
         cost=[Payment(265, Token.MONEY)],
         operating_cost=[Payment(3, Token.MONEY)],
-        requires_depot_extension=True,
     ),
     Engine(
         name="Br 3",
         era=Era.EARLY_DIESEL,
+        requires_depot_extension=False,
         speed=31,
         capacity=252,
         power=300,
@@ -133,6 +140,7 @@ ENGINES: typing.Sequence[Engine] = [
     Engine(
         name="Bdz 52",
         era=Era.EARLY_DIESEL,
+        requires_depot_extension=False,
         speed=40,
         capacity=388,
         power=600,
@@ -144,6 +152,7 @@ ENGINES: typing.Sequence[Engine] = [
     Engine(
         name="Bdz 52+",
         era=Era.EARLY_DIESEL,
+        requires_depot_extension=False,
         speed=43,
         capacity=390,
         power=650,
@@ -156,6 +165,7 @@ ENGINES: typing.Sequence[Engine] = [
     Engine(
         name="Emd F3",
         era=Era.EARLY_DIESEL,
+        requires_depot_extension=True,
         speed=81,
         capacity=453,
         power=1400,
@@ -163,11 +173,11 @@ ENGINES: typing.Sequence[Engine] = [
         length=0.86,
         cost=[Payment(30, Token.IRON), Payment(60, Token.DIESEL)],
         operating_cost=[Payment(2, Token.DIESEL)],
-        requires_depot_extension=True,
     ),
     Engine(
         name="074 Bangle",
         era=Era.DIESEL,
+        requires_depot_extension=False,
         speed=43,
         capacity=390,
         power=650,
@@ -179,6 +189,7 @@ ENGINES: typing.Sequence[Engine] = [
     Engine(
         name="Sasha 871",
         era=Era.DIESEL,
+        requires_depot_extension=False,
         speed=68,
         capacity=650,
         power=1700,
@@ -190,6 +201,7 @@ ENGINES: typing.Sequence[Engine] = [
     Engine(
         name="Sasha 872",
         era=Era.DIESEL,
+        requires_depot_extension=False,
         speed=68,
         capacity=708,
         power=1850,
@@ -202,6 +214,7 @@ ENGINES: typing.Sequence[Engine] = [
     Engine(
         name="V220",
         era=Era.DIESEL,
+        requires_depot_extension=False,
         speed=87,
         capacity=360,
         power=1200,
@@ -213,6 +226,7 @@ ENGINES: typing.Sequence[Engine] = [
     Engine(
         name="GM 40P",
         era=Era.DIESEL,
+        requires_depot_extension=True,
         speed=70,
         capacity=864,
         power=2800,
@@ -220,11 +234,11 @@ ENGINES: typing.Sequence[Engine] = [
         length=1.07,
         cost=[Payment(200, Token.STEEL)],
         operating_cost=[Payment(5, Token.MONEY), Payment(2, Token.DIESEL)],
-        requires_depot_extension=True,
     ),
     Engine(
         name="Ragulin",
         era=Era.EARLY_ELECTRIC,
+        requires_depot_extension=False,
         speed=62,
         capacity=505,
         power=1200,
@@ -236,6 +250,7 @@ ENGINES: typing.Sequence[Engine] = [
     Engine(
         name="Alligator",
         era=Era.EARLY_ELECTRIC,
+        requires_depot_extension=False,
         speed=43,
         capacity=481,
         power=800,
@@ -247,6 +262,7 @@ ENGINES: typing.Sequence[Engine] = [
     Engine(
         name="E118",
         era=Era.EARLY_ELECTRIC,
+        requires_depot_extension=False,
         speed=93,
         capacity=421,
         power=1500,
@@ -258,6 +274,7 @@ ENGINES: typing.Sequence[Engine] = [
     Engine(
         name="E66 Azakase",
         era=Era.EARLY_ELECTRIC,
+        requires_depot_extension=False,
         speed=68,
         capacity=765,
         power=2000,
@@ -269,6 +286,7 @@ ENGINES: typing.Sequence[Engine] = [
     Engine(
         name="E76 Isumo",
         era=Era.EARLY_ELECTRIC,
+        requires_depot_extension=False,
         speed=75,
         capacity=771,
         power=2200,

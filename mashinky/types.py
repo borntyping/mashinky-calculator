@@ -24,10 +24,18 @@ class Era(enum.Enum):
     def __str__(self) -> str:
         return self.value
 
-    def __lt__(self, other):
+    @property
+    def index(self) -> int:
+        return list(Era).index(self)
+
+    def __lt__(self, other: Era) -> bool:
         if self.__class__ is other.__class__:
-            values = list(self.__class__)
-            return values.index(self) < values.index(other)
+            return self.index < self.index
+        return NotImplemented
+
+    def __lte__(self, other: Era) -> bool:
+        if self.__class__ is other.__class__:
+            return self.index <= self.index
         return NotImplemented
 
 
@@ -81,6 +89,7 @@ class Payment:
 class Stock:
     name: str
     era: Era
+    requires_depot_extension: bool
 
     def __str__(self) -> str:
         return self.name
@@ -98,7 +107,6 @@ class Engine(Stock):
     operating_cost: typing.Sequence[Payment]
 
     quest_reward: bool = False
-    requires_depot_extension: bool = False
 
     @property
     def operating_cost_tokens(self) -> typing.Set[Token]:
@@ -116,7 +124,6 @@ class Wagon(Stock):
     cost: typing.Sequence[Payment]
 
     special: typing.Optional[str] = None
-    requires_depot_extension: bool = False
 
 
 class Limit(enum.Enum):

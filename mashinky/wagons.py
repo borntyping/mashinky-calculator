@@ -6,6 +6,7 @@ WAGONS = [
     Wagon(
         name="Pullman",
         era=Era.EARLY_STEAM,
+        requires_depot_extension=False,
         cargo=Material.PASSENGERS,
         capacity=8,
         unloaded=15,
@@ -16,6 +17,7 @@ WAGONS = [
     Wagon(
         name="Coach Car",
         era=Era.EARLY_STEAM,
+        requires_depot_extension=False,
         cargo=Material.PASSENGERS,
         capacity=15,
         unloaded=20,
@@ -26,6 +28,7 @@ WAGONS = [
     Wagon(
         name="1st Class",
         era=Era.STEAM,
+        requires_depot_extension=True,
         cargo=Material.PASSENGERS,
         capacity=18,
         unloaded=40,
@@ -33,11 +36,11 @@ WAGONS = [
         length=1.28,
         cost=[Payment(22, Token.TIMBER), Payment(8, Token.COAL)],
         special="Income +10%",
-        requires_depot_extension=True,
     ),
     Wagon(
         name="2nd Class",
         era=Era.EARLY_STEAM,
+        requires_depot_extension=False,
         cargo=Material.PASSENGERS,
         capacity=25,
         unloaded=35,
@@ -48,6 +51,7 @@ WAGONS = [
     Wagon(
         name="Dining car",
         era=Era.STEAM,
+        requires_depot_extension=True,
         cargo=Material.PASSENGERS,
         capacity=0,
         unloaded=50,
@@ -55,11 +59,11 @@ WAGONS = [
         length=1.28,
         cost=[Payment(35, Token.TIMBER), Payment(30, Token.COAL)],
         special="Income +15%",
-        requires_depot_extension=True,
     ),
     Wagon(
         name="SCF",
         era=Era.DIESEL,
+        requires_depot_extension=False,
         cargo=Material.PASSENGERS,
         capacity=40,
         unloaded=40,
@@ -70,6 +74,7 @@ WAGONS = [
     Wagon(
         name="SCF Diner",
         era=Era.DIESEL,
+        requires_depot_extension=True,
         cargo=Material.PASSENGERS,
         capacity=0,
         unloaded=50,
@@ -77,11 +82,11 @@ WAGONS = [
         length=1.36,
         cost=[Payment(300, Token.MONEY), Payment(80, Token.COAL)],
         special="Income +20%",
-        requires_depot_extension=True,
     ),
     Wagon(
         name="Pwg PR-14",
         era=Era.STEAM,
+        requires_depot_extension=False,
         cargo=Material.MAIL,
         capacity=7,
         unloaded=22,
@@ -92,6 +97,7 @@ WAGONS = [
     Wagon(
         name="SCF Mail",
         era=Era.DIESEL,
+        requires_depot_extension=False,
         cargo=Material.MAIL,
         capacity=20,
         unloaded=40,
@@ -102,6 +108,7 @@ WAGONS = [
     Wagon(
         name="Hatch",
         era=Era.EARLY_DIESEL,
+        requires_depot_extension=False,
         cargo=Material.CRUDE_OIL,
         capacity=4,
         unloaded=14,
@@ -112,6 +119,7 @@ WAGONS = [
     Wagon(
         name="Warren",
         era=Era.EARLY_DIESEL,
+        requires_depot_extension=False,
         cargo=Material.CRUDE_OIL,
         capacity=7,
         unloaded=18,
@@ -122,6 +130,7 @@ WAGONS = [
     Wagon(
         name="Steudinger",
         era=Era.EARLY_STEAM,
+        requires_depot_extension=False,
         cargo=Material.LOGS,
         capacity=7,
         unloaded=14,
@@ -132,17 +141,18 @@ WAGONS = [
     Wagon(
         name="Nossinger",
         era=Era.EARLY_STEAM,
+        requires_depot_extension=True,
         cargo=Material.LOGS,
         capacity=11,
         unloaded=18,
         loaded=29,
         length=1.05,
         cost=[Payment(10, Token.TIMBER)],
-        requires_depot_extension=True,
     ),
     Wagon(
         name="Ronghoffer",
         era=Era.EARLY_STEAM,
+        requires_depot_extension=False,
         cargo=Material.TIMBER,
         capacity=7,
         unloaded=15,
@@ -153,17 +163,18 @@ WAGONS = [
     Wagon(
         name="Ronghoffer II",
         era=Era.EARLY_STEAM,
+        requires_depot_extension=True,
         cargo=Material.TIMBER,
         capacity=15,
         unloaded=20,
         loaded=50,
         length=1.16,
         cost=[Payment(15, Token.IRON)],
-        requires_depot_extension=True,
     ),
     Wagon(
         name="Hatch II",
         era=Era.EARLY_DIESEL,
+        requires_depot_extension=False,
         cargo=Material.DIESEL,
         capacity=7,
         unloaded=15,
@@ -174,6 +185,7 @@ WAGONS = [
     Wagon(
         name="Warren II",
         era=Era.EARLY_DIESEL,
+        requires_depot_extension=False,
         cargo=Material.DIESEL,
         capacity=12,
         unloaded=16,
@@ -184,6 +196,7 @@ WAGONS = [
     Wagon(
         name="Opeln",
         era=Era.EARLY_DIESEL,
+        requires_depot_extension=False,
         cargo=Material.GOODS,
         capacity=7,
         unloaded=11,
@@ -194,6 +207,7 @@ WAGONS = [
     Wagon(
         name="Hiblns",
         era=Era.EARLY_DIESEL,
+        requires_depot_extension=False,
         cargo=Material.GOODS,
         capacity=12,
         unloaded=14,
@@ -204,6 +218,7 @@ WAGONS = [
     Wagon(
         name="Fischer",
         era=Era.STEAM,
+        requires_depot_extension=False,
         cargo=Material.IRON_ORE,
         capacity=8,
         unloaded=16,
@@ -214,6 +229,7 @@ WAGONS = [
     Wagon(
         name="Linz II",
         era=Era.STEAM,
+        requires_depot_extension=False,
         cargo=Material.IRON_ORE,
         capacity=12,
         unloaded=18,
@@ -224,17 +240,18 @@ WAGONS = [
     Wagon(
         name="Faccs II",
         era=Era.STEAM,
+        requires_depot_extension=True,
         cargo=Material.IRON_ORE,
         capacity=16,
         unloaded=20,
         loaded=52,
         length=0.68,
         cost=[Payment(60, Token.MONEY), Payment(10, Token.IRON)],
-        requires_depot_extension=True,
     ),
     Wagon(
         name="Talbot",
         era=Era.EARLY_STEAM,
+        requires_depot_extension=False,
         cargo=Material.COAL,
         capacity=6,
         unloaded=13,
@@ -245,6 +262,7 @@ WAGONS = [
     Wagon(
         name="Linz",
         era=Era.EARLY_STEAM,
+        requires_depot_extension=False,
         cargo=Material.COAL,
         capacity=9,
         unloaded=18,
@@ -255,17 +273,18 @@ WAGONS = [
     Wagon(
         name="Faccs",
         era=Era.EARLY_STEAM,
+        requires_depot_extension=True,
         cargo=Material.COAL,
         capacity=15,
         unloaded=16,
         loaded=46,
         length=0.51,
         cost=[Payment(9, Token.IRON)],
-        requires_depot_extension=True,
     ),
     Wagon(
         name="Ignax Schustel",
         era=Era.STEAM,
+        requires_depot_extension=False,
         cargo=Material.IRON,
         capacity=4,
         unloaded=12,
@@ -276,6 +295,7 @@ WAGONS = [
     Wagon(
         name="Schustel II",
         era=Era.STEAM,
+        requires_depot_extension=False,
         cargo=Material.IRON,
         capacity=6,
         unloaded=15,
@@ -286,6 +306,7 @@ WAGONS = [
     Wagon(
         name="Schustel III",
         era=Era.STEAM,
+        requires_depot_extension=False,
         cargo=Material.IRON,
         capacity=8,
         unloaded=18,
@@ -296,6 +317,7 @@ WAGONS = [
     Wagon(
         name="Muller",
         era=Era.DIESEL,
+        requires_depot_extension=False,
         cargo=Material.STEEL,
         capacity=3,
         unloaded=12,
@@ -306,6 +328,7 @@ WAGONS = [
     Wagon(
         name="Muller II",
         era=Era.DIESEL,
+        requires_depot_extension=False,
         cargo=Material.STEEL,
         capacity=4,
         unloaded=14,
@@ -316,6 +339,7 @@ WAGONS = [
     Wagon(
         name="Muller III",
         era=Era.DIESEL,
+        requires_depot_extension=False,
         cargo=Material.STEEL,
         capacity=5,
         unloaded=16,
@@ -326,6 +350,7 @@ WAGONS = [
     Wagon(
         name="Cackle",
         era=Era.DIESEL,
+        requires_depot_extension=False,
         cargo=Material.SAND,
         capacity=5,
         unloaded=8,
@@ -336,6 +361,7 @@ WAGONS = [
     Wagon(
         name="Cackle II",
         era=Era.DIESEL,
+        requires_depot_extension=False,
         cargo=Material.SAND,
         capacity=7,
         unloaded=11,
@@ -346,6 +372,7 @@ WAGONS = [
     Wagon(
         name="Snowflake Food",
         era=Era.EARLY_ELECTRIC,
+        requires_depot_extension=False,
         cargo=Material.FOOD,
         capacity=10,
         unloaded=25,
@@ -356,6 +383,7 @@ WAGONS = [
     Wagon(
         name="Snowflake Food Ex",
         era=Era.EARLY_ELECTRIC,
+        requires_depot_extension=False,
         cargo=Material.FOOD,
         capacity=18,
         unloaded=35,

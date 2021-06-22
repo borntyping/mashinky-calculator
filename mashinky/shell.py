@@ -39,15 +39,25 @@ def display(
 
 
 class State(pydantic.BaseModel):
-    era: Era = Era.EARLY_STEAM
-    depot_extension: bool = False
-    station_length: int = 6
+    era: Era = pydantic.Field(default=Era.EARLY_STEAM)
+    station_length: int = pydantic.Field(default=6, ge=1, le=8)
+    depot_extension: bool = pydantic.Field(default=False)
+    quest_rewards: bool = pydantic.Field(default=False)
 
     def select(self, items: typing.Sequence[S]) -> typing.Sequence[S]:
-        return [stock for stock in items if stock.era <= self.era]  # type: ignore
+        return [
+            stock
+            for stock in items
+            if stock.era <= self.era
+            and stock.requires_depot_extension <= self.depot_extension
+        ]
 
     def engines(self) -> typing.Sequence[Engine]:
-        return self.select(ENGINES)
+        return [
+            engine
+            for engine in self.select(ENGINES)
+            if engine.quest_reward <= self.quest_rewards
+        ]
 
     def wagons(self) -> typing.Sequence[Wagon]:
         return self.select(WAGONS)
@@ -85,22 +95,26 @@ def main(ctx: click.Context) -> None:
 )
 @click.pass_context
 def unlock(ctx: click.Context) -> None:
-    ctx.obj.era = Era(
-        click.prompt(
-            "Current era?",
-            type=click.Choice([e.value for e in Era], case_sensitive=False),
-            default=ctx.obj.era.value,
-        )
+    ctx.obj.era = click.prompt(
+        "Current era?",
+        type=click.Choice([e.value for e in Era], case_sensitive=False),
+        default=ctx.obj.era.value,
+        value_proc=Era,
+    )
+    ctx.obj.station_length = click.prompt(
+        "Station length",
+        type=click.IntRange(min=1, max=8),
+        default=str(ctx.obj.station_length),
     )
     ctx.obj.depot_extension = click.prompt(
         "Depot extension?",
         type=bool,
-        default=str(ctx.obj.depot_extension),
+        default="yes" if ctx.obj.depot_extension else "no",
     )
-    ctx.obj.station_length = click.prompt(
-        "Station length",
-        type=int,
-        default=str(ctx.obj.station_length),
+    ctx.obj.quest_rewards = click.prompt(
+        "Show engines from quest rewards?",
+        type=bool,
+        default="yes" if ctx.obj.quest_rewards else "no",
     )
 
     click.echo()
