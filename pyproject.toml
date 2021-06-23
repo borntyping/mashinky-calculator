@@ -1,9 +1,12 @@
 [tool.poetry]
 name = "mashinky-calculator"
-version = "0.1.0"
+version = "0.2.0"
 description = ""
 authors = ["Sam Clements"]
 license = "MIT"
+packages = [
+    { include = "mashinky" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -24,7 +27,7 @@ mypy = "*"
 black = "*"
 
 [tool.poetry.scripts]
-mashinky = 'mashinky.shell:main'
+mashinky = "mashinky.shell:main"
 
 [tool.mypy]
 ignore_missing_imports = true
