@@ -171,15 +171,18 @@ class Train:
         return self._weight(wagon_weight=self.wagon.loaded)
 
     def unloaded_usage(self) -> float:
-        return self.unloaded_weight() / (self.engine.capacity * self.engine_count)
+        return self.unloaded_weight() / self.maximum_weight()
 
     def loaded_usage(self) -> float:
-        return self.loaded_weight() / (self.engine.capacity * self.engine_count)
+        return self.loaded_weight() / self.maximum_weight()
 
     def _weight(self, wagon_weight: int) -> int:
         engine = self.engine.weight * self.engine_count
         wagon = wagon_weight * self.wagon_count
         return engine + wagon
+
+    def maximum_weight(self) -> int:
+        return self.engine.capacity * self.engine_count
 
     @classmethod
     def build(

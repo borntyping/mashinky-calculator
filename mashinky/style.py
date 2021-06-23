@@ -1,3 +1,4 @@
+import dataclasses
 import typing
 
 import click
@@ -31,13 +32,13 @@ def count(n: int) -> typing.Optional[int]:
     return n if n > 1 else None
 
 
-def usage(train: Train) -> str:
-    loaded_usage = train.loaded_usage()
-    if loaded_usage >= 0.75:
-        return click.style(str(loaded_usage), fg="green")
-    if loaded_usage >= 0.50:
-        return click.style(str(loaded_usage), fg="yellow")
-    return click.style(str(loaded_usage), fg="red")
+def usage(usage: float, min_usage: float, max_usage: float) -> str:
+    return compare(
+        round(usage * 100),
+        round(min_usage * 100),
+        round(max_usage * 100),
+        "{:>5}%",
+    )
 
 
 def limit(l: Limit) -> str:
@@ -84,24 +85,23 @@ def operating_cost(train: Train) -> str:
     return payments(train.engine.operating_cost, train.engine_count)
 
 
-def compare(value: int, max: int) -> str:
-    if value == max:
-        return click.style(str(value), fg="green")
+def compare(value: float, lo: float, hi: float, format: str = "{}") -> str:
+    if value >= hi:
+        fg = "green"
+    elif value <= lo:
+        fg = "red"
+    else:
+        fg = "reset"
 
-    if value >= max * 0.8:
-        return click.style(str(value), fg="yellow")
-
-    return str(value)
+    return click.style(format.format(value), fg=fg)
 
 
 def length(value: float, station_length: float) -> str:
-    if value >= station_length - 1.0:
-        return click.style(str(value), fg="green")
-
-    if value <= station_length / 2.0:
-        return click.style(str(value), fg="red")
-
-    return click.style(str(value), fg="yellow")
+    return compare(
+        value,
+        lo=station_length / 2.0,
+        hi=station_length - 1.0,
+    )
 
 
 def state_era(state: State) -> str:

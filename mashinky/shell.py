@@ -191,8 +191,14 @@ def transport(
     combinations = Train.combinations(engines, wagons, state.station_length)
     trains = sorted(combinations, key=operator.attrgetter("capacity"))
 
+    min_capacity = min(train.capacity for train in trains)
     max_capacity = max(train.capacity for train in trains)
+
+    min_speed = min(train.engine.speed for train in trains)
     max_speed = max(train.engine.speed for train in trains)
+
+    min_usage = min(train.usage for train in trains)
+    max_usage = max(train.usage for train in trains)
 
     if best:
         trains = [train for train in trains if train.capacity == max_capacity]
@@ -214,9 +220,9 @@ def transport(
                     mashinky.style.count(train.wagon_count),
                     train.wagon.cargo,
                     # Train
-                    mashinky.style.compare(train.capacity, max_capacity),
-                    mashinky.style.usage(train),
-                    mashinky.style.compare(train.engine.speed, max_speed),
+                    mashinky.style.compare(train.capacity, min_capacity, max_capacity),
+                    mashinky.style.compare(train.engine.speed, min_speed, max_speed),
+                    mashinky.style.usage(train.usage, min_usage, max_usage),
                     mashinky.style.length(train.length, state.station_length),
                     mashinky.style.limit(train.wagon_limit),
                     mashinky.style.engine_cost(train),
