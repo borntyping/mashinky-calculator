@@ -31,12 +31,12 @@ class Era(enum.Enum):
 
     def __lt__(self, other: Era) -> bool:
         if self.__class__ is other.__class__:
-            return self.index < self.index
+            return self.index < other.index
         return NotImplemented
 
-    def __lte__(self, other: Era) -> bool:
+    def __le__(self, other: Era) -> bool:
         if self.__class__ is other.__class__:
-            return self.index <= self.index
+            return self.index <= other.index
         return NotImplemented
 
 
