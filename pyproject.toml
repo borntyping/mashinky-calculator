@@ -10,24 +10,23 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-wcwidth = "^0.2.5"
-tabulate = "^0.8.7"
-Pint = "^0.16.1"
-inflect = "^5.0.2"
-click-shell = "^2.0"
-click = "^7.1.2"
-xdg = "^5.1.0"
+ansicolors = "^1.1.8"
+appdirs = "^1.4.4"
+prompt-toolkit = "^3.0.19"
 pydantic = "^1.8.2"
+tabulate = "^0.8.7"
 
 [tool.poetry.dev-dependencies]
 types-tabulate = "*"
-types-click = "*"
 pytest = "*"
 mypy = "*"
 black = "*"
 
 [tool.poetry.scripts]
-mashinky = "mashinky.shell:main"
+mashinky = "mashinky.repl:main"
+
+[tool.black]
+line-length = 100
 
 [tool.mypy]
 ignore_missing_imports = true

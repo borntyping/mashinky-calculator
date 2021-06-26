@@ -2,42 +2,57 @@ from __future__ import annotations
 
 import dataclasses
 import enum
-import functools
+import itertools
 import math
 import typing
-import itertools
-
-
-MPH = typing.NewType("MPH", int)
-Tons = typing.NewType("Tons", int)
-HP = typing.NewType("HP", int)
 
 
 @enum.unique
-@functools.total_ordering
-class Era(enum.Enum):
-    EARLY_STEAM = "early steam"
-    STEAM = "steam"
-    EARLY_DIESEL = "early diesel"
-    DIESEL = "diesel"
-    EARLY_ELECTRIC = "early electric"
+class Era(enum.IntEnum):
+    EARLY_STEAM = 1
+    STEAM = 2
+    EARLY_DIESEL = 3
+    DIESEL = 4
+    EARLY_ELECTRIC = 5
+
+    descriptions: typing.Mapping[Era, str]
 
     def __str__(self) -> str:
-        return self.value
+        return self.description
 
     @property
     def index(self) -> int:
-        return list(Era).index(self)
+        return self.value
 
-    def __lt__(self, other: Era) -> bool:
-        if self.__class__ is other.__class__:
-            return self.index < other.index
-        return NotImplemented
+    @property
+    def description(self) -> str:
+        return self.descriptions[self.value].title()
 
-    def __le__(self, other: Era) -> bool:
-        if self.__class__ is other.__class__:
-            return self.index <= other.index
-        return NotImplemented
+
+Era.descriptions = {
+    Era.EARLY_STEAM: "Early steam",
+    Era.STEAM: "Steam",
+    Era.EARLY_DIESEL: "Early diesel",
+    Era.DIESEL: "Diesel",
+    Era.EARLY_ELECTRIC: "Early electric",
+}
+
+Era.numerals = {
+    Era.EARLY_STEAM: "Ⅰ",
+    Era.STEAM: "Ⅱ",
+    Era.EARLY_DIESEL: "Ⅲ",
+    Era.DIESEL: "Ⅳ",
+    Era.EARLY_ELECTRIC: "Ⅴ",
+}
+
+
+Era.names = {
+    "early steam": Era.EARLY_STEAM,
+    "steam": Era.STEAM,
+    "early diesel": Era.EARLY_DIESEL,
+    "diesel": Era.DIESEL,
+    "early electric": Era.EARLY_ELECTRIC,
+}
 
 
 class Material(enum.Enum):
@@ -146,6 +161,10 @@ class Train:
     wagon_limit: Limit
 
     @property
+    def speed(self) -> float:
+        return self.engine.speed
+
+    @property
     def capacity(self) -> int:
         return self.wagon.capacity * self.wagon_count
 
@@ -159,10 +178,7 @@ class Train:
 
     @property
     def length(self) -> float:
-        return (
-            self.engine.length * self.engine_count
-            + self.wagon.length * self.wagon_count
-        )
+        return self.engine.length * self.engine_count + self.wagon.length * self.wagon_count
 
     def unloaded_weight(self) -> int:
         return self._weight(wagon_weight=self.wagon.unloaded)
@@ -183,6 +199,14 @@ class Train:
 
     def maximum_weight(self) -> int:
         return self.engine.capacity * self.engine_count
+
+    @property
+    def multiple_engines(self) -> typing.Optional[str]:
+        return f"{self.engine_count}" if self.engine_count > 1 else None
+
+    @property
+    def multiple_wagons(self) -> typing.Optional[str]:
+        return f"{self.wagon_count}" if self.wagon_count > 1 else None
 
     @classmethod
     def build(

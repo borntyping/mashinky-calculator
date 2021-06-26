@@ -1,3 +1,3 @@
-import mashinky.shell
+import mashinky.repl
 
-mashinky.shell.main()
+mashinky.repl.main()
