@@ -278,9 +278,10 @@ def make_color(name: str, shade: int) -> typing.Callable[[str], str]:
     return lambda text: colors.color(text, fg=palette[name][shade])
 
 
-engine = make_color("red", 500)
-wagon = make_color("sky", 500)
-train = make_color("purple", 500)
+engine = make_color("cyan", 500)
+wagon = make_color("teal", 500)
+train = make_color("blue", 600)
+
 era = make_color("gray", 500)
 
 good = make_color("green", 500)
