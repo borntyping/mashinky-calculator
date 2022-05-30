@@ -37,6 +37,6 @@ def data():
     )
 
 
-@app.add_template_global
-def undefined() -> str:
-    return "—"
+@app.context_processor
+def variables():
+    return {"undefined": "—"}

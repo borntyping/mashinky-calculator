@@ -9,14 +9,18 @@
 <body>
 
 <nav class="navbar bg-dark">
-  <div class="container-fluid">
+  <div class="container-xl">
     <a class="navbar-brand text-bg-dark" href="{{ url_for('home') }}">Mashinky Toolkit</a>
+    <a class="navbar-item text-bg-dark" href="{{ url_for('home') }}" >Trains</a>
+    <a class="navbar-item text-bg-dark" href="{{ url_for('home') }}" >Engines</a>
+    <a class="navbar-item text-bg-dark" href="{{ url_for('home') }}" >Wagons</a>
+    <a class="navbar-item text-bg-dark" href="{{ url_for('home') }}" >Road vehicles</a>
     <a class="navbar-item text-bg-dark" href="{{ url_for('data') }}" >Data</a>
   </div>
 </nav>
 
 
-<div class="container-fluid mt-3">
+<div class="container-xl mt-3">
   {% block page %}
   {% endblock page %}
 </div>

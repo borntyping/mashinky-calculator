@@ -34,6 +34,21 @@ class Coord:
 
 
 @dataclasses.dataclass(frozen=True)
+class Color:
+    r: int
+    g: int
+    b: int
+
+    @classmethod
+    def from_attrs(cls, attrs: Attrs) -> Color:
+        return cls(
+            r=int(attrs["red"]),
+            g=int(attrs["green"]),
+            b=int(attrs["blue"]),
+        )
+
+
+@dataclasses.dataclass(frozen=True)
 class Images:
     cargo_types_icons: typing.Mapping[str, pathlib.Path]
     token_types_icons: typing.Mapping[str, pathlib.Path]
@@ -47,22 +62,24 @@ class ImagesBuilder:
 
     def extract_images(self, config: mashinky.extract.config.Config) -> Images:
         coords = {i: Coord.from_attrs(attrs) for i, attrs in config.tcoords.items()}
+        colors = {i: Color.from_attrs(attrs) for i, attrs in config.colors.items()}
         return Images(
-            cargo_types_icons=self.extract_icons(config.cargo_types, coords, "cargo_types"),
-            token_types_icons=self.extract_icons(config.token_types, coords, "token_types"),
-            wagon_types_icons=self.extract_icons(config.wagon_types, coords, "wagon_types"),
+            cargo_types_icons=self.extract_icons(config.cargo_types, coords, colors, "cargo_types"),
+            token_types_icons=self.extract_icons(config.token_types, coords, colors, "token_types"),
+            wagon_types_icons=self.extract_icons(config.wagon_types, coords, colors, "wagon_types"),
         )
 
     def extract_icons(
         self,
         things: dict[str, dict[str, str]],
         coords: typing.Mapping[str, Coord],
+        colors: typing.Mapping[str, Color],
         category: str,
     ) -> typing.Mapping[str, pathlib.Path]:
         self.directory.mkdir(exist_ok=True)
         (self.directory / "images").mkdir(exist_ok=True)
         return {
-            identifier: self.extract_icon(attrs, coords, category)
+            identifier: self.extract_icon(attrs, coords, colors, category)
             for identifier, attrs in things.items()
             if all(("icon_texture" in attrs, "icon" in attrs))
         }
@@ -71,6 +88,7 @@ class ImagesBuilder:
         self,
         attrs: typing.Mapping[str, str],
         coords: typing.Mapping[str, Coord],
+        colors: typing.Mapping[str, Color],
         category: str,
     ) -> pathlib.Path:
         identifier = attrs["id"]

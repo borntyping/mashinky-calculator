@@ -14,7 +14,7 @@
                 {% if cargo_type.name %}
                   <div class="card-text text-info">{{ cargo_type.name }}</div>
                 {% else %}
-                  <div class="card-text text-muted">{{ undefined() }}</div>
+                  <div class="card-text text-muted">{{ undefined }}</div>
                 {% endif %}
                 <code class="card-text text-muted">{{ cargo_type.id }}</code>
               </div>
@@ -38,7 +38,7 @@
                 {% if token_type.name %}
                   <div class="card-text text-info">{{ token_type.name }}</div>
                 {% else %}
-                  <div class="card-text text-muted">{{ undefined() }}</div>
+                  <div class="card-text text-muted">{{ undefined }}</div>
                 {% endif %}
                 <code class="card-text text-muted">{{ token_type.id }}</code>
               </div>
@@ -62,7 +62,7 @@
                 {% if color.name %}
                   <div class="card-text" style="color: rgb({{ color.red }}, {{ color.green }}, {{ color.blue }});">{{ color.name }}</div>
                 {% else %}
-                  <div class="card-text text-muted">{{ undefined() }}</div>
+                  <div class="card-text text-muted">{{ undefined }}</div>
                 {% endif %}
                 <code class="card-text text-muted">{{ color.id }}</code>
               </div>
@@ -80,12 +80,80 @@
       {% for wagon_type in wagon_types %}
         <div class="w-25 p-1">
           <div class="card h-100">
-            <div class="card-body">
-              <img class="mx-auto d-block" src="{{ url_for('static', filename=wagon_type.icon) }}" alt="{{ wagon_type.name or wagon_type.icon }}" height="32px">
-            </div>
-            <div class="card-body p-1">
-              <div class="card-text text-success">{{ wagon_type.name }}</div>
-              <code class="card-text text-muted">{{ wagon_type.id }}</code>
+            <div class="card-body p-0">
+              <img class="mx-auto my-2 d-block" src="{{ url_for('static', filename=wagon_type.icon) }}" alt="{{ wagon_type.name or wagon_type.icon }}" height="32px">
+              <table class="table fs-6">
+                <tbody>
+                <tr>
+                  <th class="w-50">ID</th>
+                  <td class="font-monospace text-break">{{ wagon_type.id }}</td>
+                </tr>
+                <tr>
+                  <th>Name</th>
+                  <td class="text-info">{{ wagon_type.name }}</td>
+                </tr>
+                <tr>
+                  <th class="w-50">Epoch</th>
+                  <td class="font-monospace text-break">{{ wagon_type.epoch }}</td>
+                </tr>
+                <tr>
+                  <th class="w-50">Track</th>
+                  <td class="font-monospace text-break">{{ wagon_type.track }}</td>
+                </tr>
+                <tr>
+                  <th class="w-50">Cost</th>
+                  <td class="font-monospace text-break">{{ wagon_type.cost|default(undefined, True) }}</td>
+                </tr>
+                <tr>
+                  <th class="w-50">Sell</th>
+                  <td class="font-monospace text-break">{{ wagon_type.sell|default(undefined, True) }}</td>
+                </tr>
+                <tr>
+                  <th class="w-50">Weight empty</th>
+                  <td class="font-monospace text-break">{{ wagon_type.weight_empty|default(undefined, True) }}</td>
+                </tr>
+                <tr>
+                  <th class="w-50">Weight full</th>
+                  <td class="font-monospace text-break">{{ wagon_type.weight_full|default(undefined, True) }}</td>
+                </tr>
+                <tr>
+                  <th class="w-50">Length</th>
+                  <td class="font-monospace text-break">{{ wagon_type.length|round(2)|default(undefined, True) }}</td>
+                </tr>
+                <tr>
+                  <th class="w-50">Fuel cost</th>
+                  <td class="font-monospace text-break">{{ wagon_type.fuel_cost|default(undefined, True) }}</td>
+                </tr>
+                <tr>
+                  <th class="w-50">Power</th>
+                  <td class="font-monospace text-break">{{ wagon_type.power|default(undefined, True) }}</td>
+                </tr>
+                <tr>
+                  <th class="w-50">Max speed</th>
+                  <td class="font-monospace text-break">{{ wagon_type.max_speed|default(undefined, True) }}</td>
+                </tr>
+                <tr>
+                  <th class="w-50">Max speed reverse</th>
+                  <td class="font-monospace text-break">{{ wagon_type.max_speed_reverse|default(undefined, True) }}</td>
+                </tr>
+                <tr>
+                  <th class="w-50">Depo upgrade</th>
+                  <td class="font-monospace text-break">{{ wagon_type.depo_upgrade|default(undefined, True) }}</td>
+                </tr>
+                <tr>
+                  <th class="w-50">Cargo</th>
+                  <td class="font-monospace text-break">{{ wagon_type.cargo_id|default(undefined, True) }}</td>
+                </tr>
+                <tr>
+                  <th class="w-50">Cargo</th>
+                  <td class="font-monospace text-break">{{ wagon_type.cargo|default(undefined, True) }}</td>
+                </tr>
+                <tr>
+                  <th class="w-50">Capacity</th>
+                  <td class="font-monospace text-break">{{ wagon_type.capacity|default(undefined, True) }}</td>
+                </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
