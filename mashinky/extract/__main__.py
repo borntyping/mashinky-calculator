@@ -8,6 +8,7 @@ import mashinky.extract.images
 
 
 game_path = pathlib.Path("/home/sam/Development/scratch/Mashinky")
+assets = pathlib.Path("assets")
 
 readers = [
     mashinky.extract.reader.DirReader(game_path / "media"),
@@ -16,9 +17,11 @@ readers = [
 ]
 
 config_builder = mashinky.extract.config.ConfigBuilder(readers)
-images_builder = mashinky.extract.images.ImagesBuilder(readers, pathlib.Path("assets"))
+images_builder = mashinky.extract.images.ImagesBuilder(readers, assets)
 models_builder = mashinky.extract.models.ModelsBuilder()
 
 config = config_builder.load_config().patch()
 images = images_builder.extract_images(config)
 models = models_builder.build(config, images)
+
+models_builder.build_uniq_values_file(config, assets)
