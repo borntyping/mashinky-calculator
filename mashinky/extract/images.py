@@ -77,20 +77,22 @@ class ImagesBuilder:
         coord = coords[attrs["icon"]]
 
         output_path = self.directory / category / f"{identifier}.png"
-        self.directory.mkdir(exist_ok=True)
-        output_path.parent.mkdir(exist_ok=True)
 
-        paths = [reader.path(icon_texture) for reader in self.readers]
-        paths = [path for path in paths if path.exists()]
+        if not output_path.exists():
+            self.directory.mkdir(exist_ok=True)
+            output_path.parent.mkdir(exist_ok=True)
 
-        if not paths:
-            raise FileNotFoundError(icon_texture)
+            paths = [reader.path(icon_texture) for reader in self.readers]
+            paths = [path for path in paths if path.exists()]
 
-        x1, y1, x2, y2 = (coord.x, coord.y, coord.x + coord.w, coord.y + coord.h)
-        box = (x1 * 2, y1 * 2, x2 * 2, y2 * 2)
+            if not paths:
+                raise FileNotFoundError(icon_texture)
 
-        texture = PIL.Image.open(paths[0])
-        image = texture.crop(box)
-        image.save(output_path)
+            x1, y1, x2, y2 = (coord.x, coord.y, coord.x + coord.w, coord.y + coord.h)
+            box = (x1 * 2, y1 * 2, x2 * 2, y2 * 2)
+
+            texture = PIL.Image.open(paths[0])
+            image = texture.crop(box)
+            image.save(output_path)
 
         return output_path.relative_to(self.directory)
