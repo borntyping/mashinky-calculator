@@ -15,6 +15,9 @@ appdirs = "^1.4.4"
 prompt-toolkit = "^3.0.19"
 pydantic = "^1.8.2"
 tabulate = "^0.8.7"
+rich = "^12.4.4"
+Pillow = "^9.1.1"
+beautifulsoup4 = "^4.11.1"
 
 [tool.poetry.dev-dependencies]
 types-tabulate = "*"
