@@ -127,3 +127,7 @@ dmypy.json
 # IDEs
 /.vscode/
 /.idea/
+
+# Generated data
+/assets/*
+/static/images/*

@@ -5,10 +5,13 @@ import pathlib
 import typing
 
 import PIL.Image
+import structlog
 
 import mashinky.console
 import mashinky.extract.config
 import mashinky.extract.reader
+
+logger = structlog.get_logger(logger_name=__name__)
 
 Attrs = dict[str, str]
 
@@ -42,7 +45,7 @@ class ImagesBuilder:
     readers: typing.Sequence[mashinky.extract.reader.Reader]
     directory: pathlib.Path
 
-    def extract_images(self, config: mashinky.extract.loader.Config):
+    def extract_images(self, config: mashinky.extract.config.Config) -> Images:
         coords = {i: Coord.from_attrs(attrs) for i, attrs in config.tcoords.items()}
         return Images(
             cargo_types_icons=self.extract_icons(config.cargo_types, coords, "cargo_types"),
@@ -56,13 +59,11 @@ class ImagesBuilder:
         coords: typing.Mapping[str, Coord],
         category: str,
     ) -> typing.Mapping[str, pathlib.Path]:
+        self.directory.mkdir(exist_ok=True)
+        (self.directory / "images").mkdir(exist_ok=True)
         return {
             identifier: self.extract_icon(attrs, coords, category)
-            for identifier, attrs in mashinky.console.track(
-                things.items(),
-                description=f"Extracting images for {category}",
-                plural="images",
-            )
+            for identifier, attrs in things.items()
             if all(("icon_texture" in attrs, "icon" in attrs))
         }
 
@@ -76,13 +77,18 @@ class ImagesBuilder:
         icon_texture = attrs["icon_texture"]
         coord = coords[attrs["icon"]]
 
-        output_path = self.directory / category / f"{identifier}.png"
+        output_path = self.directory / "images" / category / f"{identifier}.png"
+
+        logger.info(
+            "Extracting icon",
+            icon_texture=icon_texture,
+            output_path=output_path.relative_to(self.directory).as_posix(),
+        )
 
         if not output_path.exists():
-            self.directory.mkdir(exist_ok=True)
             output_path.parent.mkdir(exist_ok=True)
 
-            paths = [reader.path(icon_texture) for reader in self.readers]
+            paths = [reader.path_object(icon_texture) for reader in self.readers]
             paths = [path for path in paths if path.exists()]
 
             if not paths:

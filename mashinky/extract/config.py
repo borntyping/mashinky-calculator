@@ -6,9 +6,12 @@ import warnings
 
 import bs4.builder
 import bs4.element
+import structlog
 
 import mashinky.extract.reader
 import mashinky.console
+
+logger = structlog.get_logger(logger_name=__name__)
 
 Things = dict[str, dict[str, str]]
 Resources = dict[str, dict[str, str]]
@@ -26,13 +29,30 @@ class Config:
 
     def patch(self) -> Config:
         # Incorrect texture reference?
-        self.wagon_types["004849B6"]["icon_texture"] = "map/gui/wagons_basic_set.png"
+        if "004849B6" in self.wagon_types:
+            assert self.wagon_types["004849B6"]["icon_texture"] == "map/gui/wagons_basic_set.png"
+            self.wagon_types["004849B6"]["icon_texture"] = "map/gui/wagons_basic_set.png"
 
         # Unfinished wagon?
-        assert "icon_texture" not in self.wagon_types["1E5C2858"]
-        del self.wagon_types["1E5C2858"]
+        if "1E5C2858" in self.wagon_types:
+            assert "icon_texture" not in self.wagon_types["1E5C2858"]
+            del self.wagon_types["1E5C2858"]
+
+        # C8980ED0: quest glassworks
+        # CE90001A: electricity
+        # CE900010: transformer
+        # 0BA4580F: "Gold"
+        for id in ("C8980ED0", "CE90001A", "CE900010"):
+            if id in self.cargo_types and self.cargo_types[id]["name"] == "0BA4580F":
+                del self.cargo_types[id]["name"]
 
         return self
+
+    def text(self, attrs: dict[str, str], language: str = "English") -> typing.Optional[str]:
+        if name := attrs.get("name"):
+            return self.texts["English"][name]
+
+        return None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -103,12 +123,9 @@ class ConfigBuilder:
         return element.string[1:-1]
 
     def _soups(self, filename: str) -> typing.Iterable[bs4.BeautifulSoup]:
-        for reader in mashinky.console.track(
-            self.readers,
-            description=f"Loading {filename:30}",
-            plural="mods",
-        ):
+        for reader in self.readers:
             try:
+                logger.info("Loading file", filename=filename, base=reader.base.as_posix())
                 yield self._soup(reader.read_text(filename))
             except FileNotFoundError:
                 pass

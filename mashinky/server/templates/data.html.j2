@@ -1,0 +1,95 @@
+{% extends 'base.html.j2' %}
+{% block page %}
+
+  <div class="mt-3">
+    <h2 class="title">Cargo types
+      <span class="badge bg-secondary">{{ cargo_types|count }}</span></h2>
+    <div class="d-flex flex-wrap align-self-stretch">
+      {% for cargo_type in cargo_types %}
+        <div class="w-25 p-1">
+          <div class="card h-100">
+            <div class="card-body d-flex align-items-center p-1">
+              <img class="mx-1" src="{{ url_for('static', filename=cargo_type.icon) }}" alt="{{ cargo_type.name or cargo_type.icon }}" width="32px" height="32px">
+              <div class="mx-1">
+                {% if cargo_type.name %}
+                  <div class="card-text text-info">{{ cargo_type.name }}</div>
+                {% else %}
+                  <div class="card-text text-muted">{{ undefined() }}</div>
+                {% endif %}
+                <code class="card-text text-muted">{{ cargo_type.id }}</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <h2 class="title">Token types
+      <span class="badge bg-secondary">{{ token_types|count }}</span></h2>
+    <div class="d-flex flex-wrap align-self-stretch">
+      {% for token_type in token_types %}
+        <div class="w-25 p-1">
+          <div class="card h-100">
+            <div class="card-body d-flex align-items-center p-1">
+              <img class="mx-1" src="{{ url_for('static', filename=token_type.icon) }}" alt="{{ token_type.name or token_type.icon }}" width="32px" height="32px">
+              <div class="mx-1">
+                {% if token_type.name %}
+                  <div class="card-text text-info">{{ token_type.name }}</div>
+                {% else %}
+                  <div class="card-text text-muted">{{ undefined() }}</div>
+                {% endif %}
+                <code class="card-text text-muted">{{ token_type.id }}</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <h2 class="title">Colors
+      <span class="badge bg-secondary">{{ colors|count }}</span></h2>
+    <div class="d-flex flex-wrap align-self-stretch">
+      {% for color in colors %}
+        <div class="w-25 p-1">
+          <div class="card h-100">
+            <div class="card-body d-flex align-items-center p-1">
+              <div class="mx-1 rounded-circle" style="width: 32px; height: 32px; background-color: rgb({{ color.red }}, {{ color.green }}, {{ color.blue }})"></div>
+              <div class="mx-1">
+                {% if color.name %}
+                  <div class="card-text" style="color: rgb({{ color.red }}, {{ color.green }}, {{ color.blue }});">{{ color.name }}</div>
+                {% else %}
+                  <div class="card-text text-muted">{{ undefined() }}</div>
+                {% endif %}
+                <code class="card-text text-muted">{{ color.id }}</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <h2 class="title">Wagons
+      <span class="badge bg-secondary">{{ wagon_types|count }}</span></h2>
+    <div class="d-flex flex-wrap align-self-stretch">
+      {% for wagon_type in wagon_types %}
+        <div class="w-25 p-1">
+          <div class="card h-100">
+            <div class="card-body">
+              <img class="mx-auto d-block" src="{{ url_for('static', filename=wagon_type.icon) }}" alt="{{ wagon_type.name or wagon_type.icon }}" height="32px">
+            </div>
+            <div class="card-body p-1">
+              <div class="card-text text-success">{{ wagon_type.name }}</div>
+              <code class="card-text text-muted">{{ wagon_type.id }}</code>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

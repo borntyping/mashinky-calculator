@@ -3,46 +3,31 @@ import json
 import pathlib
 import typing
 
+import rich.status
+import structlog
+
+import mashinky.models
 import mashinky.extract.config
 import mashinky.extract.images
+import mashinky.paths
 
+import sqlalchemy.orm
 
-@dataclasses.dataclass(frozen=True)
-class CargoType:
-    icon: pathlib.Path
-
-
-@dataclasses.dataclass(frozen=True)
-class TokenType:
-    icon: pathlib.Path
-
-
-@dataclasses.dataclass(frozen=True)
-class Color:
-    name: str
-    red: int
-    green: int
-    blue: int
-
-
-@dataclasses.dataclass(frozen=True)
-class Vehicle:
-    id: str
-    name: str
-    icon: pathlib.Path
+logger = structlog.get_logger(logger_name=__name__)
 
 
 @dataclasses.dataclass(frozen=True)
 class Models:
-    cargo_types: typing.Mapping[str, CargoType]
-    token_types: typing.Mapping[str, TokenType]
-    colors: typing.Mapping[str, Color]
+    cargo_types: typing.Sequence[mashinky.models.CargoType]
+    token_types: typing.Sequence[mashinky.models.TokenType]
+    colors: typing.Sequence[mashinky.models.Color]
 
-    engines: typing.Mapping[str, Vehicle]
-    wagons: typing.Mapping[str, Vehicle]
-    road_vehicles: typing.Mapping[str, Vehicle]
+    engines: typing.Sequence[mashinky.models.WagonType]
+    wagons: typing.Sequence[mashinky.models.WagonType]
+    road_vehicles: typing.Sequence[mashinky.models.WagonType]
 
 
+@dataclasses.dataclass(frozen=True)
 class ModelsBuilder:
     def build(
         self,
@@ -50,61 +35,72 @@ class ModelsBuilder:
         images: mashinky.extract.images.Images,
     ):
         cargo_types = {
-            identifier: CargoType(
-                icon=images.cargo_types_icons[identifier],
+            id: mashinky.models.CargoType(
+                id=id,
+                icon=images.cargo_types_icons[id].as_posix(),
+                name=config.text(attrs),
             )
-            for identifier, attrs in config.cargo_types.items()
+            for id, attrs in config.cargo_types.items()
         }
 
         token_types = {
-            identifier: TokenType(
-                icon=images.token_types_icons[identifier],
+            id: mashinky.models.TokenType(
+                id=id,
+                icon=images.token_types_icons[id].as_posix(),
+                name=config.text(attrs),
             )
-            for identifier, attrs in config.token_types.items()
+            for id, attrs in config.token_types.items()
         }
 
         colors = {
-            identifier: Color(
+            id: mashinky.models.Color(
+                id=id,
                 name=attrs["name"],
                 red=int(attrs["red"]),
                 green=int(attrs["green"]),
                 blue=int(attrs["blue"]),
             )
-            for identifier, attrs in config.colors.items()
+            for id, attrs in config.colors.items()
         }
 
-        engines = {}
-        wagons = {}
-        road_vehicles = {}
+        engines = []
+        wagons = []
+        road_vehicles = []
 
-        for identifier, attrs in config.wagon_types.items():
+        for id, attrs in config.wagon_types.items():
             vehicle_type = int(attrs["vehicle_type"])
             name = attrs["name"]
-            icon = images.wagon_types_icons[attrs["id"]]
+            icon = images.wagon_types_icons[attrs["id"]].as_posix()
 
             if vehicle_type == 0 and "cargo" not in attrs:
-                engines[identifier] = Vehicle(
-                    id=identifier,
-                    name=name,
-                    icon=icon,
+                engines.append(
+                    mashinky.models.WagonType(
+                        id=id,
+                        name=name,
+                        icon=icon,
+                    )
                 )
             elif vehicle_type == 0 and "cargo" in attrs:
-                wagons[identifier] = Vehicle(
-                    id=identifier,
-                    name=name,
-                    icon=icon,
+                wagons.append(
+                    mashinky.models.WagonType(
+                        id=id,
+                        name=name,
+                        icon=icon,
+                    )
                 )
             elif vehicle_type == 1:
-                road_vehicles[identifier] = Vehicle(
-                    id=identifier,
-                    name=name,
-                    icon=icon,
+                road_vehicles.append(
+                    mashinky.models.WagonType(
+                        id=id,
+                        name=name,
+                        icon=icon,
+                    )
                 )
 
         return Models(
-            cargo_types=cargo_types,
-            token_types=token_types,
-            colors=colors,
+            cargo_types=list(cargo_types.values()),
+            token_types=list(token_types.values()),
+            colors=list(colors.values()),
             engines=engines,
             wagons=wagons,
             road_vehicles=road_vehicles,
@@ -122,3 +118,31 @@ class ModelsBuilder:
             for key in sorted(keys)
         }
         path.write_text(json.dumps(uniq, indent=2))
+
+
+@dataclasses.dataclass(frozen=True)
+class ModelsCreator:
+    def write(self, models: Models, url: str):
+        mashinky.paths.database.unlink(missing_ok=True)
+        engine = sqlalchemy.create_engine(url, future=True)
+        mashinky.models.Base.metadata.create_all(engine)
+
+        with rich.status.Status("Writing database"):
+            with sqlalchemy.orm.Session(engine) as session:
+                session.add_all(models.cargo_types)
+                session.add_all(models.token_types)
+                session.add_all(models.colors)
+                session.add_all(models.engines)
+                session.add_all(models.wagons)
+                session.add_all(models.road_vehicles)
+                session.commit()
+
+        logger.info(
+            "Committed models",
+            cargo_types=len(models.cargo_types),
+            token_types=len(models.token_types),
+            colors=len(models.colors),
+            engines=len(models.engines),
+            wagons=len(models.wagons),
+            road_vehicles=len(models.road_vehicles),
+        )
