@@ -10,7 +10,7 @@ from sqlalchemy.orm import declarative_base, relationship
 Base = declarative_base()
 
 
-class PaymentMixin:
+class Payment:
     wagon_type: WagonType
     token_type: TokenType
     amount: int
@@ -19,7 +19,7 @@ class PaymentMixin:
         return f"{self.__class__.__name__}({self.wagon_type}, {self.token_type}, {self.amount})"
 
 
-class Cost(Base, PaymentMixin):
+class Cost(Base, Payment):
     __tablename__ = "cost"
 
     id = Column(Integer, primary_key=True)
@@ -31,7 +31,7 @@ class Cost(Base, PaymentMixin):
     token_type = relationship("TokenType")
 
 
-class Sell(Base, PaymentMixin):
+class Sell(Base, Payment):
     __tablename__ = "sell"
 
     wagon_type_id = Column(String, ForeignKey("wagon_type.id"), primary_key=True)
@@ -42,7 +42,7 @@ class Sell(Base, PaymentMixin):
     token_type = relationship("TokenType")
 
 
-class Fuel(Base, PaymentMixin):
+class Fuel(Base, Payment):
     __tablename__ = "fuel"
 
     wagon_type_id = Column(String, ForeignKey("wagon_type.id"), primary_key=True)
@@ -171,25 +171,13 @@ class WagonType(Base, ConfigMixin):
     }
 
     @property
-    def weight(self) -> str:
-        if self.weight_empty == self.weight_full:
-            return f"{self.weight_full}"
-        else:
-            return f"{self.weight_empty}&ndash;{self.weight_full}"
-
-    @property
     def is_quest_reward(self) -> bool:
         return self.epoch is None
 
     @property
-    def recommended_weight(self) -> int:
-        """
-        This value is calculated by the game. There's a function named GetVehicleRecommendedWeight.
-
-        Someone on the Mashinky Discord reverse engineered the formula:
-        https://discord.com/channels/319014803756679171/377847968344047626/540116140576210945
-        """
-        return math.floor(42.1 * self.power / self.max_speed)
+    def unique(self) -> bool:
+        """TODO: Special cases for quest rewards that give multiple engines."""
+        return self.is_quest_reward
 
 
 class Engine(WagonType, ConfigMixin):
@@ -203,6 +191,16 @@ class Engine(WagonType, ConfigMixin):
     power = Column(Integer, nullable=False)
     max_speed = Column(Integer, nullable=False)
     max_speed_reverse = Column(Integer, nullable=True)
+
+    @property
+    def recommended_weight(self) -> int:
+        """
+        This value is calculated by the game. There's a function named GetVehicleRecommendedWeight.
+
+        Someone on the Mashinky Discord reverse engineered the formula:
+        https://discord.com/channels/319014803756679171/377847968344047626/540116140576210945
+        """
+        return math.floor(42.1 * self.power / self.max_speed)
 
 
 class Wagon(WagonType, ConfigMixin):

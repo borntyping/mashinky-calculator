@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_sqlalchemy import SQLAlchemy
 from jinja2 import StrictUndefined
@@ -6,6 +6,7 @@ from sqlalchemy import asc, nulls_last
 
 from mashinky.models import Base, CargoType, Color, Engine, RoadVehicle, TokenType, Wagon, WagonType
 from mashinky.paths import sqlalchemy_database_url, static_folder
+from mashinky.trains import combinations
 
 app = Flask(import_name=__name__, static_folder=static_folder)
 app.jinja_env.undefined = StrictUndefined
@@ -24,7 +25,13 @@ def home():
 
 @app.route("/trains")
 def trains():
-    return render_template("trains.html.j2")
+    engines = Engine.query.order_by(Engine.id).all()
+    wagons = Wagon.query.order_by(Wagon.id).all()
+
+    combos = list(combinations(engines, wagons, station_length=6))
+    combos = sorted(combos, key=lambda train: train.capacity, reverse=True)
+
+    return render_template("trains.html.j2", trains=combos)
 
 
 @app.route("/wagon_types")

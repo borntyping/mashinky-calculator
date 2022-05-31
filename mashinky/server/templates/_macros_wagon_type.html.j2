@@ -1,3 +1,7 @@
+{% macro empty(title) -%}
+  <span class="text-faded" title="{{ title }}">&mdash;</span>
+{%- endmacro %}
+
 {% macro id(wagon_type) -%}
   <small class="font-monospace text-muted">{{ wagon_type.id }}</small>
 {%- endmacro %}
@@ -23,28 +27,33 @@
   {%- elif wagon_type.epoch -%}
     <span title="{{ wagon_type.epoch }} onwards">{{ wagon_type.epoch.numeral }}</span>
   {%- else -%}
-    <span class="text-faded" title="Quest reward">&mdash;</span>
+    {{ empty("Quest reward") }}
   {%- endif -%}
 {%- endmacro %}
 
 {% macro track(wagon_type) -%}
   {% if wagon_type.track.value == 0 %}
-    <span class="text-faded">&mdash;</span>
+    {{ empty("Standard track") }}
   {% else %}
     <span>{{ wagon_type.track }}</span>
   {% endif %}
 {%- endmacro %}
 
 {% macro weight(wagon_type) -%}
-  <span>{{ wagon_type.weight }} tons</span>
+  {% if wagon_type.weight_empty != wagon_type.weight_full %}
+    <span class="text-truncate">{{ wagon_type.weight_empty }}&ndash;{{ wagon_type.weight_full }} tons</span>
+  {% else %}
+    <span class="text-truncate">{{ wagon_type.weight_empty }} tons</span>
+  {% endif %}
+
 {%- endmacro %}
 
 {% macro recommended_weight(wagon_type) -%}
-  <span>{{ wagon_type.recommended_weight }} tons</span>
+  <span class="text-truncate">{{ wagon_type.recommended_weight }} tons</span>
 {%- endmacro %}
 
 {% macro length(wagon_type) -%}
-  <span>{{ "%.2f"|format(wagon_type.length) }} tiles</span>
+  <span class="text-truncate">{{ "%.2f"|format(wagon_type.length) }} tiles</span>
 {%- endmacro %}
 
 {% macro costs(payments) -%}
@@ -86,6 +95,16 @@
       <span class="d-block">{{ wagon_type.capacity }}</span>
     </div>
   {%- else -%}
-    &mdash;
+    {{ empty("No cargo") }}
   {%- endif -%}
+{%- endmacro %}
+
+{# Trains #}
+
+{% macro limits(train) -%}
+  {% for limit in train.limits %}
+    <span>{{ limit }}</span>{% if not loop.last %},{% endif %}
+  {% else %}
+    {{ empty("Not limited by length or weight") }}
+  {% endfor %}
 {%- endmacro %}

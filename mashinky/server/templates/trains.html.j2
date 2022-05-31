@@ -1,6 +1,39 @@
-{% extends '_base.html.j2' %}
-{% import '_macros.html.j2' as macros %}
-{% import '_macros_wagon_type.html.j2' as wagon_type_macros %}
+{% extends '_base.html.j2' %}{% import '_macros.html.j2' as macros %}{% import '_macros_wagon_type.html.j2' as macros_wagon_type %}
 {% block page %}
+  <section class="">
+    <h1>Trains {{ macros.count(trains) }}</h1>
 
+    <table class="table table-sm table-hover table-responsive align-middle">
+      <thead class="thead-light">
+      <tr>
+        <th>Epoch</th>
+        <th>Engine</th>
+        <th>Wagon</th>
+        <th>Train</th>
+        <th>Weight</th>
+        <th>Length</th>
+        <th>Cargo</th>
+        <th>Limit</th>
+      </tr>
+      </thead>
+      <tbody class="table-group-divider">
+      {% for train in trains %}
+        <tr>
+          <td>{{ macros_wagon_type.epoch(train) }}</td>
+          <td>{{ macros_wagon_type.name(train.engine) }}</td>
+          <td>{{ macros_wagon_type.name(train.wagon) }}</td>
+          <td class="w-50">
+            {% for wagon_type in train %}
+              {{ macros_wagon_type.icon(wagon_type) }}
+            {% endfor %}
+          </td>
+          <td class="text-end">{{ macros_wagon_type.weight(train) }}</td>
+          <td class="text-end">{{ macros_wagon_type.length(train) }}</td>
+          <td>{{ macros_wagon_type.cargo(train) }}</td>
+          <td>{{ macros_wagon_type.limits(train) }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
 {% endblock %}
