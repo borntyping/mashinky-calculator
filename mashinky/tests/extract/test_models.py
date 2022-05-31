@@ -2,7 +2,7 @@ import typing
 
 import pytest
 
-from mashinky.models.trains import Track, Cost
+from mashinky.models import Track, Cost
 from mashinky.extract.models import parse_epoch, parse_track, parse_payments
 
 

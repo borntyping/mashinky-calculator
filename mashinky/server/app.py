@@ -4,9 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from jinja2 import StrictUndefined
 from sqlalchemy import asc, nulls_last
 
-from mashinky.models.base import Base
-from mashinky.models.config import CargoType, Color, TokenType
-from mashinky.models.trains import Engine, WagonType, Wagon, RoadVehicle
+from mashinky.models import Base, CargoType, Color, Engine, RoadVehicle, TokenType, Wagon, WagonType
 from mashinky.paths import sqlalchemy_database_url, static_folder
 
 app = Flask(import_name=__name__, static_folder=static_folder)
