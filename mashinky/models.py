@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+import math
 import typing
 
 from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String
@@ -160,10 +161,6 @@ class WagonType(Base, ConfigMixin):
     cargo_type_id = Column(String, ForeignKey("cargo_type.id"), nullable=True)
     capacity = Column(Integer, nullable=False)
 
-    # The "Pulls up to" amount is calculated by the game. Not sure if we can calcuate it.
-    # https://mashinky.com/wiki/index.php?title=Engines
-    # https://wiki.openttd.org/en/Manual/Game%20Mechanics/Tractive%20Effort
-
     cargo_type = relationship(CargoType, lazy="joined", backref="wagon_types")
     cost: list[Cost] = relationship(Cost, uselist=True, lazy="joined", back_populates="wagon_type")
     sell: list[Sell] = relationship(Sell, uselist=True, lazy="joined", back_populates="wagon_type")
@@ -183,6 +180,16 @@ class WagonType(Base, ConfigMixin):
     @property
     def is_quest_reward(self) -> bool:
         return self.epoch is None
+
+    @property
+    def recommended_weight(self) -> int:
+        """
+        This value is calculated by the game. There's a function named GetVehicleRecommendedWeight.
+
+        Someone on the Mashinky Discord reverse engineered the formula:
+        https://discord.com/channels/319014803756679171/377847968344047626/540116140576210945
+        """
+        return math.floor(42.1 * self.power / self.max_speed)
 
 
 class Engine(WagonType, ConfigMixin):

@@ -39,6 +39,10 @@
   <span>{{ wagon_type.weight }} tons</span>
 {%- endmacro %}
 
+{% macro recommended_weight(wagon_type) -%}
+  <span>{{ wagon_type.recommended_weight }} tons</span>
+{%- endmacro %}
+
 {% macro length(wagon_type) -%}
   <span>{{ "%.2f"|format(wagon_type.length) }} tiles</span>
 {%- endmacro %}
@@ -52,9 +56,8 @@
   {% endfor %}
 {%- endmacro %}
 
-
 {% macro depo_upgrade(wagon_type) -%}
-  <span>{{ 'Required' if wagon_type.depo_upgrade else '&mdash;' }}</span>
+  <span>{{ 'Yes' if wagon_type.depo_upgrade else 'No' }}</span>
 {%- endmacro %}
 
 {# Engines #}
