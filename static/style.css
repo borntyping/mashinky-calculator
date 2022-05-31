@@ -1,0 +1,11 @@
+code {
+    color: var(--bs-secondary);
+}
+
+.app-icon-sm {
+    height: 24px;
+}
+
+.app-icon-md {
+    height: 32px;
+}

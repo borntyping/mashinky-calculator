@@ -13,7 +13,7 @@ import mashinky.paths
 class Factory:
     readers: typing.Sequence[mashinky.extract.reader.Reader]
     images_directory: pathlib.Path
-    sqlalchemy_url: str
+    sqlalchemy_database_url: str
 
     def manufacture(self):
         config_factory = mashinky.extract.config.ConfigFactory(readers=self.readers)
@@ -28,7 +28,7 @@ class Factory:
         models_factory = mashinky.extract.models.ModelFactory(
             config=config,
             images=images,
-            sqlalchemy_url=self.sqlalchemy_url,
+            sqlalchemy_database_url=self.sqlalchemy_database_url,
         )
 
         models_factory.init()

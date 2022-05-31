@@ -1,8 +1,8 @@
 import pathlib
 
-module = pathlib.Path(__file__).parent
-static = module.parent / "static"
-assets = module.parent / "assets"
+module_folder = pathlib.Path(__file__).parent
+static_folder = module_folder.parent / "static"
+assets_folder = module_folder.parent / "assets"
 
-sqlalchemy_path = assets / "models.sqlite3"
-sqlalchemy_url = f"sqlite:///{sqlalchemy_path.absolute()}"
+sqlalchemy_path = assets_folder / "models.sqlite3"
+sqlalchemy_database_url = f"sqlite:///{sqlalchemy_path.absolute()}"

@@ -1,40 +1,65 @@
-import flask
-import flask_sqlalchemy
-import sqlalchemy
+from flask import Flask, render_template
+from flask_debugtoolbar import DebugToolbarExtension
+from flask_sqlalchemy import SQLAlchemy
+from jinja2 import StrictUndefined
 from sqlalchemy import asc, nulls_last
 
-import mashinky.models
-import mashinky.paths
+from mashinky.models.base import Base
+from mashinky.models.config import CargoType, Color, TokenType
+from mashinky.models.trains import Engine, WagonType, Wagon, RoadVehicle
+from mashinky.paths import sqlalchemy_database_url, static_folder
 
-app = flask.Flask(__name__, static_folder=mashinky.paths.static)
-app.config["SQLALCHEMY_DATABASE_URI"] = mashinky.paths.sqlalchemy_url
+app = Flask(import_name=__name__, static_folder=static_folder)
+app.jinja_env.undefined = StrictUndefined
+app.config["SECRET_KEY"] = "50e80816-1736-404b-880d-16e35c6c6ef4"
+app.config["SQLALCHEMY_DATABASE_URI"] = sqlalchemy_database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-db = flask_sqlalchemy.SQLAlchemy(app=app, model_class=mashinky.models.Base)
+db = SQLAlchemy(app=app, model_class=Base)
+toolbar = DebugToolbarExtension(app=app)
 
 
 @app.route("/")
 def home():
-    return flask.render_template("home.html.j2")
+    return render_template("home.html.j2")
 
 
-@app.route("/data")
-def data():
-    cargo_types = mashinky.models.CargoType.query.order_by(
-        nulls_last(mashinky.models.CargoType.name),
-        asc(mashinky.models.CargoType.name),
-    ).all()
-    token_types = mashinky.models.TokenType.query.all()
-    colors = mashinky.models.Color.query.all()
-    wagon_types = mashinky.models.WagonType.query.all()
+@app.route("/trains")
+def trains():
+    return render_template("trains.html.j2")
 
-    return flask.render_template(
-        "data.html.j2",
-        cargo_types=cargo_types,
-        token_types=token_types,
-        colors=colors,
-        wagon_types=wagon_types,
+
+@app.route("/wagon_types")
+def wagon_types():
+    results = WagonType.query.order_by(WagonType.id).all()
+    return render_template(
+        "wagon_types.j2",
+        wagon_types=results,
+        engines=[v for v in results if isinstance(v, Engine)],
+        wagons=[v for v in results if isinstance(v, Wagon)],
+        road_vehicles=[v for v in results if isinstance(v, RoadVehicle)],
     )
+
+
+@app.route("/cargo_types")
+def cargo_types():
+    return render_template(
+        "cargo_types.html.j2",
+        cargo_types=CargoType.query.order_by(nulls_last(CargoType.name), asc(CargoType.name)).all(),
+    )
+
+
+@app.route("/token_types")
+def token_types():
+    return render_template(
+        "token_types.html.j2",
+        token_types=TokenType.query.order_by(nulls_last(TokenType.name), asc(TokenType.name)).all(),
+    )
+
+
+@app.route("/colors")
+def colors():
+    return render_template("colors.html.j2", colors=Color.query.all())
 
 
 @app.context_processor

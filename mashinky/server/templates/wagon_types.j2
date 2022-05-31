@@ -1,0 +1,91 @@
+{% extends '_base.html.j2' %}
+{% import '_macros.html.j2' as macros %}
+{% block page %}
+  <section class="">
+    <h1>Wagon types</h1>
+  </section>
+
+  <section class="my-5">
+    <h2 class="title">Engines {{ macros.count(engines) }}</h2>
+    <table class="table table-sm table-hover align-middle">
+      <thead class="thead-light">
+      <tr>
+        <th>ID</th>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Icon</th>
+        <th>Epoch</th>
+        <th>Track</th>
+        <th>Weight</th>
+        <th>Length</th>
+
+        <th>Power</th>
+        <th>Speed</th>
+
+        <th>Cost</th>
+        <th>Sell</th>
+        <th>Fuel</th>
+      </tr>
+      </thead>
+      <tbody class="table-group-divider">
+      {% for engine in engines %}
+        <tr>
+          <td>{{ macros.wagon_type_id(engine) }}</td>
+          <td>{{ macros.wagon_type_type(engine) }}</td>
+          <td>{{ macros.wagon_type_name(engine) }}</td>
+          <td>{{ macros.wagon_type_icon(engine) }}</td>
+          <td>{{ engine.epoch }}</td>
+          <td>{{ engine.track }}</td>
+          <td>{{ engine.weight }} tons</td>
+          <td>{{ engine.length }} tiles</td>
+
+          <td>{{ engine.power|default(undefined) }} hp</td>
+          <td>{{ engine.max_speed|default(undefined) }} km/h ({{ engine.max_speed_reverse|default(undefined) }}) km/h</td>
+
+          <td>{{ engine.cost }}</td>
+          <td>{{ engine.sell }}</td>
+          <td>{{ engine.fuel }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="my-5">
+    <h2 class="title">Vehicles {{ macros.count(wagon_types) }}</h2>
+    <table class="table table-sm table-hover align-middle">
+      <thead class="thead-light">
+      <tr>
+        <th>ID</th>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Icon</th>
+        <th>Epoch</th>
+        <th>Track</th>
+        <th>Weight</th>
+        <th>Length</th>
+        <th>Cost</th>
+        <th>Sell</th>
+        <th>Fuel</th>
+      </tr>
+      </thead>
+      <tbody class="table-group-divider">
+      {% for wagon_type in wagon_types %}
+        <tr>
+          <td>{{ macros.wagon_type_id(wagon_type) }}</td>
+          <td>{{ macros.wagon_type_type(wagon_type) }}</td>
+          <td>{{ macros.wagon_type_name(wagon_type) }}</td>
+          <td>{{ macros.wagon_type_icon(wagon_type) }}</td>
+          <td>{{ wagon_type.epoch }}</td>
+          <td>{{ wagon_type.track }}</td>
+          <td>{{ wagon_type.weight }} tons</td>
+          <td>{{ wagon_type.length }} tiles</td>
+          <td>{{ wagon_type.cost }}</td>
+          <td>{{ wagon_type.sell }}</td>
+          <td>{{ wagon_type.fuel }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+{% endblock %}

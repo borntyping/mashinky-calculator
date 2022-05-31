@@ -1,0 +1,22 @@
+{% macro count(seq) -%}
+  <span class="badge bg-secondary">{{ seq|count }}</span>
+{%- endmacro %}
+
+{% macro wagon_type_id(vehicle) -%}
+  <small class="font-monospace text-muted">{{ vehicle.id }}</small>
+{%- endmacro %}
+
+{% macro wagon_type_type(vehicle) -%}
+  <small class="font-monospace text-muted">{{ vehicle.__class__.__name__ }}</small>
+{%- endmacro %}
+
+{% macro wagon_type_name(vehicle) -%}
+  <strong class="text-success">{{ vehicle.name }}</strong>
+  {% if vehicle.is_quest_reward %}
+    <span title="Quest Reward">★</span>
+  {% endif %}
+{%- endmacro %}
+
+{% macro wagon_type_icon(vehicle) -%}
+  <img class="app-icon-sm" src="{{ url_for('static', filename=vehicle.icon) }}" alt="{{ vehicle.name or vehicle.id }}">
+{%- endmacro %}

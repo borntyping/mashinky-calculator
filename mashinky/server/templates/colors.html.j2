@@ -1,0 +1,26 @@
+{% extends '_base.html.j2' %}
+{% import '_macros.html.j2' as macros %}
+{% block page %}
+  <section>
+    <h1>Colors {{ macros.count(colors) }}</h1>
+    <div class="d-flex flex-wrap align-self-stretch">
+      {% for color in colors %}
+        <div class="w-25 p-1">
+          <div class="card h-100">
+            <div class="card-body d-flex align-items-center p-1">
+              <div class="mx-1 rounded-circle" style="width: 32px; height: 32px; background-color: rgb({{ color.red }}, {{ color.green }}, {{ color.blue }})"></div>
+              <div class="mx-1">
+                {% if color.name %}
+                  <div class="card-text" style="color: rgb({{ color.red }}, {{ color.green }}, {{ color.blue }});">{{ color.name }}</div>
+                {% else %}
+                  <div class="card-text text-muted">{{ undefined }}</div>
+                {% endif %}
+                <code class="card-text text-muted">{{ color.id }}</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}
