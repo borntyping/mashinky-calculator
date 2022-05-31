@@ -1,15 +1,65 @@
 from __future__ import annotations
 
 import enum
-import typing
 
-from sqlalchemy.orm import relationship, declarative_base, declared_attr
-from sqlalchemy import Column, String, Integer, ForeignKey, Enum, PrimaryKeyConstraint
+from sqlalchemy import Column, Enum, ForeignKey, Integer, String
+from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
 
 
-class CargoType(Base):
+class PaymentMixin:
+    wagon_type: WagonType
+    token_type: TokenType
+    amount: int
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.wagon_type}, {self.token_type}, {self.amount})"
+
+
+class Cost(Base, PaymentMixin):
+    __tablename__ = "cost"
+
+    id = Column(Integer, primary_key=True)
+    wagon_type_id = Column(String, ForeignKey("wagon_type.id"), nullable=False)
+    token_type_id = Column(String, ForeignKey("token_type.id"), nullable=False)
+    amount = Column(Integer, nullable=False)
+
+    wagon_type = relationship("WagonType", back_populates="cost")
+    token_type = relationship("TokenType")
+
+
+class Sell(Base, PaymentMixin):
+    __tablename__ = "sell"
+
+    wagon_type_id = Column(String, ForeignKey("wagon_type.id"), primary_key=True)
+    token_type_id = Column(String, ForeignKey("token_type.id"), primary_key=True)
+    amount = Column(Integer, nullable=False)
+
+    wagon_type = relationship("WagonType", back_populates="sell")
+    token_type = relationship("TokenType")
+
+
+class Fuel(Base, PaymentMixin):
+    __tablename__ = "fuel"
+
+    wagon_type_id = Column(String, ForeignKey("wagon_type.id"), primary_key=True)
+    token_type_id = Column(String, ForeignKey("token_type.id"), primary_key=True)
+    amount = Column(Integer, nullable=False)
+
+    wagon_type = relationship("WagonType", back_populates="fuel")
+    token_type = relationship("TokenType")
+
+
+class ConfigMixin:
+    id: str
+    name: str
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}[{self.id} {self.name!r}]"
+
+
+class CargoType(Base, ConfigMixin):
     __tablename__ = "cargo_type"
 
     id = Column(String, primary_key=True)
@@ -17,7 +67,7 @@ class CargoType(Base):
     name = Column(String)
 
 
-class TokenType(Base):
+class TokenType(Base, ConfigMixin):
     __tablename__ = "token_type"
 
     id = Column(String, primary_key=True)
@@ -25,7 +75,7 @@ class TokenType(Base):
     name = Column(String)
 
 
-class Color(Base):
+class Color(Base, ConfigMixin):
     __tablename__ = "color"
 
     id = Column(String, primary_key=True)
@@ -69,7 +119,7 @@ class Epoch(enum.IntEnum):
         return names[self]
 
 
-class WagonType(Base):
+class WagonType(Base, ConfigMixin):
     __tablename__ = "wagon_type"
 
     id = Column(String, primary_key=True)
@@ -86,9 +136,9 @@ class WagonType(Base):
     weight_full = Column(Integer, nullable=False)
     length = Column(Integer, nullable=False)
 
-    cost: typing.Sequence[Cost] = relationship("Cost", uselist=True, lazy="joined")
-    sell: typing.Sequence[Sell] = relationship("Sell", uselist=True, lazy="joined")
-    fuel: typing.Sequence[Fuel] = relationship("Fuel", uselist=True, lazy="joined")
+    cost: list[Cost] = relationship(Cost, uselist=True, lazy="joined", back_populates="wagon_type")
+    sell: list[Sell] = relationship(Sell, uselist=True, lazy="joined", back_populates="wagon_type")
+    fuel: list[Fuel] = relationship(Fuel, uselist=True, lazy="joined", back_populates="wagon_type")
 
     __mapper_args__ = {
         "polymorphic_on": type,
@@ -106,7 +156,7 @@ class WagonType(Base):
         return self.epoch is None
 
 
-class Engine(WagonType):
+class Engine(WagonType, ConfigMixin):
     __tablename__ = "engine"
     __mapper_args__ = {
         "polymorphic_identity": "engine",
@@ -124,7 +174,7 @@ class Engine(WagonType):
     max_speed_reverse = Column(Integer, nullable=True)
 
 
-class Wagon(WagonType):
+class Wagon(WagonType, ConfigMixin):
     __tablename__ = "wagon"
     __mapper_args__ = {
         "polymorphic_identity": "wagon",
@@ -147,7 +197,7 @@ class Wagon(WagonType):
     capacity = Column(Integer, nullable=False)
 
 
-class RoadVehicle(WagonType):
+class RoadVehicle(WagonType, ConfigMixin):
     __tablename__ = "road_vehicle"
     __mapper_args__ = {
         "polymorphic_identity": "road_vehicle",
@@ -168,47 +218,3 @@ class RoadVehicle(WagonType):
     cargo = relationship(CargoType)
 
     capacity = Column(Integer, nullable=False)
-
-
-class Payment(Base):
-    __abstract__ = True
-    __table_args__ = (PrimaryKeyConstraint("wagon_type_id", "token_type_id"),)
-
-    @declared_attr
-    def wagon_type_id(self):
-        return Column(
-            String,
-            ForeignKey("wagon_type.id"),
-            nullable=False,
-        )
-
-    @declared_attr
-    def token_type_id(self):
-        return Column(
-            String,
-            ForeignKey("token_type.id"),
-            nullable=False,
-        )
-
-    amount = Column(Integer, nullable=False)
-
-
-class Cost(Payment):
-    __tablename__ = "cost"
-
-    vehicle = relationship(WagonType, back_populates="cost")
-    token_type = relationship(TokenType)
-
-
-class Sell(Payment):
-    __tablename__ = "sell"
-
-    vehicle = relationship(WagonType, back_populates="sell")
-    token_type = relationship(TokenType)
-
-
-class Fuel(Payment):
-    __tablename__ = "fuel"
-
-    vehicle = relationship(WagonType, back_populates="fuel")
-    token_type = relationship(TokenType)

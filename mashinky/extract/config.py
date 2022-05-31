@@ -41,8 +41,8 @@ class ConfigFactory:
 
         # Incorrect texture reference?
         if "004849B6" in config.wagon_types:
-            assert config.wagon_types["004849B6"]["icon_texture"] == "map/gui/wagons_basic_set.png"
-            config.wagon_types["004849B6"]["icon_texture"] = "map/gui/wagons_basic_set.png"
+            if config.wagon_types["004849B6"]["icon_texture"] != "map/gui/wagons_basic_set.png":
+                config.wagon_types["004849B6"]["icon_texture"] = "map/gui/wagons_basic_set.png"
 
         # Unfinished wagon?
         if "1E5C2858" in config.wagon_types:

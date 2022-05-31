@@ -31,6 +31,7 @@ factory = mashinky.extract.factory.Factory(
         mashinky.extract.reader.ZipReader(game_data / "mods/world_cities.zip"),
     ],
     images_directory=mashinky.paths.static_folder,
+    sqlalchemy_database_path=mashinky.paths.sqlalchemy_database_path,
     sqlalchemy_database_url=mashinky.paths.sqlalchemy_database_url,
 )
 factory.manufacture()

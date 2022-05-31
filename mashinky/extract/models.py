@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import functools
+import pprint
 import re
 import typing
 
@@ -11,8 +12,6 @@ import structlog
 
 import mashinky.extract.config
 import mashinky.extract.images
-import mashinky.models
-import mashinky.models
 import mashinky.models
 import mashinky.paths
 
@@ -31,42 +30,33 @@ class ModelFactory:
     images: mashinky.extract.images.ImageFactory
     engine: sqlalchemy.engine.Engine
 
-    def __init__(
-        self,
-        config: mashinky.extract.config.Config,
-        images: mashinky.extract.images.ImageFactory,
-        sqlalchemy_database_url: str,
-    ) -> None:
-        self.config = config
-        self.images = images
-        self.engine = sqlalchemy.create_engine(sqlalchemy_database_url, future=True)
-
-    def init(self) -> None:
-        logger.info("Creating database", url=self.engine.url)
-        mashinky.paths.sqlalchemy_path.unlink(missing_ok=True)
-        mashinky.models.Base.metadata.create_all(self.engine)
-
     def build(self):
         cargo_types = {k: self.build_cargo_type(v) for k, v in self.config.cargo_types.items()}
         token_types = {k: self.build_token_type(v) for k, v in self.config.token_types.items()}
-        wagon_types = {k: self.build_wagon_type(v) for k, v in self.config.wagon_types.items()}
+        wagon_types = {
+            id: self.build_wagon_type(attrs, token_types)
+            for id, attrs in self.config.wagon_types.items()
+        }
         colors = {k: self.build_color(v) for k, v in self.config.colors.items()}
 
         logger.info("Writing models to database", url=self.engine.url)
 
         with sqlalchemy.orm.Session(self.engine) as session:
-            session.add_all(cargo_types.values())
-            session.add_all(token_types.values())
-            session.add_all(wagon_types.values())
-            session.add_all(colors.values())
+            session.add_all(list(cargo_types.values()))
+            session.add_all(list(token_types.values()))
+            session.add_all(list(wagon_types.values()))
+            session.add_all(list(colors.values()))
             session.commit()
 
         logger.info(
             "Wrote models to database",
-            cargo_types=len(cargo_types),
-            token_types=len(token_types),
-            colors=len(colors),
-            wagon_types=len(wagon_types),
+            cargo_types=session.query(mashinky.models.CargoType).count(),
+            token_types=session.query(mashinky.models.TokenType).count(),
+            wagon_types=session.query(mashinky.models.WagonType).count(),
+            colors=session.query(mashinky.models.Color).count(),
+            cost=session.query(mashinky.models.Cost).count(),
+            sell=session.query(mashinky.models.Sell).count(),
+            fuel=session.query(mashinky.models.Fuel).count(),
         )
 
     def build_cargo_type(self, attrs: dict[str, str]) -> mashinky.models.CargoType:
@@ -101,11 +91,12 @@ class ModelFactory:
     def build_wagon_type(
         self,
         attrs: dict[str, str],
+        token_types: dict[str, mashinky.models.TokenType],
     ) -> mashinky.models.WagonType:
         id = attrs["id"]
         name = attrs["name"]
 
-        logger.info("Building vehicle", id=id, name=name)
+        logger.debug("Building vehicle", id=id, name=name)
 
         icon = self.images.extract_icon(
             icon_texture=attrs["icon_texture"],
@@ -125,11 +116,32 @@ class ModelFactory:
         weight_full = int(attrs["weight_full"])
         length = optional(float, attrs["length"])
 
-        cost = parse_payments(attrs.get("cost"), mashinky.models.Cost)
-        sell = parse_payments(attrs.get("sell"), mashinky.models.Sell)
-        fuel = parse_payments(attrs.get("fuel"), mashinky.models.Fuel)
+        cost = [
+            mashinky.models.Cost(
+                wagon_type_id=attrs["id"],
+                token_type=token_types[token_type_id],
+                amount=amount,
+            )
+            for amount, token_type_id in parse_payments(attrs.get("cost"))
+        ]
+        sell = [
+            mashinky.models.Sell(
+                wagon_type_id=attrs["id"],
+                token_type=token_types[token_type_id],
+                amount=amount,
+            )
+            for amount, token_type_id in parse_payments(attrs.get("sell"))
+        ]
+        fuel = [
+            mashinky.models.Fuel(
+                wagon_type_id=attrs["id"],
+                token_type=token_types[token_type_id],
+                amount=amount,
+            )
+            for amount, token_type_id in parse_payments(attrs.get("fuel"))
+        ]
 
-        vehicle = mashinky.models.WagonType(
+        kwargs = dict(
             id=id,
             name=name,
             icon=icon,
@@ -145,30 +157,23 @@ class ModelFactory:
             fuel=fuel,
         )
 
+        logger.info("Loaded base wagon type", **kwargs)
+
         if attrs["vehicle_type"] == "0" and attrs.get("power"):
-            return self.build_engine(vehicle, attrs)
+            return self.build_engine(attrs, **kwargs)
         elif attrs["vehicle_type"] == "0":
-            return self.build_wagon(vehicle, attrs)
+            return self.build_wagon(attrs, **kwargs)
         elif attrs["vehicle_type"] == "1":
-            return self.build_road_vehicle(vehicle, attrs)
+            return self.build_road_vehicle(attrs, **kwargs)
         raise ValueError(attrs["vehicle_type"])
 
     def build_engine(
         self,
-        vehicle: mashinky.models.WagonType,
         attrs: dict[str, str],
+        **kwargs: typing.Any,
     ) -> mashinky.models.Engine:
         return mashinky.models.Engine(
-            id=vehicle.id,
-            name=vehicle.name,
-            icon=vehicle.icon,
-            icon_color=vehicle.icon_color,
-            epoch=vehicle.epoch,
-            epoch_end=vehicle.epoch_end,
-            track=vehicle.track,
-            weight_empty=vehicle.weight_empty,
-            weight_full=vehicle.weight_full,
-            length=vehicle.length,
+            **kwargs,
             power=int(attrs["power"]),
             max_speed=int(attrs["max_speed"]),
             max_speed_reverse=optional(int, attrs.get("max_speed_reverse")),
@@ -176,40 +181,22 @@ class ModelFactory:
 
     def build_wagon(
         self,
-        vehicle: mashinky.models.WagonType,
         attrs: dict[str, str],
+        **kwargs: typing.Any,
     ) -> mashinky.models.Wagon:
         return mashinky.models.Wagon(
-            id=vehicle.id,
-            name=vehicle.name,
-            icon=vehicle.icon,
-            icon_color=vehicle.icon_color,
-            epoch=vehicle.epoch,
-            epoch_end=vehicle.epoch_end,
-            track=vehicle.track,
-            weight_empty=vehicle.weight_empty,
-            weight_full=vehicle.weight_full,
-            length=vehicle.length,
+            **kwargs,
             cargo_id=attrs["cargo"],
             capacity=int(attrs["capacity"]),
         )
 
     def build_road_vehicle(
         self,
-        vehicle: mashinky.models.WagonType,
         attrs: dict[str, str],
+        **kwargs: typing.Any,
     ) -> mashinky.models.RoadVehicle:
         return mashinky.models.RoadVehicle(
-            id=vehicle.id,
-            name=vehicle.name,
-            icon=vehicle.icon,
-            icon_color=vehicle.icon_color,
-            epoch=vehicle.epoch,
-            epoch_end=vehicle.epoch_end,
-            track=vehicle.track,
-            weight_empty=vehicle.weight_empty,
-            weight_full=vehicle.weight_full,
-            length=vehicle.length,
+            **kwargs,
             cargo_id=attrs["cargo"],
             capacity=int(attrs["capacity"]),
         )
@@ -229,7 +216,7 @@ def parse(method: typing.Callable[[str], T]) -> typing.Callable[[str], T]:
 @parse
 def parse_epoch(
     value: str,
-) -> typing.Tuple[mashinky.models.Epoch, mashinky.models.Epoch]:
+) -> typing.Tuple[typing.Optional[mashinky.models.Epoch], typing.Optional[mashinky.models.Epoch]]:
     if value == "0":
         return None, None
 
@@ -254,18 +241,12 @@ def parse_track(value: str) -> mashinky.models.Track:
 
 def parse_payments(
     value: typing.Optional[str],
-    model: typing.Type,
-) -> typing.Sequence[mashinky.models.Cost]:
-    if value is None:
+    default_token_type: str = "F0000000",
+) -> typing.Sequence[typing.Tuple[int, str]]:
+    if value is None or value == "0":
         return []
 
-    if matches := re.findall(r"(?P<amount>-?\d+)(?:\[(?P<token_type>\w+)])?", value):
-        return [
-            model(
-                amount=int(amount),
-                token_type_id=token_type or "F0000000",
-            )
-            for amount, token_type in matches
-        ]
+    if matches := re.findall(r"(?P<amount>-?\d+)(?:\[(?P<token_type_id>\w+)])?", value):
+        return [(amount, token_type or default_token_type) for amount, token_type in matches]
 
     raise ValueError(f"Could not parse {value} as payments")
