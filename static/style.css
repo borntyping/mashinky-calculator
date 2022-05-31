@@ -1,5 +1,31 @@
 * {
     font-variant-numeric: tabular-nums;
+    --apple-green: rgb(165, 205, 74); /* Apple green */
+    --black: rgb(25, 25, 25); /* Black */
+    --burgundy: rgb(123, 35, 51); /* Burgundy */
+    --champagne: rgb(206, 200, 146); /* Champagne */
+    --chocolate: rgb(95, 58, 43); /* Chocolate */
+    --coral-orange: rgb(241, 130, 30); /* Coral orange */
+    --fushia: rgb(152, 60, 145); /* Fushia */
+    --gold: rgb(198, 160, 55); /* Gold */
+    --dark-green: rgb(37, 96, 72); /* Dark green */
+    --lavender: rgb(198, 161, 230); /* Lavender */
+    --light-blue: rgb(119, 175, 213); /* Light blue */
+    --mauve: rgb(148, 106, 110); /* Mauve */
+    --navy-blue: rgb(40, 59, 140); /* Navy blue */
+    --peach: rgb(235, 166, 100); /* Peach */
+    --periwinkle: rgb(107, 123, 180); /* Periwinkle */
+    --pink: rgb(227, 173, 192); /* Pink */
+    --purple: rgb(98, 56, 140); /* Purple */
+    --lotos: rgb(180, 55, 90); /* Lotos */
+    --royal-blue: rgb(1, 75, 185); /* Royal blue */
+    --sage-green: rgb(121, 136, 19); /* Sage green */
+    --silver: rgb(128, 128, 128); /* Silver */
+    --turquoise: rgb(59, 161, 170); /* Turquoise */
+    --white: rgb(216, 216, 216); /* White */
+    --willow-green: rgb(122, 149, 108); /* Willow green */
+    --yellow: rgb(235, 220, 61); /* Yellow */
+    --red: rgb(179, 10, 0); /* Red */
 }
 
 code {
@@ -20,4 +46,12 @@ code {
 
 .app-icon-lg {
     height: 64px;
+}
+
+.app-limit-length {
+    background: var(--royal-blue);
+}
+
+.app-limit-weight {
+    background: var(--burgundy);
 }

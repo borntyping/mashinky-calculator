@@ -12,23 +12,27 @@ from mashinky.models import Engine, Epoch, Payment, TokenType, Track, Wagon, Car
 class Limit:
     name: typing.ClassVar[str]
     unit: typing.ClassVar[str]
-
-    maximum: float
-
-    def __str__(self) -> str:
-        return f"{self.name} ({self.maximum} {self.unit})"
+    maximum: typing.Union[int, float]
 
 
 @dataclasses.dataclass(frozen=True)
 class LengthLimit(Limit):
-    name: typing.ClassVar[str] = "Length"
-    unit: typing.ClassVar[str] = "tiles"
+    name = "length"
+    unit = "tiles"
+    maximum: float
+
+    def __str__(self) -> str:
+        return f"Length ({self.maximum:.2f} tiles)"
 
 
 @dataclasses.dataclass(frozen=True)
 class WeightLimit(Limit):
-    name: typing.ClassVar[str] = "Weight"
-    unit: typing.ClassVar[str] = "tons"
+    name = "weight"
+    unit = "tons"
+    maximum: int
+
+    def __str__(self) -> str:
+        return f"Weight ({self.maximum} tons)"
 
 
 @dataclasses.dataclass(frozen=True)
@@ -65,12 +69,14 @@ class Train:
 
     @property
     def epoch(self) -> typing.Optional[Epoch]:
-        epochs = {wagon_type.epoch for wagon_type in self.wagon_types if wagon_type.epoch}
+        epochs = {
+            wagon_type.epoch_start for wagon_type in self.wagon_types if wagon_type.epoch_start
+        }
         return max(epochs) if epochs else None
 
     @property
     def epoch_end(self) -> typing.Optional[Epoch]:
-        epochs = {wagon_type.epoch_end for wagon_type in self.wagon_types if wagon_type.epoch}
+        epochs = {wagon_type.epoch_end for wagon_type in self.wagon_types if wagon_type.epoch_start}
         return min(epochs) if epochs else None
 
     @property
@@ -149,18 +155,21 @@ class Train:
 
     # Train properties
 
-    def remaining_length(self, max_length: int) -> float:
-        return max_length - self.length
-
-    def remaining_weight(self) -> float:
-        return self.recommended_weight - self.weight_full
+    # def remaining_length(self, max_length: int) -> float:
+    #     return max_length - self.length
+    #
+    # def remaining_weight(self) -> float:
+    #     return self.recommended_weight - self.weight_full
 
     def add_wagons(self, wagon: Wagon, max_length: int) -> Train:
-        length = LengthLimit(self.remaining_length(max_length))
-        weight = WeightLimit(self.remaining_weight())
+        length = LengthLimit(max_length)
+        weight = WeightLimit(self.recommended_weight)
 
-        length_count = math.floor(length.maximum / wagon.length)
-        weight_count = math.floor(weight.maximum / wagon.weight_full)
+        length_max = max_length - self.length
+        weight_max = self.recommended_weight - self.weight_full
+
+        length_count = math.floor(length_max / wagon.length)
+        weight_count = math.floor(weight_max / wagon.weight_full)
 
         if length_count < weight_count:
             count = length_count

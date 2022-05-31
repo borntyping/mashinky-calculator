@@ -101,10 +101,14 @@
 
 {# Trains #}
 
-{% macro limits(train) -%}
+{% macro limits(train) %}
   {% for limit in train.limits %}
-    <span>{{ limit }}</span>{% if not loop.last %},{% endif %}
+    {% if limit.name == 'length' %}
+      <span class="app-limit-{{ limit.name|escape }} badge">Length ({{ limit.maximum|round(2) }} tiles)</span>
+    {% elif limit.name == 'weight' %}
+      <span class="app-limit-{{ limit.name|escape }} badge">Weight ({{ limit.maximum }} tons)</span>
+    {% endif %}
   {% else %}
     {{ empty("Not limited by length or weight") }}
   {% endfor %}
-{%- endmacro %}
+{% endmacro %}

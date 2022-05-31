@@ -1,10 +1,20 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, url_for, redirect
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_sqlalchemy import SQLAlchemy
 from jinja2 import StrictUndefined
 from sqlalchemy import asc, nulls_last
 
-from mashinky.models import Base, CargoType, Color, Engine, RoadVehicle, TokenType, Wagon, WagonType
+from mashinky.models import (
+    Base,
+    CargoType,
+    Color,
+    Engine,
+    Epoch,
+    RoadVehicle,
+    TokenType,
+    Wagon,
+    WagonType,
+)
 from mashinky.paths import sqlalchemy_database_url, static_folder
 from mashinky.trains import combinations
 
@@ -25,8 +35,22 @@ def home():
 
 @app.route("/trains")
 def trains():
-    engines = Engine.query.order_by(Engine.id).all()
-    wagons = Wagon.query.order_by(Wagon.id).all()
+    epoch = Epoch(request.args.get("epoch", default=1, type=int))
+
+    path = url_for("trains", epoch=epoch.value, _external=False)
+    if path != request.full_path:
+        return redirect(path)
+
+    engines = (
+        Engine.query.order_by(Engine.id)
+        .filter(WagonType.epoch_start <= epoch, epoch <= WagonType.epoch_end)
+        .all()
+    )
+    wagons = (
+        Wagon.query.order_by(Wagon.id)
+        .filter(WagonType.epoch_start <= epoch, epoch <= WagonType.epoch_end)
+        .all()
+    )
 
     combos = list(combinations(engines, wagons, station_length=6))
     combos = sorted(combos, key=lambda train: train.capacity, reverse=True)

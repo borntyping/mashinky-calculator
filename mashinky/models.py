@@ -7,6 +7,8 @@ import typing
 from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import declarative_base, relationship
 
+from mashinky.ext.sqlalchemy import IntEnum
+
 Base = declarative_base()
 
 
@@ -147,10 +149,10 @@ class WagonType(Base, ConfigMixin):
     icon = Column(String, nullable=False)
     icon_color = Column(String, nullable=False)
 
-    epoch = Column(Enum(Epoch), nullable=True)
-    epoch_end = Column(Enum(Epoch), nullable=True)
+    epoch_start = Column(IntEnum(Epoch), nullable=True)
+    epoch_end = Column(IntEnum(Epoch), nullable=True)
 
-    track = Column(Enum(Track), nullable=False)
+    track = Column(IntEnum(Track), nullable=False)
     weight_empty = Column(Integer, nullable=False)
     weight_full = Column(Integer, nullable=False)
     length = Column(Integer, nullable=False)
@@ -172,7 +174,7 @@ class WagonType(Base, ConfigMixin):
 
     @property
     def is_quest_reward(self) -> bool:
-        return self.epoch is None
+        return self.epoch_start is None
 
     @property
     def unique(self) -> bool:

@@ -109,7 +109,7 @@ class ModelFactory:
             name=attrs["name"],
             group="wagon_type_icon_color",
         )
-        epoch, epoch_end = parse_epoch(attrs["epoch"])
+        epoch_start, epoch_end = parse_epoch(attrs["epoch"])
         track = mashinky.models.Track(int(attrs["track"]))
         weight_empty: int = int(attrs["weight_empty"])
         weight_full: int = int(attrs["weight_full"])
@@ -149,7 +149,7 @@ class ModelFactory:
             name=name,
             icon=icon,
             icon_color=icon_color,
-            epoch=epoch,
+            epoch_start=epoch_start,
             epoch_end=epoch_end,
             track=track,
             weight_empty=weight_empty,

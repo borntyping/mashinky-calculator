@@ -6,20 +6,20 @@
     <table class="table table-sm table-hover table-responsive align-middle">
       <thead class="thead-light">
       <tr>
-        <th>Epoch</th>
+        <th class="text-center">Epoch</th>
         <th>Engine</th>
         <th>Wagon</th>
         <th>Train</th>
-        <th>Weight</th>
-        <th>Length</th>
+        <th class="text-end">Weight</th>
+        <th class="text-end">Length</th>
         <th>Cargo</th>
-        <th>Limit</th>
+        <th class="text-end">Limits</th>
       </tr>
       </thead>
       <tbody class="table-group-divider">
       {% for train in trains %}
         <tr>
-          <td>{{ macros_wagon_type.epoch(train) }}</td>
+          <td class="text-center">{{ macros_wagon_type.epoch(train) }}</td>
           <td>{{ macros_wagon_type.name(train.engine) }}</td>
           <td>{{ macros_wagon_type.name(train.wagon) }}</td>
           <td class="w-50">
@@ -30,7 +30,7 @@
           <td class="text-end">{{ macros_wagon_type.weight(train) }}</td>
           <td class="text-end">{{ macros_wagon_type.length(train) }}</td>
           <td>{{ macros_wagon_type.cargo(train) }}</td>
-          <td>{{ macros_wagon_type.limits(train) }}</td>
+          <td class="text-end">{{ macros_wagon_type.limits(train) }}</td>
         </tr>
       {% endfor %}
       </tbody>
