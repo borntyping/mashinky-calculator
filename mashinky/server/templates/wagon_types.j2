@@ -23,7 +23,6 @@
         <th>Speed</th>
 
         <th>Cost</th>
-        <th>Sell</th>
         <th>Fuel</th>
       </tr>
       </thead>
@@ -42,9 +41,8 @@
           <td>{{ engine.power|default(undefined) }} hp</td>
           <td>{{ engine.max_speed|default(undefined) }} km/h ({{ engine.max_speed_reverse|default(undefined) }}) km/h</td>
 
-          <td>{{ engine.cost }}</td>
-          <td>{{ engine.sell }}</td>
-          <td>{{ engine.fuel }}</td>
+          <td>{{ macros.wagon_type_costs(engine.cost) }}</td>
+          <td>{{ macros.wagon_type_costs(engine.fuel) }}</td>
         </tr>
       {% endfor %}
       </tbody>
@@ -65,7 +63,6 @@
         <th>Weight</th>
         <th>Length</th>
         <th>Cost</th>
-        <th>Sell</th>
         <th>Fuel</th>
       </tr>
       </thead>
@@ -80,9 +77,8 @@
           <td>{{ wagon_type.track }}</td>
           <td>{{ wagon_type.weight }} tons</td>
           <td>{{ wagon_type.length }} tiles</td>
-          <td>{{ wagon_type.cost }}</td>
-          <td>{{ wagon_type.sell }}</td>
-          <td>{{ wagon_type.fuel }}</td>
+          <td>{{ macros.wagon_type_costs(wagon_type.cost) }}</td>
+          <td>{{ macros.wagon_type_costs(wagon_type.fuel) }}</td>
         </tr>
       {% endfor %}
       </tbody>

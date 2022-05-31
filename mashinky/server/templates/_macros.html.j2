@@ -2,21 +2,30 @@
   <span class="badge bg-secondary">{{ seq|count }}</span>
 {%- endmacro %}
 
-{% macro wagon_type_id(vehicle) -%}
-  <small class="font-monospace text-muted">{{ vehicle.id }}</small>
+{% macro wagon_type_id(wagon_type) -%}
+  <small class="font-monospace text-muted">{{ wagon_type.id }}</small>
 {%- endmacro %}
 
-{% macro wagon_type_type(vehicle) -%}
-  <small class="font-monospace text-muted">{{ vehicle.__class__.__name__ }}</small>
+{% macro wagon_type_type(wagon_type) -%}
+  <small class="font-monospace text-muted">{{ wagon_type.__class__.__name__ }}</small>
 {%- endmacro %}
 
-{% macro wagon_type_name(vehicle) -%}
-  <strong class="text-success">{{ vehicle.name }}</strong>
-  {% if vehicle.is_quest_reward %}
+{% macro wagon_type_name(wagon_type) -%}
+  <strong class="text-success">{{ wagon_type.name }}</strong>
+  {% if wagon_type.is_quest_reward %}
     <span title="Quest Reward">★</span>
   {% endif %}
 {%- endmacro %}
 
-{% macro wagon_type_icon(vehicle) -%}
-  <img class="app-icon-sm" src="{{ url_for('static', filename=vehicle.icon) }}" alt="{{ vehicle.name or vehicle.id }}">
+{% macro wagon_type_icon(wagon_type) -%}
+  <img class="app-icon-sm" src="{{ url_for('static', filename=wagon_type.icon) }}" alt="{{ wagon_type.name or wagon_type.id }}">
+{%- endmacro %}
+
+{% macro wagon_type_costs(payments) -%}
+  {% for payment in payments %}
+    <div class="d-inline-flex justify-content-start align-items-center">
+      <img class="d-block mx-1 app-icon-sm" src="{{ url_for('static', filename=payment.token_type.icon) }}" alt="{{ payment.token_type.name or payment.token_type.id }}">
+      <span class="d-block">{{ payment.amount }}</span>
+    </div>
+  {% endfor %}
 {%- endmacro %}

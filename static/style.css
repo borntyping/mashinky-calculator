@@ -3,9 +3,13 @@ code {
 }
 
 .app-icon-sm {
-    height: 24px;
+    height: 16px;
 }
 
 .app-icon-md {
     height: 32px;
+}
+
+.app-icon-lg {
+    height: 64px;
 }

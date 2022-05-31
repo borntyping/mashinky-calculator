@@ -138,7 +138,7 @@ class ModelFactory:
                 token_type=token_types[token_type_id],
                 amount=amount,
             )
-            for amount, token_type_id in parse_payments(attrs.get("fuel"))
+            for amount, token_type_id in parse_payments(attrs.get("fuel_cost"))
         ]
 
         kwargs = dict(
@@ -247,6 +247,8 @@ def parse_payments(
         return []
 
     if matches := re.findall(r"(?P<amount>-?\d+)(?:\[(?P<token_type_id>\w+)])?", value):
-        return [(amount, token_type or default_token_type) for amount, token_type in matches]
+        return [
+            (abs(int(amount)), token_type or default_token_type) for amount, token_type in matches
+        ]
 
     raise ValueError(f"Could not parse {value} as payments")
