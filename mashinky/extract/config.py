@@ -27,37 +27,37 @@ class Config:
     town_names: Resources
     wagon_types: Things
 
-    def patch(self) -> Config:
+    @property
+    def english(self):
+        return self.texts["English"]
+
+
+@dataclasses.dataclass(frozen=True)
+class ConfigFactory:
+    readers: typing.Sequence[mashinky.extract.reader.Reader]
+
+    def load_patched_config(self) -> Config:
+        config = self.load_config()
+
         # Incorrect texture reference?
-        if "004849B6" in self.wagon_types:
-            assert self.wagon_types["004849B6"]["icon_texture"] == "map/gui/wagons_basic_set.png"
-            self.wagon_types["004849B6"]["icon_texture"] = "map/gui/wagons_basic_set.png"
+        if "004849B6" in config.wagon_types:
+            assert config.wagon_types["004849B6"]["icon_texture"] == "map/gui/wagons_basic_set.png"
+            config.wagon_types["004849B6"]["icon_texture"] = "map/gui/wagons_basic_set.png"
 
         # Unfinished wagon?
-        if "1E5C2858" in self.wagon_types:
-            assert "icon_texture" not in self.wagon_types["1E5C2858"]
-            del self.wagon_types["1E5C2858"]
+        if "1E5C2858" in config.wagon_types:
+            assert "icon_texture" not in config.wagon_types["1E5C2858"]
+            del config.wagon_types["1E5C2858"]
 
         # C8980ED0: quest glassworks
         # CE90001A: electricity
         # CE900010: transformer
         # 0BA4580F: "Gold"
         for id in ("C8980ED0", "CE90001A", "CE900010"):
-            if id in self.cargo_types and self.cargo_types[id]["name"] == "0BA4580F":
-                del self.cargo_types[id]["name"]
+            if id in config.cargo_types and config.cargo_types[id]["name"] == "0BA4580F":
+                del config.cargo_types[id]["name"]
 
-        return self
-
-    def text(self, attrs: dict[str, str], language: str = "English") -> typing.Optional[str]:
-        if name := attrs.get("name"):
-            return self.texts["English"][name]
-
-        return None
-
-
-@dataclasses.dataclass(frozen=True)
-class ConfigBuilder:
-    readers: typing.Sequence[mashinky.extract.reader.Reader]
+        return config
 
     def load_config(self) -> Config:
         cargo_types = self.cargo_types()

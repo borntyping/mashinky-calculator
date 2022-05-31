@@ -1,193 +1,266 @@
+from __future__ import annotations
+
 import dataclasses
-import decimal
+import functools
 import json
 import pathlib
 import typing
 
-import rich.status
+import sqlalchemy.engine
 import sqlalchemy.orm
 import structlog
 
 import mashinky.extract.config
 import mashinky.extract.images
-import mashinky.models
+import mashinky.models.base
+import mashinky.models.config
+import mashinky.models.trains
 import mashinky.paths
 
 logger = structlog.get_logger(logger_name=__name__)
 
-
-def get_float(attrs: dict[str, str], key: str) -> typing.Optional[float]:
-    if value := attrs.get(key):
-        return float(value)
-    return None
+T = typing.TypeVar("T")
 
 
-def get_int(attrs: dict[str, str], key: str) -> typing.Optional[int]:
-    if value := attrs.get(key):
-        return int(value)
-    return None
+def optional(t: typing.Type, /, value: typing.Optional[str]) -> typing.Optional[int]:
+    return t(value) if value is not None else None
 
 
-@dataclasses.dataclass(frozen=True)
-class Models:
-    config_cargo_types: typing.Sequence[mashinky.models.CargoType]
-    config_token_types: typing.Sequence[mashinky.models.TokenType]
-    config_colors: typing.Sequence[mashinky.models.Color]
-    config_wagon_types: typing.Sequence[mashinky.models.WagonType]
+def parse(method: typing.Callable[[typing.Any, str], T]) -> typing.Callable[[str], T]:
+    @functools.wraps(method)
+    def wrapper(self, value: str) -> T:
+        try:
+            return method(self, value)
+        except Exception as exception:
+            raise RuntimeError(f"Could not parse {value!r} using {method.__name__}") from exception
 
-    app_engines: typing.Sequence[mashinky.models.WagonType]
-    app_wagons: typing.Sequence[mashinky.models.WagonType]
-    app_road_vehicles: typing.Sequence[mashinky.models.WagonType]
+    return wrapper
 
 
-@dataclasses.dataclass(frozen=True)
-class ModelsBuilder:
-    def build(
+@dataclasses.dataclass()
+class ModelFactory:
+    config: mashinky.extract.config.Config
+    images: mashinky.extract.images.ImageFactory
+    engine: sqlalchemy.engine.Engine
+
+    def __init__(
         self,
         config: mashinky.extract.config.Config,
-        images: mashinky.extract.images.Images,
-    ):
-        cargo_types = {
-            id: mashinky.models.CargoType(
-                id=id,
-                icon=images.cargo_types_icons[id].as_posix(),
-                name=config.text(attrs),
-            )
-            for id, attrs in config.cargo_types.items()
-        }
-
-        token_types = {
-            id: mashinky.models.TokenType(
-                id=id,
-                icon=images.token_types_icons[id].as_posix(),
-                name=config.text(attrs),
-            )
-            for id, attrs in config.token_types.items()
-        }
-
-        colors = {
-            id: mashinky.models.Color(
-                id=id,
-                name=attrs["name"],
-                red=int(attrs["red"]),
-                green=int(attrs["green"]),
-                blue=int(attrs["blue"]),
-            )
-            for id, attrs in config.colors.items()
-        }
-
-        wagon_types = []
-        engines = []
-        wagons = []
-        road_vehicles = []
-
-        # TODO: load coloured icons
-        for id, attrs in config.wagon_types.items():
-            log = logger.bind(id=id, name=attrs["name"])
-            log.info("Parsing wagon type")
-
-            vehicle_type = int(attrs["vehicle_type"])
-            icon = images.wagon_types_icons[attrs["id"]].as_posix()
-
-            wagon_types.append(
-                mashinky.models.WagonType(
-                    id=id,
-                    name=attrs["name"],
-                    icon=icon,
-                    epoch=attrs["epoch"],
-                    track=int(attrs["track"]),
-                    cost=attrs.get("cost"),
-                    sell=attrs.get("sell"),
-                    weight_empty=int(attrs["weight_empty"]),
-                    weight_full=int(attrs["weight_full"]),
-                    length=get_float(attrs, "length"),
-                    fuel_cost=attrs.get("fuel_cost"),
-                    power=get_int(attrs, "power"),
-                    max_speed=get_int(attrs, "max_speed"),
-                    max_speed_reverse=get_int(attrs, "max_speed_reverse"),
-                    depo_upgrade=attrs.get("depo_upgrade"),
-                    cargo_id=attrs.get("cargo_id"),
-                    capacity=get_int(attrs, "capacity"),
-                )
-            )
-
-            if vehicle_type == 0 and "cargo" not in attrs:
-                ...
-                # engines.append(
-                #     mashinky.models.WagonType(
-                #         id=id,
-                #         name=name,
-                #         icon=icon,
-                #     )
-                # )
-            elif vehicle_type == 0 and "cargo" in attrs:
-                ...
-                # wagons.append(
-                #     mashinky.models.WagonType(
-                #         id=id,
-                #         name=name,
-                #         icon=icon,
-                #     )
-                # )
-            elif vehicle_type == 1:
-                ...
-                # road_vehicles.append(
-                #     mashinky.models.WagonType(
-                #         id=id,
-                #         name=name,
-                #         icon=icon,
-                #     )
-                # )
-
-        return Models(
-            config_cargo_types=list(cargo_types.values()),
-            config_token_types=list(token_types.values()),
-            config_colors=list(colors.values()),
-            config_wagon_types=wagon_types,
-            app_engines=engines,
-            app_wagons=wagons,
-            app_road_vehicles=road_vehicles,
-        )
-
-    def build_uniq_values_file(
-        self, config: mashinky.extract.config.Config, directory: pathlib.Path
+        images: mashinky.extract.images.ImageFactory,
+        sqlalchemy_url: str,
     ) -> None:
-        path = directory / "unique.json"
-        keys = {key for attrs in config.wagon_types.values() for key in attrs.keys()}
-        uniq = {
-            key: list(
-                sorted(set(attrs[key] for attrs in config.wagon_types.values() if key in attrs))
-            )
-            for key in sorted(keys)
-        }
-        path.write_text(json.dumps(uniq, indent=2))
+        self.config = config
+        self.images = images
+        self.engine = sqlalchemy.create_engine(sqlalchemy_url, future=True)
 
+    def init(self) -> None:
+        logger.info("Creating database", url=self.engine.url)
+        mashinky.paths.sqlalchemy_path.unlink(missing_ok=True)
+        mashinky.models.base.Base.metadata.create_all(self.engine)
 
-@dataclasses.dataclass(frozen=True)
-class ModelsCreator:
-    def write(self, models: Models, url: str):
-        mashinky.paths.database.unlink(missing_ok=True)
-        engine = sqlalchemy.create_engine(url, future=True)
-        mashinky.models.Base.metadata.create_all(engine)
+    def build(self):
+        cargo_types = {k: self.build_cargo_type(v) for k, v in self.config.cargo_types.items()}
+        token_types = {k: self.build_token_type(v) for k, v in self.config.token_types.items()}
+        colors = {k: self.build_color(v) for k, v in self.config.colors.items()}
+        wagon_types = {k: self.build_wagon_type(v) for k, v in self.config.wagon_types.items()}
+        vehicles = {k: self.build_vehicle(v) for k, v in self.config.wagon_types.items()}
 
-        with rich.status.Status("Writing database"):
-            with sqlalchemy.orm.Session(engine) as session:
-                session.add_all(models.config_cargo_types)
-                session.add_all(models.config_token_types)
-                session.add_all(models.config_colors)
-                session.add_all(models.config_wagon_types)
-                session.add_all(models.app_engines)
-                session.add_all(models.app_wagons)
-                session.add_all(models.app_road_vehicles)
-                session.commit()
+        logger.info("Writing models to database", url=self.engine.url)
+
+        with sqlalchemy.orm.Session(self.engine) as session:
+            session.add_all(cargo_types.values())
+            session.add_all(token_types.values())
+            session.add_all(colors.values())
+            session.add_all(wagon_types.values())
+            session.add_all(vehicles.values())
+            session.commit()
 
         logger.info(
-            "Committed models",
-            cargo_types=len(models.config_cargo_types),
-            token_types=len(models.config_token_types),
-            colors=len(models.config_colors),
-            wagon_types=len(models.config_wagon_types),
-            engines=len(models.app_engines),
-            wagons=len(models.app_wagons),
-            road_vehicles=len(models.app_road_vehicles),
+            "Wrote models to database",
+            cargo_types=len(cargo_types),
+            token_types=len(token_types),
+            colors=len(colors),
+            wagon_types=len(wagon_types),
+            vehicles=len(vehicles),
         )
+
+    def build_cargo_type(self, attrs: dict[str, str]) -> mashinky.models.config.CargoType:
+        name = self.config.english.get(attrs.get("name"))
+        icon = self.images.extract_icon(
+            icon_texture=attrs["icon_texture"],
+            icon=attrs["icon"],
+            name=name,
+            group="cargo_type",
+        )
+        return mashinky.models.config.CargoType(id=attrs["id"], icon=icon, name=name)
+
+    def build_token_type(self, attrs: dict[str, str]) -> mashinky.models.config.TokenType:
+        name = self.config.english.get(attrs.get("name"))
+        icon = self.images.extract_icon(
+            icon_texture=attrs["icon_texture"],
+            icon=attrs["icon"],
+            name=name,
+            group="token_type",
+        )
+        return mashinky.models.config.TokenType(id=attrs["id"], icon=icon, name=name)
+
+    def build_color(self, attrs: dict[str, str]) -> mashinky.models.config.Color:
+        return mashinky.models.config.Color(
+            id=attrs["id"],
+            name=attrs["name"],
+            red=int(attrs["red"]),
+            green=int(attrs["green"]),
+            blue=int(attrs["blue"]),
+        )
+
+    def build_wagon_type(self, attrs: dict[str, str]) -> mashinky.models.config.WagonType:
+        logger.info("Building wagon type", id=attrs["id"], name=attrs["name"])
+        icon = self.images.extract_icon(
+            icon_texture=attrs["icon_texture"],
+            icon=attrs["icon"],
+            name=attrs["name"],
+            group="wagon_type_icon",
+        )
+        icon_color = self.images.extract_icon(
+            icon_texture=attrs["icon_texture"],
+            icon=attrs["icon_color"],
+            name=attrs["name"],
+            group="wagon_type_icon_color",
+        )
+        return mashinky.models.config.WagonType(
+            id=attrs["id"],
+            name=attrs["name"],
+            icon=icon,
+            icon_color=icon_color,
+            epoch=attrs["epoch"],
+            level=attrs.get("level"),
+            track=attrs["track"],
+            weight_empty=attrs["weight_empty"],
+            weight_full=attrs["weight_full"],
+            length=attrs.get("length"),
+            cost=attrs.get("cost"),
+            sell=attrs.get("sell"),
+            fuel_cost=attrs.get("fuel_cost"),
+            power=attrs.get("power"),
+            max_speed=attrs.get("max_speed"),
+            max_speed_reverse=attrs.get("max_speed_reverse"),
+            depo_upgrade=attrs.get("depo_upgrade"),
+            cargo_id=attrs.get("cargo_id"),
+            capacity=attrs.get("capacity"),
+        )
+
+    def build_vehicle(self, attrs: dict[str, str]) -> mashinky.models.trains.Vehicle:
+        id = attrs["id"]
+        name = attrs["name"]
+
+        logger.info("Building vehicle", id=id, name=name)
+
+        icon = self.images.extract_icon(
+            icon_texture=attrs["icon_texture"],
+            icon=attrs["icon"],
+            name=attrs["name"],
+            group="wagon_type_icon",
+        )
+        icon_color = self.images.extract_icon(
+            icon_texture=attrs["icon_texture"],
+            icon=attrs["icon_color"],
+            name=attrs["name"],
+            group="wagon_type_icon_color",
+        )
+        epoch_min, epoch_max = self.parse_epoch(attrs["epoch"])
+        track = int(attrs["track"])
+        weight_empty = int(attrs["weight_empty"])
+        weight_full = int(attrs["weight_full"])
+        length = optional(float, attrs["length"])
+
+        vehicle = mashinky.models.trains.Vehicle(
+            id=id,
+            name=name,
+            icon=icon,
+            icon_color=icon_color,
+            epoch_min=epoch_min,
+            epoch_max=epoch_max,
+            track=track,
+            weight_empty=weight_empty,
+            weight_full=weight_full,
+            length=length,
+        )
+
+        if attrs["vehicle_type"] == "0" and attrs.get("power"):
+            return self.build_engine(vehicle, attrs)
+        elif attrs["vehicle_type"] == "0":
+            return self.build_wagon(vehicle, attrs)
+        elif attrs["vehicle_type"] == "1":
+            return self.build_road_vehicle(vehicle, attrs)
+        raise ValueError(attrs["vehicle_type"])
+
+    def build_engine(
+        self,
+        vehicle: mashinky.models.trains.Vehicle,
+        attrs: dict[str, str],
+    ) -> mashinky.models.trains.Engine:
+        return mashinky.models.trains.Engine(
+            id=vehicle.id,
+            name=vehicle.name,
+            icon=vehicle.icon,
+            icon_color=vehicle.icon_color,
+            epoch_min=vehicle.epoch_min,
+            epoch_max=vehicle.epoch_max,
+            track=vehicle.track,
+            weight_empty=vehicle.weight_empty,
+            weight_full=vehicle.weight_full,
+            length=vehicle.length,
+        )
+
+    def build_wagon(
+        self,
+        vehicle: mashinky.models.trains.Vehicle,
+        attrs: dict[str, str],
+    ) -> mashinky.models.trains.Wagon:
+        return mashinky.models.trains.Wagon(
+            id=vehicle.id,
+            name=vehicle.name,
+            icon=vehicle.icon,
+            icon_color=vehicle.icon_color,
+            epoch_min=vehicle.epoch_min,
+            epoch_max=vehicle.epoch_max,
+            track=vehicle.track,
+            weight_empty=vehicle.weight_empty,
+            weight_full=vehicle.weight_full,
+            length=vehicle.length,
+        )
+
+    def build_road_vehicle(
+        self,
+        vehicle: mashinky.models.trains.Vehicle,
+        attrs: dict[str, str],
+    ) -> mashinky.models.trains.RoadVehicle:
+        return mashinky.models.trains.RoadVehicle(
+            id=vehicle.id,
+            name=vehicle.name,
+            icon=vehicle.icon,
+            icon_color=vehicle.icon_color,
+            epoch_min=vehicle.epoch_min,
+            epoch_max=vehicle.epoch_max,
+            track=vehicle.track,
+            weight_empty=vehicle.weight_empty,
+            weight_full=vehicle.weight_full,
+            length=vehicle.length,
+        )
+
+    @parse
+    def parse_epoch(self, value: str) -> typing.Tuple[int, int]:
+        parts = value.split("-", 1)
+        if len(parts) == 1:
+            epoch = int(parts[0])
+            return epoch, epoch
+        elif len(parts) == 2:
+            epoch_min, epoch_max = parts
+            return int(epoch_min), int(epoch_max)
+        raise NotImplementedError
+
+    @parse
+    def parse_track(self, value: str) -> int:
+        track = int(value)
+        assert track in (0, 2)
+        return track

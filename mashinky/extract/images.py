@@ -17,87 +17,22 @@ Attrs = dict[str, str]
 
 
 @dataclasses.dataclass(frozen=True)
-class Coord:
-    x: int
-    y: int
-    w: int
-    h: int
-
-    @classmethod
-    def from_attrs(cls, attrs: Attrs) -> Coord:
-        return cls(
-            x=int(attrs["x"]),
-            y=int(attrs["y"]),
-            w=int(attrs["w"]),
-            h=int(attrs["h"]),
-        )
-
-
-@dataclasses.dataclass(frozen=True)
-class Color:
-    r: int
-    g: int
-    b: int
-
-    @classmethod
-    def from_attrs(cls, attrs: Attrs) -> Color:
-        return cls(
-            r=int(attrs["red"]),
-            g=int(attrs["green"]),
-            b=int(attrs["blue"]),
-        )
-
-
-@dataclasses.dataclass(frozen=True)
-class Images:
-    cargo_types_icons: typing.Mapping[str, pathlib.Path]
-    token_types_icons: typing.Mapping[str, pathlib.Path]
-    wagon_types_icons: typing.Mapping[str, pathlib.Path]
-
-
-@dataclasses.dataclass(frozen=True)
-class ImagesBuilder:
+class ImageFactory:
     readers: typing.Sequence[mashinky.extract.reader.Reader]
+    tcoords: typing.Mapping[str, dict[str, str]]
     directory: pathlib.Path
-
-    def extract_images(self, config: mashinky.extract.config.Config) -> Images:
-        coords = {i: Coord.from_attrs(attrs) for i, attrs in config.tcoords.items()}
-        colors = {i: Color.from_attrs(attrs) for i, attrs in config.colors.items()}
-        return Images(
-            cargo_types_icons=self.extract_icons(config.cargo_types, coords, colors, "cargo_types"),
-            token_types_icons=self.extract_icons(config.token_types, coords, colors, "token_types"),
-            wagon_types_icons=self.extract_icons(config.wagon_types, coords, colors, "wagon_types"),
-        )
-
-    def extract_icons(
-        self,
-        things: dict[str, dict[str, str]],
-        coords: typing.Mapping[str, Coord],
-        colors: typing.Mapping[str, Color],
-        category: str,
-    ) -> typing.Mapping[str, pathlib.Path]:
-        self.directory.mkdir(exist_ok=True)
-        (self.directory / "images").mkdir(exist_ok=True)
-        return {
-            identifier: self.extract_icon(attrs, coords, colors, category)
-            for identifier, attrs in things.items()
-            if all(("icon_texture" in attrs, "icon" in attrs))
-        }
 
     def extract_icon(
         self,
-        attrs: typing.Mapping[str, str],
-        coords: typing.Mapping[str, Coord],
-        colors: typing.Mapping[str, Color],
-        category: str,
-    ) -> pathlib.Path:
-        identifier = attrs["id"]
-        icon_texture = attrs["icon_texture"]
-        coord = coords[attrs["icon"]]
+        *,
+        icon_texture: str,
+        icon: str,
+        name: str,
+        group: str,
+    ) -> str:
+        output_path = self.directory / "images" / group / f"{name}.png"
 
-        output_path = self.directory / "images" / category / f"{identifier}.png"
-
-        logger.info(
+        logger.debug(
             "Extracting icon",
             icon_texture=icon_texture,
             output_path=output_path.relative_to(self.directory).as_posix(),
@@ -112,11 +47,15 @@ class ImagesBuilder:
             if not paths:
                 raise FileNotFoundError(icon_texture)
 
-            x1, y1, x2, y2 = (coord.x, coord.y, coord.x + coord.w, coord.y + coord.h)
-            box = (x1 * 2, y1 * 2, x2 * 2, y2 * 2)
+            tcoord = self.tcoords[icon]
+
+            x = int(tcoord["x"]) * 2
+            y = int(tcoord["y"]) * 2
+            w = int(tcoord["w"]) * 2
+            h = int(tcoord["h"]) * 2
 
             texture = PIL.Image.open(paths[0])
-            image = texture.crop(box)
+            image = texture.crop((x, y, x + w, y + h))
             image.save(output_path)
 
-        return output_path.relative_to(self.directory)
+        return output_path.relative_to(self.directory).as_posix()

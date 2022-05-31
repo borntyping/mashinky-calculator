@@ -1,12 +1,13 @@
+import dataclasses
 import logging
+import os
+import pathlib
 
-import structlog.stdlib
+import structlog
 
-import mashinky.extract.config
-import mashinky.extract.images
-import mashinky.extract.models
+import mashinky.extract.factory
+import mashinky.extract.reader
 import mashinky.paths
-from mashinky.extract.reader import DirReader, ZipReader
 
 structlog.configure(
     processors=[
@@ -16,24 +17,20 @@ structlog.configure(
         structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M.%S", utc=False),
         structlog.dev.ConsoleRenderer(sort_keys=False),
     ],
+    wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
 )
 
-readers = [
-    DirReader(mashinky.paths.game_data / "media"),
-    ZipReader(mashinky.paths.game_data / "mods/elishka.zip"),
-    ZipReader(mashinky.paths.game_data / "mods/finished_texts.zip"),
-    ZipReader(mashinky.paths.game_data / "mods/philip.zip"),
-    ZipReader(mashinky.paths.game_data / "mods/unique_vehicles.zip"),
-    ZipReader(mashinky.paths.game_data / "mods/world_cities.zip"),
-]
-
-config_builder = mashinky.extract.config.ConfigBuilder(readers)
-images_builder = mashinky.extract.images.ImagesBuilder(readers, mashinky.paths.static)
-models_builder = mashinky.extract.models.ModelsBuilder()
-models_creator = mashinky.extract.models.ModelsCreator()
-
-config = config_builder.load_config().patch()
-images = images_builder.extract_images(config)
-models = models_builder.build(config, images)
-
-models_creator.write(models, mashinky.paths.sqlalchemy_url)
+game_data = pathlib.Path(os.environ["MASHINKY_GAME_DATA"])
+factory = mashinky.extract.factory.Factory(
+    readers=[
+        mashinky.extract.reader.DirReader(game_data / "media"),
+        mashinky.extract.reader.ZipReader(game_data / "mods/elishka.zip"),
+        mashinky.extract.reader.ZipReader(game_data / "mods/finished_texts.zip"),
+        mashinky.extract.reader.ZipReader(game_data / "mods/philip.zip"),
+        mashinky.extract.reader.ZipReader(game_data / "mods/unique_vehicles.zip"),
+        mashinky.extract.reader.ZipReader(game_data / "mods/world_cities.zip"),
+    ],
+    images_directory=mashinky.paths.static,
+    sqlalchemy_url=mashinky.paths.sqlalchemy_url,
+)
+factory.manufacture()

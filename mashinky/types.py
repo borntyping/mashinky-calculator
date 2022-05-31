@@ -14,6 +14,7 @@ class Era(enum.IntEnum):
     EARLY_DIESEL = 3
     DIESEL = 4
     EARLY_ELECTRIC = 5
+    ELECTRIC = 6
 
     descriptions: typing.Mapping[Era, str]
 
