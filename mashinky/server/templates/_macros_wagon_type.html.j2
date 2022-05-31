@@ -30,7 +30,7 @@
 {%- endmacro %}
 
 {% macro length(wagon_type) -%}
-  <span>{{ wagon_type.length }} tiles</span>
+  <span>{{ "%.2f"|format(wagon_type.length) }} tiles</span>
 {%- endmacro %}
 
 {% macro costs(payments) -%}
@@ -50,8 +50,11 @@
 
 {% macro speed(engine) -%}
   <span>{{ engine.max_speed }} km/h</span>
+{%- endmacro %}
+
+{% macro reverse_speed(engine) -%}
   {% if engine.max_speed_reverse is not none -%}
-    <span>({{ engine.max_speed_reverse }} km/h)</span>
+    <span class="text-muted">({{ engine.max_speed_reverse }} km/h)</span>
   {%- endif %}
 {%- endmacro %}
 

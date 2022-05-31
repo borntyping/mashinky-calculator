@@ -114,7 +114,7 @@ class ModelFactory:
         track = int(attrs["track"])
         weight_empty = int(attrs["weight_empty"])
         weight_full = int(attrs["weight_full"])
-        length = optional(float, attrs["length"])
+        length = round(float(attrs["length"]) + float(attrs.get("tail_length", 0.0)), 2)
 
         cost = [
             mashinky.models.Cost(
@@ -156,8 +156,6 @@ class ModelFactory:
             sell=sell,
             fuel=fuel,
         )
-
-        logger.info("Loaded base wagon type", **kwargs)
 
         if attrs["vehicle_type"] == "0" and attrs.get("power"):
             return self.build_engine(attrs, **kwargs)

@@ -1,3 +1,7 @@
+* {
+    font-variant-numeric: tabular-nums;
+}
+
 code {
     color: var(--bs-secondary);
 }

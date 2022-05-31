@@ -15,12 +15,11 @@
         <th>Icon</th>
         <th>Epoch</th>
         <th>Track</th>
-        <th>Weight</th>
-        <th>Length</th>
-
-        <th>Power</th>
-        <th>Speed</th>
-
+        <th class="text-center">Weight</th>
+        <th class="text-center">Length</th>
+        <th class="text-center">Power</th>
+        <th class="text-center">Speed</th>
+        <th class="text-center">Reverse</th>
         <th>Cost</th>
         <th>Fuel</th>
       </tr>
@@ -34,10 +33,11 @@
           <td>{{ macros_wagon_type.icon(engine) }}</td>
           <td>{{ macros_wagon_type.epoch(engine) }}</td>
           <td>{{ macros_wagon_type.track(engine) }}</td>
-          <td>{{ macros_wagon_type.weight(engine) }}</td>
-          <td>{{ macros_wagon_type.length(engine) }}</td>
-          <td>{{ macros_wagon_type.power(engine) }}</td>
-          <td>{{ macros_wagon_type.speed(engine) }}</td>
+          <td class="text-end">{{ macros_wagon_type.weight(engine) }}</td>
+          <td class="text-end">{{ macros_wagon_type.length(engine) }}</td>
+          <td class="text-end">{{ macros_wagon_type.power(engine) }}</td>
+          <td class="text-end">{{ macros_wagon_type.speed(engine) }}</td>
+          <td class="text-end">{{ macros_wagon_type.reverse_speed(engine) }}</td>
           <td>{{ macros_wagon_type.costs(engine.cost) }}</td>
           <td>{{ macros_wagon_type.costs(engine.fuel) }}</td>
         </tr>
@@ -57,8 +57,8 @@
         <th>Icon</th>
         <th>Epoch</th>
         <th>Track</th>
-        <th>Weight</th>
-        <th>Length</th>
+        <th class="text-end">Weight</th>
+        <th class="text-end">Length</th>
         <th>Cargo</th>
         <th>Cost</th>
       </tr>
@@ -72,8 +72,8 @@
           <td>{{ macros_wagon_type.icon(wagon) }}</td>
           <td>{{ macros_wagon_type.epoch(wagon) }}</td>
           <td>{{ macros_wagon_type.track(wagon) }}</td>
-          <td>{{ macros_wagon_type.weight(wagon) }}</td>
-          <td>{{ macros_wagon_type.length(wagon) }}</td>
+          <td class="text-end">{{ macros_wagon_type.weight(wagon) }}</td>
+          <td class="text-end">{{ macros_wagon_type.length(wagon) }}</td>
           <td>{{ macros_wagon_type.cargo(wagon) }}</td>
           <td>{{ macros_wagon_type.costs(wagon.cost) }}</td>
         </tr>
@@ -93,8 +93,8 @@
         <th>Icon</th>
         <th>Epoch</th>
         <th>Track</th>
-        <th>Weight</th>
-        <th>Length</th>
+        <th class="text-end">Weight</th>
+        <th class="text-end">Length</th>
         <th>Cargo</th>
         <th>Cost</th>
         <th>Fuel</th>
@@ -109,8 +109,8 @@
           <td>{{ macros_wagon_type.icon(road_vehicle) }}</td>
           <td>{{ macros_wagon_type.epoch(road_vehicle) }}</td>
           <td>{{ macros_wagon_type.track(road_vehicle) }}</td>
-          <td>{{ macros_wagon_type.weight(road_vehicle) }}</td>
-          <td>{{ macros_wagon_type.length(road_vehicle) }}</td>
+          <td class="text-end">{{ macros_wagon_type.weight(road_vehicle) }}</td>
+          <td class="text-end">{{ macros_wagon_type.length(road_vehicle) }}</td>
           <td>{{ macros_wagon_type.cargo(road_vehicle) }}</td>
           <td>{{ macros_wagon_type.costs(road_vehicle.cost) }}</td>
           <td>{{ macros_wagon_type.costs(road_vehicle.fuel) }}</td>
