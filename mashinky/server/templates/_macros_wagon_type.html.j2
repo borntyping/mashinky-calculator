@@ -1,0 +1,65 @@
+{% macro id(wagon_type) -%}
+  <small class="font-monospace text-muted">{{ wagon_type.id }}</small>
+{%- endmacro %}
+
+{% macro type(wagon_type) -%}
+  <small class="font-monospace text-muted">{{ wagon_type.__class__.__name__ }}</small>
+{%- endmacro %}
+
+{% macro name(wagon_type) -%}
+  <strong class="text-success">{{ wagon_type.name }}</strong>
+  {% if wagon_type.is_quest_reward %}
+    <span title="Quest Reward">★</span>
+  {% endif %}
+{%- endmacro %}
+
+{% macro icon(wagon_type) -%}
+  <img class="app-icon-sm" src="{{ url_for('static', filename=wagon_type.icon) }}" alt="{{ wagon_type.name or wagon_type.id }}">
+{%- endmacro %}
+
+{% macro epoch(wagon_type) -%}
+  <span>{{ wagon_type.epoch or '&mdash;' }}</span>
+{%- endmacro %}
+
+{% macro track(wagon_type) -%}
+  <span>{{ wagon_type.track if wagon_type.track.value else '&mdash;' }}</span>
+{%- endmacro %}
+
+{% macro weight(wagon_type) -%}
+  <span>{{ wagon_type.weight }} tons</span>
+{%- endmacro %}
+
+{% macro length(wagon_type) -%}
+  <span>{{ wagon_type.length }} tiles</span>
+{%- endmacro %}
+
+{% macro costs(payments) -%}
+  {% for payment in payments %}
+    <div class="d-inline-flex justify-content-start align-items-center">
+      <img class="d-block mx-1 app-icon-sm" src="{{ url_for('static', filename=payment.token_type.icon) }}" alt="{{ payment.token_type }}">
+      <span class="d-block">{{ payment.amount }}</span>
+    </div>
+  {% endfor %}
+{%- endmacro %}
+
+{# Engines #}
+
+{% macro power(engine) -%}
+  <span>{{ engine.power }} hp</span>
+{%- endmacro %}
+
+{% macro speed(engine) -%}
+  <span>{{ engine.max_speed }} km/h</span>
+  {% if engine.max_speed_reverse is not none -%}
+    <span>({{ engine.max_speed_reverse }} km/h)</span>
+  {%- endif %}
+{%- endmacro %}
+
+{# Wagons and road vehicles #}
+
+{% macro cargo(wagon_type) -%}
+  <div class="d-inline-flex justify-content-start align-items-center">
+    <img class="d-block mx-1 app-icon-sm" src="{{ url_for('static', filename=wagon_type.cargo_type.icon) }}" alt="{{ wagon_type.cargo_type }}">
+    <span class="d-block">{{ wagon_type.capacity }}</span>
+  </div>
+{%- endmacro %}

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import enum
+import typing
 
 from sqlalchemy import Column, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import declarative_base, relationship
@@ -53,10 +54,13 @@ class Fuel(Base, PaymentMixin):
 
 class ConfigMixin:
     id: str
-    name: str
+    name: typing.Optional[str]
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}[{self.id} {self.name!r}]"
+
+    def __str__(self):
+        return self.name or self.id
 
 
 class CargoType(Base, ConfigMixin):
@@ -187,12 +191,12 @@ class Wagon(WagonType, ConfigMixin):
         primary_key=True,
     )
 
-    cargo_id = Column(
+    cargo_type_id = Column(
         String,
         ForeignKey("cargo_type.id"),
         nullable=False,
     )
-    cargo = relationship(CargoType)
+    cargo_type = relationship(CargoType)
 
     capacity = Column(Integer, nullable=False)
 
@@ -210,11 +214,11 @@ class RoadVehicle(WagonType, ConfigMixin):
         primary_key=True,
     )
 
-    cargo_id = Column(
+    cargo_type_id = Column(
         String,
         ForeignKey("cargo_type.id"),
         nullable=False,
     )
-    cargo = relationship(CargoType)
+    cargo_type = relationship(CargoType)
 
     capacity = Column(Integer, nullable=False)

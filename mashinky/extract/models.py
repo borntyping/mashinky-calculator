@@ -186,7 +186,7 @@ class ModelFactory:
     ) -> mashinky.models.Wagon:
         return mashinky.models.Wagon(
             **kwargs,
-            cargo_id=attrs["cargo"],
+            cargo_type_id=attrs["cargo"],
             capacity=int(attrs["capacity"]),
         )
 
@@ -197,7 +197,7 @@ class ModelFactory:
     ) -> mashinky.models.RoadVehicle:
         return mashinky.models.RoadVehicle(
             **kwargs,
-            cargo_id=attrs["cargo"],
+            cargo_type_id=attrs["cargo"],
             capacity=int(attrs["capacity"]),
         )
 

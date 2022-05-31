@@ -24,7 +24,7 @@ class Factory:
     sqlalchemy_database_url: str
 
     def engine(self) -> sqlalchemy.engine.Engine:
-        engine = sqlalchemy.create_engine(self.sqlalchemy_database_url, future=True, echo=True)
+        engine = sqlalchemy.create_engine(self.sqlalchemy_database_url, future=True)
         self.sqlalchemy_database_path.unlink(missing_ok=True)
         logger.info("Creating database", url=engine.url)
         mashinky.models.Base.metadata.create_all(engine)

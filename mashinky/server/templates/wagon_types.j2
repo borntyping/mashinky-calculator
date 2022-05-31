@@ -1,5 +1,4 @@
-{% extends '_base.html.j2' %}
-{% import '_macros.html.j2' as macros %}
+{% extends '_base.html.j2' %}{% import '_macros.html.j2' as macros %}{% import '_macros_wagon_type.html.j2' as macros_wagon_type %}
 {% block page %}
   <section class="">
     <h1>Wagon types</h1>
@@ -29,20 +28,18 @@
       <tbody class="table-group-divider">
       {% for engine in engines %}
         <tr>
-          <td>{{ macros.wagon_type_id(engine) }}</td>
-          <td>{{ macros.wagon_type_type(engine) }}</td>
-          <td>{{ macros.wagon_type_name(engine) }}</td>
-          <td>{{ macros.wagon_type_icon(engine) }}</td>
-          <td>{{ engine.epoch }}</td>
-          <td>{{ engine.track }}</td>
-          <td>{{ engine.weight }} tons</td>
-          <td>{{ engine.length }} tiles</td>
-
-          <td>{{ engine.power|default(undefined) }} hp</td>
-          <td>{{ engine.max_speed|default(undefined) }} km/h ({{ engine.max_speed_reverse|default(undefined) }}) km/h</td>
-
-          <td>{{ macros.wagon_type_costs(engine.cost) }}</td>
-          <td>{{ macros.wagon_type_costs(engine.fuel) }}</td>
+          <td>{{ macros_wagon_type.id(engine) }}</td>
+          <td>{{ macros_wagon_type.type(engine) }}</td>
+          <td>{{ macros_wagon_type.name(engine) }}</td>
+          <td>{{ macros_wagon_type.icon(engine) }}</td>
+          <td>{{ macros_wagon_type.epoch(engine) }}</td>
+          <td>{{ macros_wagon_type.track(engine) }}</td>
+          <td>{{ macros_wagon_type.weight(engine) }}</td>
+          <td>{{ macros_wagon_type.length(engine) }}</td>
+          <td>{{ macros_wagon_type.power(engine) }}</td>
+          <td>{{ macros_wagon_type.speed(engine) }}</td>
+          <td>{{ macros_wagon_type.costs(engine.cost) }}</td>
+          <td>{{ macros_wagon_type.costs(engine.fuel) }}</td>
         </tr>
       {% endfor %}
       </tbody>
@@ -50,7 +47,7 @@
   </section>
 
   <section class="my-5">
-    <h2 class="title">Vehicles {{ macros.count(wagon_types) }}</h2>
+    <h2 class="title">Wagons {{ macros.count(wagons) }}</h2>
     <table class="table table-sm table-hover align-middle">
       <thead class="thead-light">
       <tr>
@@ -62,23 +59,61 @@
         <th>Track</th>
         <th>Weight</th>
         <th>Length</th>
+        <th>Cargo</th>
+        <th>Cost</th>
+      </tr>
+      </thead>
+      <tbody class="table-group-divider">
+      {% for wagon in wagons %}
+        <tr>
+          <td>{{ macros_wagon_type.id(wagon) }}</td>
+          <td>{{ macros_wagon_type.type(wagon) }}</td>
+          <td>{{ macros_wagon_type.name(wagon) }}</td>
+          <td>{{ macros_wagon_type.icon(wagon) }}</td>
+          <td>{{ macros_wagon_type.epoch(wagon) }}</td>
+          <td>{{ macros_wagon_type.track(wagon) }}</td>
+          <td>{{ macros_wagon_type.weight(wagon) }}</td>
+          <td>{{ macros_wagon_type.length(wagon) }}</td>
+          <td>{{ macros_wagon_type.cargo(wagon) }}</td>
+          <td>{{ macros_wagon_type.costs(wagon.cost) }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="my-5">
+    <h2 class="title">Road vehicles {{ macros.count(road_vehicles) }}</h2>
+    <table class="table table-sm table-hover align-middle">
+      <thead class="thead-light">
+      <tr>
+        <th>ID</th>
+        <th>Type</th>
+        <th>Name</th>
+        <th>Icon</th>
+        <th>Epoch</th>
+        <th>Track</th>
+        <th>Weight</th>
+        <th>Length</th>
+        <th>Cargo</th>
         <th>Cost</th>
         <th>Fuel</th>
       </tr>
       </thead>
       <tbody class="table-group-divider">
-      {% for wagon_type in wagon_types %}
+      {% for road_vehicle in road_vehicles %}
         <tr>
-          <td>{{ macros.wagon_type_id(wagon_type) }}</td>
-          <td>{{ macros.wagon_type_type(wagon_type) }}</td>
-          <td>{{ macros.wagon_type_name(wagon_type) }}</td>
-          <td>{{ macros.wagon_type_icon(wagon_type) }}</td>
-          <td>{{ wagon_type.epoch }}</td>
-          <td>{{ wagon_type.track }}</td>
-          <td>{{ wagon_type.weight }} tons</td>
-          <td>{{ wagon_type.length }} tiles</td>
-          <td>{{ macros.wagon_type_costs(wagon_type.cost) }}</td>
-          <td>{{ macros.wagon_type_costs(wagon_type.fuel) }}</td>
+          <td>{{ macros_wagon_type.id(road_vehicle) }}</td>
+          <td>{{ macros_wagon_type.type(road_vehicle) }}</td>
+          <td>{{ macros_wagon_type.name(road_vehicle) }}</td>
+          <td>{{ macros_wagon_type.icon(road_vehicle) }}</td>
+          <td>{{ macros_wagon_type.epoch(road_vehicle) }}</td>
+          <td>{{ macros_wagon_type.track(road_vehicle) }}</td>
+          <td>{{ macros_wagon_type.weight(road_vehicle) }}</td>
+          <td>{{ macros_wagon_type.length(road_vehicle) }}</td>
+          <td>{{ macros_wagon_type.cargo(road_vehicle) }}</td>
+          <td>{{ macros_wagon_type.costs(road_vehicle.cost) }}</td>
+          <td>{{ macros_wagon_type.costs(road_vehicle.fuel) }}</td>
         </tr>
       {% endfor %}
       </tbody>
