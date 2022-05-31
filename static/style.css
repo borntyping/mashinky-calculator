@@ -6,6 +6,10 @@ code {
     color: var(--bs-secondary);
 }
 
+.text-faded {
+    color: var(--bs-gray-400)
+}
+
 .app-icon-sm {
     height: 16px;
 }

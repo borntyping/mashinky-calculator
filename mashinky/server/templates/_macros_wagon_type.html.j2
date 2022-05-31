@@ -18,11 +18,21 @@
 {%- endmacro %}
 
 {% macro epoch(wagon_type) -%}
-  <span>{{ wagon_type.epoch or '&mdash;' }}</span>
+  {%- if wagon_type.epoch and wagon_type.epoch_end -%}
+    <span title="{{ wagon_type.epoch }} to {{ wagon_type.epoch_end|lower }}">{{ wagon_type.epoch.numeral }}&ndash;{{ wagon_type.epoch_end.numeral }}</span>
+  {%- elif wagon_type.epoch -%}
+    <span title="{{ wagon_type.epoch }} onwards">{{ wagon_type.epoch.numeral }}</span>
+  {%- else -%}
+    <span class="text-faded" title="Quest reward">&mdash;</span>
+  {%- endif -%}
 {%- endmacro %}
 
 {% macro track(wagon_type) -%}
-  <span>{{ wagon_type.track if wagon_type.track.value else '&mdash;' }}</span>
+  {% if wagon_type.track.value == 0 %}
+    <span class="text-faded">&mdash;</span>
+  {% else %}
+    <span>{{ wagon_type.track }}</span>
+  {% endif %}
 {%- endmacro %}
 
 {% macro weight(wagon_type) -%}
@@ -42,6 +52,11 @@
   {% endfor %}
 {%- endmacro %}
 
+
+{% macro depo_upgrade(wagon_type) -%}
+  <span>{{ 'Required' if wagon_type.depo_upgrade else '&mdash;' }}</span>
+{%- endmacro %}
+
 {# Engines #}
 
 {% macro power(engine) -%}
@@ -52,9 +67,10 @@
   <span>{{ engine.max_speed }} km/h</span>
 {%- endmacro %}
 
+{# This isn't actually used, all trains reverse at 19mph. #}
 {% macro reverse_speed(engine) -%}
   {% if engine.max_speed_reverse is not none -%}
-    <span class="text-muted">({{ engine.max_speed_reverse }} km/h)</span>
+    <span class="text-faded">({{ engine.max_speed_reverse }} km/h)</span>
   {%- endif %}
 {%- endmacro %}
 

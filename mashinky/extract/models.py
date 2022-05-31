@@ -110,9 +110,10 @@ class ModelFactory:
             group="wagon_type_icon_color",
         )
         epoch, epoch_end = parse_epoch(attrs["epoch"])
-        track = int(attrs["track"])
-        weight_empty = int(attrs["weight_empty"])
-        weight_full = int(attrs["weight_full"])
+        track = mashinky.models.Track(int(attrs["track"]))
+        weight_empty: int = int(attrs["weight_empty"])
+        weight_full: int = int(attrs["weight_full"])
+        depo_upgrade: bool = attrs.get("depo_upgrade") == "0"
         length = round(float(attrs["length"]) + float(attrs.get("tail_length", 0.0)), 2)
 
         cargo_type_id = attrs.get("cargo", None)
@@ -159,6 +160,7 @@ class ModelFactory:
             fuel=fuel,
             cargo_type_id=cargo_type_id,
             capacity=capacity,
+            depo_upgrade=depo_upgrade,
         )
 
         if attrs["vehicle_type"] == "0" and attrs.get("power"):

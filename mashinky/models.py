@@ -3,7 +3,7 @@ from __future__ import annotations
 import enum
 import typing
 
-from sqlalchemy import Column, Enum, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
@@ -109,7 +109,7 @@ class Epoch(enum.IntEnum):
     ELECTRIC = 6
     LATE_ELECTRIC = 7
 
-    def __str__(self):
+    def __str__(self) -> str:
         names = {
             self.EARLY_STEAM: "Early steam",
             self.STEAM: "Steam",
@@ -121,6 +121,20 @@ class Epoch(enum.IntEnum):
         }
 
         return names[self]
+
+    @property
+    def numeral(self) -> str:
+        numerals = {
+            self.EARLY_STEAM: "Ⅰ",
+            self.STEAM: "Ⅱ",
+            self.EARLY_DIESEL: "Ⅲ",
+            self.DIESEL: "Ⅳ",
+            self.EARLY_ELECTRIC: "Ⅴ",
+            self.ELECTRIC: "Ⅵ",
+            self.LATE_ELECTRIC: "Ⅶ",
+        }
+
+        return numerals[self]
 
 
 class WagonType(Base, ConfigMixin):
@@ -139,11 +153,16 @@ class WagonType(Base, ConfigMixin):
     weight_empty = Column(Integer, nullable=False)
     weight_full = Column(Integer, nullable=False)
     length = Column(Integer, nullable=False)
+    depo_upgrade = Column(Boolean, nullable=False)
 
     # All wagon types can have cargo. No engines use this yet.
     # https://store.steampowered.com/news/app/598960/view/4738306083311895973
     cargo_type_id = Column(String, ForeignKey("cargo_type.id"), nullable=True)
     capacity = Column(Integer, nullable=False)
+
+    # The "Pulls up to" amount is calculated by the game. Not sure if we can calcuate it.
+    # https://mashinky.com/wiki/index.php?title=Engines
+    # https://wiki.openttd.org/en/Manual/Game%20Mechanics/Tractive%20Effort
 
     cargo_type = relationship(CargoType, lazy="joined", backref="wagon_types")
     cost: list[Cost] = relationship(Cost, uselist=True, lazy="joined", back_populates="wagon_type")
