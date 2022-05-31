@@ -140,6 +140,12 @@ class WagonType(Base, ConfigMixin):
     weight_full = Column(Integer, nullable=False)
     length = Column(Integer, nullable=False)
 
+    # All wagon types can have cargo. No engines use this yet.
+    # https://store.steampowered.com/news/app/598960/view/4738306083311895973
+    cargo_type_id = Column(String, ForeignKey("cargo_type.id"), nullable=True)
+    capacity = Column(Integer, nullable=False)
+
+    cargo_type = relationship(CargoType, lazy="joined", backref="wagon_types")
     cost: list[Cost] = relationship(Cost, uselist=True, lazy="joined", back_populates="wagon_type")
     sell: list[Sell] = relationship(Sell, uselist=True, lazy="joined", back_populates="wagon_type")
     fuel: list[Fuel] = relationship(Fuel, uselist=True, lazy="joined", back_populates="wagon_type")
@@ -167,12 +173,7 @@ class Engine(WagonType, ConfigMixin):
         "polymorphic_load": "inline",
     }
 
-    id = Column(
-        String,
-        ForeignKey("wagon_type.id"),
-        primary_key=True,
-    )
-
+    id = Column(String, ForeignKey("wagon_type.id"), primary_key=True)
     power = Column(Integer, nullable=False)
     max_speed = Column(Integer, nullable=False)
     max_speed_reverse = Column(Integer, nullable=True)
@@ -184,21 +185,7 @@ class Wagon(WagonType, ConfigMixin):
         "polymorphic_identity": "wagon",
         "polymorphic_load": "inline",
     }
-
-    id = Column(
-        String,
-        ForeignKey("wagon_type.id"),
-        primary_key=True,
-    )
-
-    cargo_type_id = Column(
-        String,
-        ForeignKey("cargo_type.id"),
-        nullable=False,
-    )
-    cargo_type = relationship(CargoType)
-
-    capacity = Column(Integer, nullable=False)
+    id = Column(String, ForeignKey("wagon_type.id"), primary_key=True)
 
 
 class RoadVehicle(WagonType, ConfigMixin):
@@ -207,18 +194,4 @@ class RoadVehicle(WagonType, ConfigMixin):
         "polymorphic_identity": "road_vehicle",
         "polymorphic_load": "inline",
     }
-
-    id = Column(
-        String,
-        ForeignKey("wagon_type.id"),
-        primary_key=True,
-    )
-
-    cargo_type_id = Column(
-        String,
-        ForeignKey("cargo_type.id"),
-        nullable=False,
-    )
-    cargo_type = relationship(CargoType)
-
-    capacity = Column(Integer, nullable=False)
+    id = Column(String, ForeignKey("wagon_type.id"), primary_key=True)

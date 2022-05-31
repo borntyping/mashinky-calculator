@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import dataclasses
 import functools
-import pprint
 import re
 import typing
 
@@ -116,6 +115,9 @@ class ModelFactory:
         weight_full = int(attrs["weight_full"])
         length = round(float(attrs["length"]) + float(attrs.get("tail_length", 0.0)), 2)
 
+        cargo_type_id = attrs.get("cargo", None)
+        capacity = int(attrs.get("capacity", 0))
+
         cost = [
             mashinky.models.Cost(
                 wagon_type_id=attrs["id"],
@@ -155,49 +157,25 @@ class ModelFactory:
             cost=cost,
             sell=sell,
             fuel=fuel,
+            cargo_type_id=cargo_type_id,
+            capacity=capacity,
         )
 
         if attrs["vehicle_type"] == "0" and attrs.get("power"):
-            return self.build_engine(attrs, **kwargs)
+            power = int(attrs["power"])
+            max_speed = int(attrs["max_speed"])
+            max_speed_reverse = optional(int, attrs.get("max_speed_reverse"))
+            return mashinky.models.Engine(
+                **kwargs,
+                power=power,
+                max_speed=max_speed,
+                max_speed_reverse=max_speed_reverse,
+            )
         elif attrs["vehicle_type"] == "0":
-            return self.build_wagon(attrs, **kwargs)
+            return mashinky.models.Wagon(**kwargs)
         elif attrs["vehicle_type"] == "1":
-            return self.build_road_vehicle(attrs, **kwargs)
+            return mashinky.models.RoadVehicle(**kwargs)
         raise ValueError(attrs["vehicle_type"])
-
-    def build_engine(
-        self,
-        attrs: dict[str, str],
-        **kwargs: typing.Any,
-    ) -> mashinky.models.Engine:
-        return mashinky.models.Engine(
-            **kwargs,
-            power=int(attrs["power"]),
-            max_speed=int(attrs["max_speed"]),
-            max_speed_reverse=optional(int, attrs.get("max_speed_reverse")),
-        )
-
-    def build_wagon(
-        self,
-        attrs: dict[str, str],
-        **kwargs: typing.Any,
-    ) -> mashinky.models.Wagon:
-        return mashinky.models.Wagon(
-            **kwargs,
-            cargo_type_id=attrs["cargo"],
-            capacity=int(attrs["capacity"]),
-        )
-
-    def build_road_vehicle(
-        self,
-        attrs: dict[str, str],
-        **kwargs: typing.Any,
-    ) -> mashinky.models.RoadVehicle:
-        return mashinky.models.RoadVehicle(
-            **kwargs,
-            cargo_type_id=attrs["cargo"],
-            capacity=int(attrs["capacity"]),
-        )
 
 
 def parse(method: typing.Callable[[str], T]) -> typing.Callable[[str], T]:

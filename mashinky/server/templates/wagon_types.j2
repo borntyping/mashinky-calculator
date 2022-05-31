@@ -20,6 +20,7 @@
         <th class="text-center">Power</th>
         <th class="text-center">Speed</th>
         <th class="text-center">Reverse</th>
+        <th>Cargo</th>
         <th>Cost</th>
         <th>Fuel</th>
       </tr>
@@ -38,6 +39,7 @@
           <td class="text-end">{{ macros_wagon_type.power(engine) }}</td>
           <td class="text-end">{{ macros_wagon_type.speed(engine) }}</td>
           <td class="text-end">{{ macros_wagon_type.reverse_speed(engine) }}</td>
+          <td>{{ macros_wagon_type.cargo(engine) }}</td>
           <td>{{ macros_wagon_type.costs(engine.cost) }}</td>
           <td>{{ macros_wagon_type.costs(engine.fuel) }}</td>
         </tr>

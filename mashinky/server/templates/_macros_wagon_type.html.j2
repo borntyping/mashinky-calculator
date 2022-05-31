@@ -61,8 +61,12 @@
 {# Wagons and road vehicles #}
 
 {% macro cargo(wagon_type) -%}
-  <div class="d-inline-flex justify-content-start align-items-center">
-    <img class="d-block mx-1 app-icon-sm" src="{{ url_for('static', filename=wagon_type.cargo_type.icon) }}" alt="{{ wagon_type.cargo_type }}">
-    <span class="d-block">{{ wagon_type.capacity }}</span>
-  </div>
+  {%- if wagon_type.cargo_type is not none -%}
+    <div class="d-inline-flex justify-content-start align-items-center">
+      <img class="d-block mx-1 app-icon-sm" src="{{ url_for('static', filename=wagon_type.cargo_type.icon) }}" alt="{{ wagon_type.cargo_type }}">
+      <span class="d-block">{{ wagon_type.capacity }}</span>
+    </div>
+  {%- else -%}
+    &mdash;
+  {%- endif -%}
 {%- endmacro %}
