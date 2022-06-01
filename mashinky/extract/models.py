@@ -92,18 +92,18 @@ class ModelFactory:
         attrs: dict[str, str],
         token_types: dict[str, mashinky.models.TokenType],
     ) -> mashinky.models.WagonType:
-        id = attrs["id"]
-        name = attrs["name"]
+        id: str = attrs["id"]
+        name: str = attrs["name"]
 
         logger.debug("Building vehicle", id=id, name=name)
 
-        icon = self.images.extract_icon(
+        icon: str = self.images.extract_icon(
             icon_texture=attrs["icon_texture"],
             icon=attrs["icon"],
             name=attrs["name"],
             group="wagon_type_icon",
         )
-        icon_color = self.images.extract_icon(
+        icon_color: str = self.images.extract_icon(
             icon_texture=attrs["icon_texture"],
             icon=attrs["icon_color"],
             name=attrs["name"],
@@ -114,10 +114,14 @@ class ModelFactory:
         weight_empty: int = int(attrs["weight_empty"])
         weight_full: int = int(attrs["weight_full"])
         depo_upgrade: bool = attrs.get("depo_upgrade") == "0"
-        length = round(float(attrs["length"]) + float(attrs.get("tail_length", 0.0)), 2)
 
-        cargo_type_id = attrs.get("cargo", None)
-        capacity = int(attrs.get("capacity", 0))
+        main_length = float(attrs["length"])
+        head_length = float(attrs.get("head_length", 0.0))
+        tail_length = float(attrs.get("tail_length", 0.0))
+        length: float = round(head_length + main_length + tail_length, 2)
+
+        cargo_type_id: str = attrs.get("cargo", None)
+        capacity: int = int(attrs.get("capacity", 0))
 
         cost = [
             mashinky.models.Cost(

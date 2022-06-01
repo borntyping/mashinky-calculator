@@ -23,9 +23,18 @@ app.jinja_env.undefined = StrictUndefined
 app.config["SECRET_KEY"] = "50e80816-1736-404b-880d-16e35c6c6ef4"
 app.config["SQLALCHEMY_DATABASE_URI"] = sqlalchemy_database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["DEBUG_TB_INTERCEPT_REDIRECTS"] = False
 
 db = SQLAlchemy(app=app, model_class=Base)
 toolbar = DebugToolbarExtension(app=app)
+
+
+@app.context_processor
+def variables():
+    return {
+        "undefined": "—",
+        "tile_width": 100,
+    }
 
 
 @app.route("/")
@@ -36,8 +45,9 @@ def home():
 @app.route("/trains")
 def trains():
     epoch = Epoch(request.args.get("epoch", default=1, type=int))
+    station_length: int = request.args.get("station_length", default=6, type=int)
 
-    path = url_for("trains", epoch=epoch.value, _external=False)
+    path = url_for("trains", epoch=epoch.value, station_length=station_length, _external=False)
     if path != request.full_path:
         return redirect(path)
 
@@ -52,7 +62,7 @@ def trains():
         .all()
     )
 
-    combos = list(combinations(engines, wagons, station_length=6))
+    combos = list(combinations(engines, wagons, station_length=station_length))
     combos = sorted(combos, key=lambda train: train.capacity, reverse=True)
 
     return render_template("trains.html.j2", trains=combos)
@@ -89,8 +99,3 @@ def token_types():
 @app.route("/colors")
 def colors():
     return render_template("colors.html.j2", colors=Color.query.all())
-
-
-@app.context_processor
-def variables():
-    return {"undefined": "—"}

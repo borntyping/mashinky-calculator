@@ -55,3 +55,13 @@ code {
 .app-limit-weight {
     background: var(--burgundy);
 }
+
+.app-bg-tiles {
+    --app-tiles-width: 100px;
+    --app-tiles-a: rgba(107, 123, 180, 0.2); /* var(--periwinkle); */
+    --app-tiles-b: rgba(119, 175, 213, 0.2); /* var(--light-blue); */
+
+    background-color: var(--app-tiles-b);
+    background-image: linear-gradient(to right, var(--app-tiles-a), var(--app-tiles-a) var(--app-tiles-width), var(--app-tiles-b) var(--app-tiles-width), var(--app-tiles-b) );
+    background-size: calc(var(--app-tiles-width) * 2) 100%;
+}

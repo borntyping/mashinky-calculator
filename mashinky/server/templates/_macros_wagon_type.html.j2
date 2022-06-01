@@ -17,15 +17,17 @@
   {% endif %}
 {%- endmacro %}
 
-{% macro icon(wagon_type) -%}
-  <img class="app-icon-sm" src="{{ url_for('static', filename=wagon_type.icon) }}" alt="{{ wagon_type.name or wagon_type.id }}">
+{% macro icon(wagon_type, tile_width) -%}
+  <div class="app-bg-tiles" style="width: {{ tile_width * 2 }}px;">
+    <img src="{{ url_for('static', filename=wagon_type.icon) }}" alt="{{ wagon_type.name or wagon_type.id }}" width="{{ tile_width * wagon_type.length }}px">
+  </div>
 {%- endmacro %}
 
 {% macro epoch(wagon_type) -%}
-  {%- if wagon_type.epoch and wagon_type.epoch_end -%}
-    <span title="{{ wagon_type.epoch }} to {{ wagon_type.epoch_end|lower }}">{{ wagon_type.epoch.numeral }}&ndash;{{ wagon_type.epoch_end.numeral }}</span>
-  {%- elif wagon_type.epoch -%}
-    <span title="{{ wagon_type.epoch }} onwards">{{ wagon_type.epoch.numeral }}</span>
+  {%- if wagon_type.epoch_start and wagon_type.epoch_end -%}
+    <span title="{{ wagon_type.epoch_start }} to {{ wagon_type.epoch_end|lower }}">{{ wagon_type.epoch_start.numeral }}&ndash;{{ wagon_type.epoch_end.numeral }}</span>
+  {%- elif wagon_type.epoch_start -%}
+    <span title="{{ wagon_type.epoch_start }} onwards">{{ wagon_type.epoch_start.numeral }}</span>
   {%- else -%}
     {{ empty("Quest reward") }}
   {%- endif -%}
@@ -102,13 +104,23 @@
 {# Trains #}
 
 {% macro limits(train) %}
-  {% for limit in train.limits %}
-    {% if limit.name == 'length' %}
-      <span class="app-limit-{{ limit.name|escape }} badge">Length ({{ limit.maximum|round(2) }} tiles)</span>
-    {% elif limit.name == 'weight' %}
-      <span class="app-limit-{{ limit.name|escape }} badge">Weight ({{ limit.maximum }} tons)</span>
-    {% endif %}
-  {% else %}
+  {% if train.limited_by_length %}
+    <span class="app-limit-length badge">Station length</span>
+  {% endif %}
+
+  {% if train.limited_by_weight %}
+    <span class="app-limit-weight badge">Recommended weight</span>
+  {% endif %}
+
+  {% if not train.limited_by_length and not train.limited_by_weight %}
     {{ empty("Not limited by length or weight") }}
-  {% endfor %}
+  {% endif %}
+{% endmacro %}
+
+{% macro train(train, tile_width) %}
+  <div class="app-bg-tiles" style="width: {{ (tile_width * train.station_length) + 1 }}px;">
+    {%- for wagon_type in train -%}
+      <img src="{{ url_for('static', filename=wagon_type.icon) }}" alt="{{ wagon_type.name or wagon_type.id }}" width="{{ tile_width * wagon_type.length }}px">
+    {%- endfor -%}
+  </div>
 {% endmacro %}

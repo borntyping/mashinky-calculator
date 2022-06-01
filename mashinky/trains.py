@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import dataclasses
 import itertools
 import math
@@ -10,27 +11,15 @@ from mashinky.models import Engine, Epoch, Payment, TokenType, Track, Wagon, Car
 
 @dataclasses.dataclass(frozen=True)
 class Limit:
-    name: typing.ClassVar[str]
-    unit: typing.ClassVar[str]
-    maximum: typing.Union[int, float]
+    maximum: int
 
 
-@dataclasses.dataclass(frozen=True)
 class LengthLimit(Limit):
-    name = "length"
-    unit = "tiles"
-    maximum: float
-
     def __str__(self) -> str:
         return f"Length ({self.maximum:.2f} tiles)"
 
 
-@dataclasses.dataclass(frozen=True)
 class WeightLimit(Limit):
-    name = "weight"
-    unit = "tons"
-    maximum: int
-
     def __str__(self) -> str:
         return f"Weight ({self.maximum} tons)"
 
@@ -38,7 +27,10 @@ class WeightLimit(Limit):
 @dataclasses.dataclass(frozen=True)
 class Train:
     wagon_types: typing.Sequence[WagonType]
-    limits: typing.Sequence[Limit] = ()
+
+    station_length: typing.Optional[int] = None
+    limited_by_length: bool = False
+    limited_by_weight: bool = False
 
     def __iter__(self) -> typing.Iterator[WagonType]:
         return iter(self.wagon_types)
@@ -68,7 +60,7 @@ class Train:
     # WagonType properties
 
     @property
-    def epoch(self) -> typing.Optional[Epoch]:
+    def epoch_start(self) -> typing.Optional[Epoch]:
         epochs = {
             wagon_type.epoch_start for wagon_type in self.wagon_types if wagon_type.epoch_start
         }
@@ -155,17 +147,8 @@ class Train:
 
     # Train properties
 
-    # def remaining_length(self, max_length: int) -> float:
-    #     return max_length - self.length
-    #
-    # def remaining_weight(self) -> float:
-    #     return self.recommended_weight - self.weight_full
-
-    def add_wagons(self, wagon: Wagon, max_length: int) -> Train:
-        length = LengthLimit(max_length)
-        weight = WeightLimit(self.recommended_weight)
-
-        length_max = max_length - self.length
+    def add_wagons(self, wagon: Wagon) -> Train:
+        length_max = self.station_length - self.length
         weight_max = self.recommended_weight - self.weight_full
 
         length_count = math.floor(length_max / wagon.length)
@@ -173,16 +156,24 @@ class Train:
 
         if length_count < weight_count:
             count = length_count
-            limits = (length,)
+            limited_by_length = True
+            limited_by_weight = False
         elif length_count > weight_count:
             count = weight_count
-            limits = (weight,)
+            limited_by_length = False
+            limited_by_weight = True
         else:
             count = length_count
-            limits = (length, weight)
+            limited_by_length = True
+            limited_by_weight = True
 
         wagons = [wagon for _ in range(count)]
-        return Train([*self, *wagons], limits=limits)
+        return Train(
+            wagon_types=[*self, *wagons],
+            station_length=self.station_length,
+            limited_by_length=limited_by_length,
+            limited_by_weight=limited_by_weight,
+        )
 
 
 def combinations(
@@ -195,9 +186,10 @@ def combinations(
     - Skips double-engine trains that use a unique engine.
     - Skips double-engine trains that have a lower capacity.
     """
+
     for engine, wagon in itertools.product(engines, wagons):
-        single = Train([engine]).add_wagons(wagon, station_length)
-        double = Train([engine, engine]).add_wagons(wagon, station_length)
+        single = Train([engine], station_length).add_wagons(wagon)
+        double = Train([engine, engine], station_length).add_wagons(wagon)
 
         yield single
 

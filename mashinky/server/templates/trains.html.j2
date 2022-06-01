@@ -1,4 +1,6 @@
-{% extends '_base.html.j2' %}{% import '_macros.html.j2' as macros %}{% import '_macros_wagon_type.html.j2' as macros_wagon_type %}
+{% extends '_base.html.j2' %}
+{% import '_macros.html.j2' as macros %}
+{% import '_macros_wagon_type.html.j2' as macros_wagon_type with context %}
 {% block page %}
   <section class="">
     <h1>Trains {{ macros.count(trains) }}</h1>
@@ -7,12 +9,12 @@
       <thead class="thead-light">
       <tr>
         <th class="text-center">Epoch</th>
-        <th>Engine</th>
-        <th>Wagon</th>
-        <th>Train</th>
+        <th class="text-start">Engine</th>
+        <th class="text-start">Wagon</th>
+        <th class="text-start">Train</th>
         <th class="text-end">Weight</th>
         <th class="text-end">Length</th>
-        <th>Cargo</th>
+        <th class="text-start">Cargo</th>
         <th class="text-end">Limits</th>
       </tr>
       </thead>
@@ -20,16 +22,12 @@
       {% for train in trains %}
         <tr>
           <td class="text-center">{{ macros_wagon_type.epoch(train) }}</td>
-          <td>{{ macros_wagon_type.name(train.engine) }}</td>
-          <td>{{ macros_wagon_type.name(train.wagon) }}</td>
-          <td class="w-50">
-            {% for wagon_type in train %}
-              {{ macros_wagon_type.icon(wagon_type) }}
-            {% endfor %}
-          </td>
+          <td class="text-start text-truncate">{{ macros_wagon_type.name(train.engine) }}</td>
+          <td class="text-start text-truncate">{{ macros_wagon_type.name(train.wagon) }}</td>
+          <td class="text-start">{{- macros_wagon_type.train(train, tile_width) -}}</td>
           <td class="text-end">{{ macros_wagon_type.weight(train) }}</td>
           <td class="text-end">{{ macros_wagon_type.length(train) }}</td>
-          <td>{{ macros_wagon_type.cargo(train) }}</td>
+          <td class="text-start">{{ macros_wagon_type.cargo(train) }}</td>
           <td class="text-end">{{ macros_wagon_type.limits(train) }}</td>
         </tr>
       {% endfor %}
