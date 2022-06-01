@@ -4,6 +4,7 @@ import enum
 import math
 import typing
 
+import sqlalchemy.orm
 from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import declarative_base, relationship
 
@@ -180,6 +181,30 @@ class WagonType(Base, ConfigMixin):
     def unique(self) -> bool:
         """TODO: Special cases for quest rewards that give multiple engines."""
         return self.is_quest_reward
+
+    def times(self, count: int) -> typing.Sequence[WagonType]:
+        return [self for _ in range(count)]
+
+    @classmethod
+    def search(
+        cls,
+        *,
+        ids: typing.Collection[str] = (),
+        names: typing.Collection[str] = (),
+        epoch: typing.Optional[Epoch] = None,
+    ) -> sqlalchemy.orm.Query:
+        query = cls.query.order_by(cls.id)
+
+        if ids:
+            query = query.filter(cls.id.in_(ids))
+
+        if names:
+            query = query.filter(cls.id.in_(names))
+
+        if epoch is not None:
+            query = query.filter(cls.epoch_start <= epoch, epoch <= cls.epoch_end)
+
+        return query
 
 
 class Engine(WagonType, ConfigMixin):

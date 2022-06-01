@@ -34,6 +34,7 @@ def variables():
     return {
         "undefined": "—",
         "tile_width": 100,
+        "line_break": "\n",
     }
 
 
@@ -47,25 +48,19 @@ def trains():
     epoch = Epoch(request.args.get("epoch", default=1, type=int))
     station_length: int = request.args.get("station_length", default=6, type=int)
 
-    path = url_for("trains", epoch=epoch.value, station_length=station_length, _external=False)
-    if path != request.full_path:
-        return redirect(path)
+    engine_ids = request.args.getlist("engine_id")
+    engine_names = request.args.getlist("engine_name")
 
-    engines = (
-        Engine.query.order_by(Engine.id)
-        .filter(WagonType.epoch_start <= epoch, epoch <= WagonType.epoch_end)
-        .all()
-    )
-    wagons = (
-        Wagon.query.order_by(Wagon.id)
-        .filter(WagonType.epoch_start <= epoch, epoch <= WagonType.epoch_end)
-        .all()
-    )
+    wagon_ids = request.args.getlist("wagon_id")
+    wagon_names = request.args.getlist("wagon_name")
+
+    engines = Engine.search(epoch=epoch, ids=engine_ids, names=engine_names).all()
+    wagons = Wagon.search(epoch=epoch, ids=wagon_ids, names=wagon_names).all()
 
     combos = list(combinations(engines, wagons, station_length=station_length))
     combos = sorted(combos, key=lambda train: train.capacity, reverse=True)
 
-    return render_template("trains.html.j2", trains=combos)
+    return render_template("trains.html.j2", trains=combos, engines=engines, wagons=wagons)
 
 
 @app.route("/wagon_types")

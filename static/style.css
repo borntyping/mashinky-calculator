@@ -56,7 +56,15 @@ code {
     background: var(--burgundy);
 }
 
-.app-bg-tiles {
+.app-tiles-container {
+    overflow-x: hidden;
+    white-space: nowrap;
+}
+
+.app-tiles {
+    overflow-x: visible;
+    white-space: nowrap;
+
     --app-tiles-width: 100px;
     --app-tiles-a: rgba(107, 123, 180, 0.2); /* var(--periwinkle); */
     --app-tiles-b: rgba(119, 175, 213, 0.2); /* var(--light-blue); */

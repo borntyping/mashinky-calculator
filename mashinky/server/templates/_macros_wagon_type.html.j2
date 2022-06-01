@@ -18,10 +18,22 @@
 {%- endmacro %}
 
 {% macro icon(wagon_type, tile_width) -%}
-  <div class="app-bg-tiles" style="width: {{ tile_width * 2 }}px;">
-    <img src="{{ url_for('static', filename=wagon_type.icon) }}" alt="{{ wagon_type.name or wagon_type.id }}" width="{{ tile_width * wagon_type.length }}px">
+    <img src="{{ url_for('static', filename=wagon_type.icon) }}" alt="{{ wagon_type.name }}" title="{{ wagon_type.name }} [{{ wagon_type.id }}]" width="{{ tile_width * wagon_type.length }}px">
+{%- endmacro %}
+
+{% macro icon_single(wagon_type, tile_width) -%}
+  <div class="app-tiles" style="width: {{ tile_width * 2 }}px;">
+    {{ icon(wagon_type, tile_width) }}
   </div>
 {%- endmacro %}
+
+{% macro icon_train(train, tile_width) %}
+  <div class="app-tiles" style="width: {{ (tile_width * train.station_length) + 1 }}px;">
+    {%- for wagon_type in train -%}
+      {{- icon(wagon_type, tile_width) -}}
+    {%- endfor -%}
+  </div>
+{% endmacro %}
 
 {% macro epoch(wagon_type) -%}
   {%- if wagon_type.epoch_start and wagon_type.epoch_end -%}
@@ -91,17 +103,29 @@
 {# Wagons and road vehicles #}
 
 {% macro cargo(wagon_type) -%}
-  {%- if wagon_type.cargo_type is not none -%}
+  {%- for cargo_type in wagon_type.cargo_types -%}
     <div class="d-inline-flex justify-content-start align-items-center">
-      <img class="d-block mx-1 app-icon-sm" src="{{ url_for('static', filename=wagon_type.cargo_type.icon) }}" alt="{{ wagon_type.cargo_type }}">
+      <img class="d-block mx-1 app-icon-sm" src="{{ url_for('static', filename=cargo_type.icon) }}" alt="{{ cargo_type }}">
       <span class="d-block">{{ wagon_type.capacity }}</span>
     </div>
   {%- else -%}
     {{ empty("No cargo") }}
-  {%- endif -%}
+  {%- endfor -%}
 {%- endmacro %}
 
 {# Trains #}
+
+{% macro warnings(train) %}
+  {% if train.overweight_empty %}
+    <span class="badge bg-danger" title="Train is overweight when empty.{{ line_break }}It may slow down and struggle to go uphill.{{ line_break }}Recommended weight: {{ train.recommended_weight }} tons.">Overweight</span>
+  {% elif train.overweight_full %}
+    <span class="badge bg-warning" title="Train is overweight when empty.{{ line_break }}It may slow down and struggle to go uphill.{{ line_break }}Recommended weight: {{ train.recommended_weight }} tons.">Overweight</span>
+  {% endif %}
+
+  {% if train.overlong %}
+    <span class="badge bg-dark" title="Train is longer than the configured station length ({{ train.station_length }} tiles).{{ line_break }}It will take longer to load and unload cargo.">Overlong</span>
+  {% endif %}
+{% endmacro %}
 
 {% macro limits(train) %}
   {% if train.limited_by_length %}
@@ -115,12 +139,4 @@
   {% if not train.limited_by_length and not train.limited_by_weight %}
     {{ empty("Not limited by length or weight") }}
   {% endif %}
-{% endmacro %}
-
-{% macro train(train, tile_width) %}
-  <div class="app-bg-tiles" style="width: {{ (tile_width * train.station_length) + 1 }}px;">
-    {%- for wagon_type in train -%}
-      <img src="{{ url_for('static', filename=wagon_type.icon) }}" alt="{{ wagon_type.name or wagon_type.id }}" width="{{ tile_width * wagon_type.length }}px">
-    {%- endfor -%}
-  </div>
 {% endmacro %}

@@ -10,21 +10,6 @@ from mashinky.models import Engine, Epoch, Payment, TokenType, Track, Wagon, Car
 
 
 @dataclasses.dataclass(frozen=True)
-class Limit:
-    maximum: int
-
-
-class LengthLimit(Limit):
-    def __str__(self) -> str:
-        return f"Length ({self.maximum:.2f} tiles)"
-
-
-class WeightLimit(Limit):
-    def __str__(self) -> str:
-        return f"Weight ({self.maximum} tons)"
-
-
-@dataclasses.dataclass(frozen=True)
 class Train:
     wagon_types: typing.Sequence[WagonType]
 
@@ -40,22 +25,30 @@ class Train:
         return [wagon_type for wagon_type in self.wagon_types if isinstance(wagon_type, Engine)]
 
     @property
-    def engine(self) -> Engine:
-        if len(set(self.engines)) > 1:
-            raise ValueError("Train has multiple types of engine")
+    def engines_set(self) -> typing.Set[Engine]:
+        return {wagon_type for wagon_type in self.wagon_types if isinstance(wagon_type, Engine)}
 
-        return self.engines[0]
+    @property
+    def engine(self) -> typing.Optional[Engine]:
+        if len(self.engines_set) == 1:
+            return self.engines[0]
+
+        return None
 
     @property
     def wagons(self) -> typing.Sequence[Wagon]:
         return [wagon_type for wagon_type in self.wagon_types if isinstance(wagon_type, Wagon)]
 
     @property
-    def wagon(self) -> Wagon:
-        if len(set(self.wagons)) > 1:
-            raise ValueError("Train has multiple types of wagon")
+    def wagons_set(self) -> typing.Set[Wagon]:
+        return {wagon_type for wagon_type in self.wagon_types if isinstance(wagon_type, Wagon)}
 
-        return self.wagons[0]
+    @property
+    def wagon(self) -> typing.Optional[Wagon]:
+        if len(self.wagons_set) == 1:
+            return self.wagons[0]
+
+        return None
 
     # WagonType properties
 
@@ -94,13 +87,6 @@ class Train:
     @property
     def cargo_types(self) -> typing.Set[CargoType]:
         return {wt.cargo_type for wt in self.wagon_types if wt.cargo_type is not None}
-
-    @property
-    def cargo_type(self) -> CargoType:
-        if len(self.cargo_types) > 1:
-            raise ValueError("Train has multiple cargo types")
-
-        return self.cargo_types.pop()
 
     @property
     def capacity(self) -> int:
@@ -147,7 +133,18 @@ class Train:
 
     # Train properties
 
-    def add_wagons(self, wagon: Wagon) -> Train:
+    def extend(self, wagon_types: typing.Sequence[WagonType], **kwargs):
+        return dataclasses.replace(self, wagon_types=[*self.wagon_types, *wagon_types], **kwargs)
+
+    def add_wagons_to_recommended_weight(self, wagon: Wagon):
+        count = math.floor((self.recommended_weight - self.weight_full) / wagon.weight_full)
+        return self.extend(wagon.times(count), limited_by_weight=True)
+
+    def add_wagons_to_station_length(self, wagon: Wagon):
+        count = math.floor((self.station_length - self.length) / wagon.length)
+        return self.extend(wagon.times(count), limited_by_length=True)
+
+    def add_wagons_within_limits(self, wagon: Wagon) -> Train:
         length_max = self.station_length - self.length
         weight_max = self.recommended_weight - self.weight_full
 
@@ -175,6 +172,18 @@ class Train:
             limited_by_weight=limited_by_weight,
         )
 
+    @property
+    def overweight_full(self) -> bool:
+        return self.weight_full > self.recommended_weight
+
+    @property
+    def overweight_empty(self) -> bool:
+        return self.weight_empty > self.recommended_weight
+
+    @property
+    def overlong(self) -> bool:
+        return self.length > self.station_length
+
 
 def combinations(
     engines: typing.Iterable[Engine],
@@ -188,10 +197,22 @@ def combinations(
     """
 
     for engine, wagon in itertools.product(engines, wagons):
-        single = Train([engine], station_length).add_wagons(wagon)
-        double = Train([engine, engine], station_length).add_wagons(wagon)
+        # Dedupe trains with the same capacity
+        capacities: dict[int, Train] = {}
 
-        yield single
+        single_head = Train(engine.times(1), station_length)
+        double_head = Train(engine.times(2), station_length)
 
-        if double.capacity > single.capacity and not engine.unique:
-            yield double
+        single_length = single_head.add_wagons_to_station_length(wagon)
+        single_weight = single_head.add_wagons_to_recommended_weight(wagon)
+
+        capacities.setdefault(single_length.capacity, single_length)
+        capacities.setdefault(single_weight.capacity, single_weight)
+
+        if not engine.unique:
+            double_length = double_head.add_wagons_to_station_length(wagon)
+            double_weight = double_head.add_wagons_to_recommended_weight(wagon)
+            capacities.setdefault(double_length.capacity, double_length)
+            capacities.setdefault(double_weight.capacity, double_weight)
+
+        yield from capacities.values()

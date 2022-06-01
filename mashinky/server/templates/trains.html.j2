@@ -5,6 +5,9 @@
   <section class="">
     <h1>Trains {{ macros.count(trains) }}</h1>
 
+    <p>Selecting from {{ engines|length }} engines ({{ engines|map(attribute='name')|join(', ') }}).</p>
+    <p>Selecting from {{ wagons|length }} wagons ({{ wagons|map(attribute='name')|join(', ') }}).</p>
+
     <table class="table table-sm table-hover table-responsive align-middle">
       <thead class="thead-light">
       <tr>
@@ -12,23 +15,25 @@
         <th class="text-start">Engine</th>
         <th class="text-start">Wagon</th>
         <th class="text-start">Train</th>
+        <th class="text-end">Recommended weight</th>
         <th class="text-end">Weight</th>
         <th class="text-end">Length</th>
         <th class="text-start">Cargo</th>
-        <th class="text-end">Limits</th>
+        <th class="text-end">Warnings</th>
       </tr>
       </thead>
       <tbody class="table-group-divider">
       {% for train in trains %}
         <tr>
           <td class="text-center">{{ macros_wagon_type.epoch(train) }}</td>
-          <td class="text-start text-truncate">{{ macros_wagon_type.name(train.engine) }}</td>
-          <td class="text-start text-truncate">{{ macros_wagon_type.name(train.wagon) }}</td>
-          <td class="text-start">{{- macros_wagon_type.train(train, tile_width) -}}</td>
+          <td class="text-start text-truncate">{{ macros_wagon_type.name(train.engine) if train.engine else undefined  }}</td>
+          <td class="text-start text-truncate">{{ macros_wagon_type.name(train.wagon) if train.wagon else undefined }}</td>
+          <td class="text-start app-tiles-container">{{- macros_wagon_type.icon_train(train, tile_width) -}}</td>
+          <td class="text-end">{{ macros_wagon_type.recommended_weight(train) }}</td>
           <td class="text-end">{{ macros_wagon_type.weight(train) }}</td>
           <td class="text-end">{{ macros_wagon_type.length(train) }}</td>
           <td class="text-start">{{ macros_wagon_type.cargo(train) }}</td>
-          <td class="text-end">{{ macros_wagon_type.limits(train) }}</td>
+          <td class="text-end">{{ macros_wagon_type.warnings(train) }}</td>
         </tr>
       {% endfor %}
       </tbody>
