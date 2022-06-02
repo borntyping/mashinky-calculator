@@ -34,7 +34,6 @@ def variables():
     return {
         "undefined": "—",
         "tile_width": 100,
-        "line_break": "\n",
         "Epoch": Epoch,
     }
 
@@ -62,10 +61,17 @@ def search_trains():
 
     results = options.collect()
 
+    best = {
+        "capacity": max(t.capacity for t in results.trains),
+        "max_speed": max(t.max_speed for t in results.trains),
+        "utilization": max(t.utilization for t in results.trains),
+    }
+
     return render_template(
         "trains.html.j2",
         options=options,
         results=results,
+        best=best,
         engines=Engine.search(epoch=options.epoch).all(),
         wagons=Wagon.search(epoch=options.epoch).all(),
         cargo_types=Cargo.search(epoch=options.epoch).all(),

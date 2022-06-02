@@ -44,6 +44,12 @@ code {
     color: var(--bs-gray-400)
 }
 
+tr:hover .app-text-faded,
+.app-text-faded:hover {
+    color: var(--bs-gray-600)
+}
+
+
 .app-icon-sm {
     height: 16px;
 }
@@ -76,6 +82,10 @@ code {
     /*padding-bottom: 1px;*/
     /*border-bottom: 1px solid var(--silver);*/
     /*margin-bottom: 1px;*/
+}
+
+.app-best {
+    color: var(--gold);
 }
 
 .app-text-apple-green { color: var(--apple-green); }

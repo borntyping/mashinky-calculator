@@ -82,10 +82,9 @@ class Train:
 
     @staticmethod
     def _payments(payments: typing.Iterable[Payment]) -> dict[TokenType, int]:
-        total = {}
+        total = collections.Counter()
 
-        for payment in payments:
-            total.setdefault(payment.token_type, 0)
+        for payment in sorted(payments, key=lambda p: p.token_type.id):
             total[payment.token_type] += payment.amount
 
         return total
@@ -134,6 +133,10 @@ class Train:
 
     def is_over_recommended_weight_full(self) -> bool:
         return self.weight_full > self.recommended_weight
+
+    @property
+    def utilization(self) -> float:
+        return self.weight_full / self.recommended_weight
 
 
 class MaximumWeight(enum.Enum):

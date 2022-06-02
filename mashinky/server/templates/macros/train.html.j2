@@ -1,19 +1,20 @@
 {% macro weight(train) -%}
   {% set empty = train.is_over_recommended_weight_empty() %}
   {% set full = train.is_over_recommended_weight_full() %}
-  <span class="text-truncate" title="Recommended weight: {{ train.recommended_weight }} tons&#10;
-    Weight when empty: {{ train.weight_empty }} tons&#10;
+  {% set usage = train.weight_full / train.recommended_weight %}
+  <span class="text-truncate" title="Weight when empty: {{ train.weight_empty }} tons.&#10;Weight when full: {{ train.weight_full }} tons.&#10;Recommended weight: {{ train.recommended_weight }} tons.&#10;&#10;
     {%- if empty -%}
-    Train is over the recommended weight when empty.
+    Over the recommended weight when empty.
     {%- else -%}
-    Train is under the recommended weight when empty.
+    Under the recommended weight when empty.
     {%- endif -%}
-    &#10;Weight when full: {{ train.weight_full }} tons&#10;
+    &#10;
     {%- if full -%}
-    Train is over the recommended weight when full.
+    Over the recommended weight when full.
     {%- else -%}
-    Train is under the recommended weight when full.
-    {%- endif %}-">
+    Under the recommended weight when full.
+    {%- endif -%}
+    &#10;Using {{ "{:.0%}".format(usage) }} of the recommended weight.">
     {%- if empty or full -%}
       <span>⚠ </span>
     {%- endif -%}
@@ -30,7 +31,8 @@
         <span class="app-text-low">{{ train.weight_full }}</span>
       {%- endif -%}
     </span>
-    <span class="app-text-turquoise">({{ train.recommended_weight }})</span> tons
+    <span>tons</span>
+    <span class="app-text-faded">({{ "{:.0%}".format(usage) }})</span>
   </span>
 {%- endmacro %}
 
@@ -56,4 +58,13 @@
   {%- else -%}
     {{ empty("No cargo") }}
   {%- endfor -%}
+{%- endmacro %}
+
+{% macro costs(payments) -%}
+  {% for token_type, amount in payments.items() %}
+    <div class="d-inline-flex justify-content-start align-items-center" title="{{ amount }} {{ token_type.name|lower }}">
+      <img class="d-block mx-1 app-icon-sm" src="{{ url_for('static', filename=token_type.icon) }}" alt="{{ token_type }}">
+      <span class="d-block">{{ amount }}</span>
+    </div>
+  {% endfor %}
 {%- endmacro %}
