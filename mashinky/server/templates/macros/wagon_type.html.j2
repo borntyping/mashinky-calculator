@@ -1,5 +1,5 @@
 {% macro empty(title) -%}
-  <span class="text-faded" title="{{ title }}">&mdash;</span>
+  <span class="app-text-faded" title="{{ title }}">&mdash;</span>
 {%- endmacro %}
 
 {% macro id(wagon_type) -%}
@@ -12,11 +12,11 @@
 
 {% macro name(wagon_type) -%}
   {%- if wagon_type.type == "engine" -%}
-    {%- set class="text-royal-blue" -%}
+    {%- set class="app-text-engine" -%}
   {%- elif wagon_type.type == "wagon" -%}
-    {%- set class="text-sage-green" -%}
+    {%- set class="app-text-wagon" -%}
   {%- elif wagon_type.type == "road_vehicle" -%}
-    {%- set class="text-chocolate" -%}
+    {%- set class="app-text-road-vehicle" -%}
   {%- endif -%}
   <span class="{{ class }}">{{ wagon_type.name }}</span>
   {%- if wagon_type.is_quest_reward -%}
@@ -66,8 +66,9 @@
   {% else %}
     <span class="text-truncate">{{ wagon_type.weight_empty }} tons</span>
   {% endif %}
-
 {%- endmacro %}
+
+
 
 {% macro length(wagon_type) -%}
   <span class="text-truncate">{{ "%.2f"|format(wagon_type.length) }} tiles</span>
@@ -99,27 +100,27 @@
 {# This isn't actually used, all trains reverse at 19mph. #}
 {% macro reverse_speed(engine) -%}
   {% if engine.max_speed_reverse is not none -%}
-    <span class="text-faded">({{ engine.max_speed_reverse }} km/h)</span>
+    <span class="app-text-faded">({{ engine.max_speed_reverse }} km/h)</span>
   {%- endif %}
 {%- endmacro %}
 
 {# Wagons and road vehicles #}
 
 {% macro cargo(wagon_type) -%}
-  {%- for cargo_type in wagon_type.cargo_types -%}
+  {%- if wagon_type.cargo_type and wagon_type.capacity -%}
     <div class="d-inline-flex justify-content-start align-items-center">
-      <img class="d-block mx-1 app-icon-sm" src="{{ url_for('static', filename=cargo_type.icon) }}" alt="{{ cargo_type }}">
-      <span class="d-block">{{ wagon_type.capacity }} {{ cargo_type.name.lower() }}</span>
+      <img class="d-block mx-1 app-icon-sm" src="{{ url_for('static', filename=wagon_type.cargo_type.icon) }}" alt="{{ wagon_type.cargo_type }}">
+      <span class="d-block">{{ wagon_type.capacity }} {{ wagon_type.cargo_type.name.lower() if wagon_type.cargo_type.name else 'UNDEFINED' }}</span>
     </div>
   {%- else -%}
     {{ empty("No cargo") }}
-  {%- endfor -%}
+  {%- endif -%}
 {%- endmacro %}
 
 {# Trains #}
 
 {% macro description(train) %}
-  {% for wagon_type, count in train.counter.items() %}
+  {% for wagon_type, count in train.wagon_type_counter.items() %}
     <span class="app-train-description">
       {{ name(wagon_type) }}
       {%- if count > 1 -%}

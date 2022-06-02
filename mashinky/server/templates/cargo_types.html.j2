@@ -1,22 +1,81 @@
-{% extends '_base.html.j2' %}
-{% import 'macros/common.html.j2' as macros %}
+{% extends '_base.html.j2' %}{% import 'macros/common.html.j2' as macros %}
 {% block page %}
   <section>
     <h1>Cargo types {{ macros.count(cargo_types) }}</h1>
     <div class="d-flex flex-wrap align-self-stretch">
       {% for cargo_type in cargo_types %}
-        <div class="w-25 p-1">
+        <div class="w-25 p-2">
           <div class="card h-100">
-            <div class="card-body d-flex align-items-center p-1">
+            <div class="card-header text-center">
               <img class="mx-1" src="{{ url_for('static', filename=cargo_type.icon) }}" alt="{{ cargo_type.name or cargo_type.icon }}" width="32px" height="32px">
-              <div class="mx-1">
-                {% if cargo_type.name %}
-                  <div class="card-text text-info">{{ cargo_type.name }}</div>
-                {% else %}
-                  <div class="card-text text-muted">{{ undefined }}</div>
-                {% endif %}
-                <code class="card-text text-muted">{{ cargo_type.id }}</code>
-              </div>
+            </div>
+            <div class="card-body p-0">
+              <table class="table table-sm table-hover mb-0">
+                <tr>
+                  <th class="ps-3 w-50">ID</th>
+                  <td class="pe-3 w-50"><code class="text-muted">{{ cargo_type.id }}</code></td>
+                </tr>
+                <tr>
+                  <th class="ps-3">Name</th>
+                  <td class="pe-3">
+                    {% if cargo_type.name %}
+                      <span class="text-info">{{ cargo_type.name }}</span>
+                    {% else %}
+                      <span class="app-text-faded">&mdash;</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                <tr>
+                  <th class="ps-3">Color</th>
+                  <td class="pe-3">
+                    {% if cargo_type.color %}
+                      <code style="color: {{ cargo_type.css_color }};">{{ cargo_type.css_color }}</code>
+                    {% endif %}
+                  </td>
+                </tr>
+                <tr>
+                  <th class="ps-3">Icon</th>
+                  <td class="pe-3">
+                    {% if cargo_type.icon_mini %}
+                      <img class="mx-1" src="{{ url_for('static', filename=cargo_type.icon_mini) }}" alt="{{ cargo_type.name or cargo_type.icon }}" width="16px" height="16px">
+                    {% endif %}
+                  </td>
+                </tr>
+                <tr>
+                  <th class="ps-3">Type</th>
+                  <td class="pe-3">
+                    {% if cargo_type.type %}
+                      <code>{{ cargo_type.type }}</code>
+                    {% else %}
+                      <span>&mdash;</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                <tr>
+                  <th class="ps-3">Load speed</th>
+                  <td class="pe-3">{{ cargo_type.load_speed or '&mdash;' }}</td>
+                </tr>
+                <tr>
+                  <th class="ps-3">Sell immediately</th>
+                  <td class="pe-3">{{ 'True' if cargo_type.sell_immediately else 'False' }}</td>
+                </tr>
+                <tr>
+                  <th class="ps-3">Affects city growth</th>
+                  <td class="pe-3">{{ '%+d'|format(cargo_type.affect_city_grow) if cargo_type.affect_city_grow else '&mdash;' }}</td>
+                </tr>
+                <tr>
+                  <th class="ps-3">Train stop capacity</th>
+                  <td class="pe-3">{{ cargo_type.train_stop_capacity or '&mdash;' }}</td>
+                </tr>
+                <tr>
+                  <th class="ps-3">Road stop capacity</th>
+                  <td class="pe-3">{{ cargo_type.road_stop_capacity or '&mdash;' }}</td>
+                </tr>
+                <tr>
+                  <th class="ps-3">Stop capacity</th>
+                  <td class="pe-3">{{ cargo_type.stop_capacity or '&mdash;' }}</td>
+                </tr>
+              </table>
             </div>
           </div>
         </div>

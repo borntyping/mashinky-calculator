@@ -1,14 +1,12 @@
-import time
-
-from flask import Flask, g, render_template, request
+from flask import Flask, render_template, request
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_sqlalchemy import SQLAlchemy
 from jinja2 import StrictUndefined
-from sqlalchemy import asc, nulls_last
+from sqlalchemy import asc
 
 from mashinky.models import (
     Base,
-    CargoType,
+    Cargo,
     Color,
     Engine,
     Epoch,
@@ -18,7 +16,7 @@ from mashinky.models import (
     WagonType,
 )
 from mashinky.paths import sqlalchemy_database_url, static_folder
-from mashinky.trains import Options
+from mashinky.server.trains import MaximumLength, MaximumWeight, Options
 
 app = Flask(import_name=__name__, static_folder=static_folder)
 app.jinja_env.undefined = StrictUndefined
@@ -46,27 +44,31 @@ def home():
     return render_template("home.html.j2")
 
 
-@app.route("/trains")
-def trains():
+@app.route("/trains", endpoint="trains")
+def search_trains():
     epoch = Epoch(request.args.get("epoch", default=1, type=int))
 
     options = Options(
         epoch=epoch,
         engines=Engine.search(epoch=epoch, ids=request.args.getlist("engine_id")),
         wagons=Wagon.search(epoch=epoch, ids=request.args.getlist("wagon_id")),
-        cargo_types=CargoType.search(ids=request.args.getlist("cargo_type_id")),
+        cargo_types=Cargo.search(ids=request.args.getlist("cargo_type_id")),
         station_length_short=request.args.get("station_length_short", default=6, type=int),
         station_length_long=request.args.get("station_length_long", default=8, type=int),
         maximum_engines=request.args.get("maximum_engines", default=2, type=int),
+        maximum_length=MaximumLength(request.args.get("maximum_length", default="short", type=str)),
+        maximum_weight=MaximumWeight(request.args.get("maximum_weight", default="full", type=str)),
     )
+
+    results = options.collect()
 
     return render_template(
         "trains.html.j2",
         options=options,
-        trains=options.collect(),
+        results=results,
         engines=Engine.search(epoch=options.epoch),
         wagons=Wagon.search(epoch=options.epoch),
-        cargo_types=CargoType.search(),
+        cargo_types=Cargo.search(),
     )
 
 
@@ -86,7 +88,7 @@ def wagon_types():
 def cargo_types():
     return render_template(
         "cargo_types.html.j2",
-        cargo_types=CargoType.query.order_by(nulls_last(CargoType.name), asc(CargoType.name)).all(),
+        cargo_types=Cargo.query.order_by(asc(Cargo.id)).all(),
     )
 
 
@@ -94,7 +96,7 @@ def cargo_types():
 def token_types():
     return render_template(
         "token_types.html.j2",
-        token_types=TokenType.query.order_by(nulls_last(TokenType.name), asc(TokenType.name)).all(),
+        token_types=TokenType.query.order_by(asc(TokenType.id)).all(),
     )
 
 

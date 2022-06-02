@@ -1,6 +1,7 @@
 {% extends '_base.html.j2' %}
 {% import 'macros/common.html.j2' as macros %}
 {% import 'macros/wagon_type.html.j2' as macros_wagon_type with context %}
+{% import 'macros/engine.html.j2' as macros_engine %}
 {% block page %}
   <section class="">
     <h1>Wagon types</h1>
@@ -38,7 +39,7 @@
           <td class="text-center">{{ macros_wagon_type.epoch(engine) }}</td>
           <td class="text-center">{{ macros_wagon_type.track(engine) }}</td>
           <td class="text-end">{{ macros_wagon_type.weight(engine) }}</td>
-          <td class="text-end">{{ macros_wagon_type.recommended_weight(engine) }}</td>
+          <td class="text-end">{{ macros_engine.recommended_weight(engine) }}</td>
           <td class="text-end">{{ macros_wagon_type.length(engine) }}</td>
           <td class="text-end">{{ macros_wagon_type.power(engine) }}</td>
           <td class="text-end">{{ macros_wagon_type.speed(engine) }}</td>

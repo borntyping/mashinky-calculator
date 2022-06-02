@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import collections
 import dataclasses
+import enum
 import itertools
 import math
 import typing
 
-from mashinky.models import Engine, Epoch, Payment, TokenType, Track, Wagon, CargoType, WagonType
+from mashinky.models import Engine, Epoch, Payment, TokenType, Track, Wagon, Cargo, WagonType
 
 T = typing.TypeVar("T")
 
@@ -19,42 +20,20 @@ class Train:
         return iter(self.wagon_types)
 
     @property
-    def counter(self) -> collections.Counter[WagonType]:
+    def wagon_type_set(self) -> frozenset[WagonType]:
+        return frozenset(self.wagon_types)
+
+    @property
+    def wagon_type_counter(self) -> collections.Counter[WagonType]:
         return collections.Counter(self.wagon_types)
 
     @property
     def engines(self) -> typing.Generator[Engine]:
         return (wagon_type for wagon_type in self.wagon_types if isinstance(wagon_type, Engine))
 
-    # @property
-    # def engines_as_counter(self) -> typing.Set[Engine]:
-    #     return collections.Counter(self.engines)
-
-    @property
-    def engine(self) -> typing.Optional[Engine]:
-        engines = list(self.engines)
-
-        if len(engines) == 1:
-            return engines[0]
-
-        return None
-
     @property
     def wagons(self) -> typing.Generator[Wagon]:
         return (wagon_type for wagon_type in self.wagon_types if isinstance(wagon_type, Wagon))
-
-    # @property
-    # def wagons_as_counter(self) -> typing.Set[Engine]:
-    #     return collections.Counter(self.wagons)
-
-    @property
-    def wagon(self) -> typing.Optional[Wagon]:
-        wagons = list(self.wagons)
-
-        if len(wagons) == 1:
-            return wagons[0]
-
-        return None
 
     # WagonType properties
 
@@ -91,7 +70,7 @@ class Train:
         return any(wagon_type.depo_upgrade for wagon_type in self.wagon_types)
 
     @property
-    def cargo_types(self) -> typing.Set[CargoType]:
+    def cargo_types(self) -> typing.Set[Cargo]:
         return {wt.cargo_type for wt in self.wagon_types if wt.cargo_type is not None}
 
     @property
@@ -139,14 +118,16 @@ class Train:
 
     # Train properties
 
-    def extend(self, wagon_types: typing.Sequence[WagonType], **kwargs):
-        return dataclasses.replace(self, wagon_types=[*self.wagon_types, *wagon_types], **kwargs)
+    def add_wagons(self, wagon_types: typing.Sequence[WagonType]):
+        return dataclasses.replace(self, wagon_types=[*self.wagon_types, *wagon_types])
 
     def add_wagons_to_weight(self: T, wagon: Wagon, weight: int) -> T:
-        return self.extend(wagon.times(math.floor((weight - self.weight_full) / wagon.weight_full)))
+        count = math.floor((weight - self.weight_full) / wagon.weight_full)
+        return self.add_wagons(wagon.times(count))
 
     def add_wagons_to_length(self: T, wagon: Wagon, length: int) -> T:
-        return self.extend(wagon.times(math.floor((length - self.length) / wagon.length)))
+        count = math.floor((length - self.length) / wagon.length)
+        return self.add_wagons(wagon.times(count))
 
     # def add_wagons_within_limits(self, wagon: Wagon) -> Train:
     #     length_max = self.station_length - self.length
@@ -183,37 +164,64 @@ class Train:
         return self.weight_full > self.recommended_weight
 
 
+class MaximumWeight(enum.Enum):
+    FULL = "full"
+    EMPTY = "empty"
+    INFINITE = "infinite"
+
+
+class MaximumLength(enum.Enum):
+    SHORT = "short"
+    LONG = "long"
+    INFINITE = "infinite"
+
+
+@dataclasses.dataclass(frozen=True)
+class Results:
+    trains: list[Train]
+
+    after_generation: list[Train]
+    after_deduplication: list[Train]
+    after_applying_rules: list[Train]
+
+
 @dataclasses.dataclass(frozen=True)
 class Options:
     epoch: Epoch
     engines: typing.Sequence[Engine]
     wagons: typing.Sequence[Wagon]
-    cargo_types: typing.Sequence[CargoType]
+    cargo_types: typing.Sequence[Cargo]
 
     station_length_short: int = 6
     station_length_long: int = 8
+
     maximum_engines: int = 2
+    maximum_weight: MaximumWeight = MaximumWeight.FULL
+    maximum_length: MaximumLength = MaximumLength.SHORT
 
-    include_over_station_length_short: bool = True
-    include_over_station_length_long: bool = False
+    deduplicate_trains: bool = False
 
-    include_over_recommended_weight_full: bool = True
-    include_over_recommended_weight_empty: bool = False
+    @property
+    def wagons_for_cargo(self):
+        return [wagon for wagon in self.wagons if wagon.cargo_type in self.cargo_types]
 
-    def collect(self) -> typing.Sequence[Train]:
-        # Dedupe engine+wagon variations with the same capacity
-        capacities: dict[tuple[Engine, Wagon, int], Train] = {}
+    def collect(self) -> Results:
+        trains = after_generation = [
+            train
+            for engine, wagon in itertools.product(self.engines, self.wagons_for_cargo)
+            for train in self.variations(engine, wagon)
+        ]
 
-        wagons = [wagon for wagon in self.wagons if wagon.cargo_type in self.cargo_types]
-
-        for engine, wagon in itertools.product(self.engines, wagons):
-            for train in self.variations(engine, wagon):
-                # This uses setdefault instead of []=, so the first train generated wins.
-                capacities.setdefault((engine, wagon, train.capacity), train)
-
-        trains = filter(self.should_include, capacities.values())
+        trains = after_deduplication = self.deduplicate(trains)
+        trains = after_applying_rules = self.apply_rules(trains)
         trains = sorted(trains, key=lambda t: t.capacity, reverse=True)
-        return trains
+
+        return Results(
+            trains=trains,
+            after_generation=after_generation,
+            after_deduplication=after_deduplication,
+            after_applying_rules=after_applying_rules,
+        )
 
     def variations(
         self,
@@ -226,17 +234,33 @@ class Options:
             yield train.add_wagons_to_length(wagon, self.station_length_short)
             yield train.add_wagons_to_length(wagon, self.station_length_long)
 
-    def should_include(self, train: Train) -> bool:
-        if self.include_over_station_length_short and train.length > self.station_length_short:
-            return False
+    @staticmethod
+    def deduplicate(trains: list[Train]) -> list[Train]:
+        """Deduplicate engine+wagon variations with the same capacity."""
+        capacities: dict[tuple[frozenset[WagonType], int], Train] = {}
 
-        if self.include_over_station_length_long and train.length > self.station_length_long:
-            return False
+        for train in trains:
+            # This uses setdefault instead of []=, so the first train wins.
+            capacities.setdefault((train.wagon_type_set, train.capacity), train)
 
-        if self.include_over_recommended_weight_full and train.is_over_recommended_weight_full():
-            return False
+        return list(capacities.values())
 
-        if self.include_over_recommended_weight_empty and train.is_over_recommended_weight_empty():
-            return False
+    def apply_rules(self, trains: list[Train]) -> list[Train]:
+        return list(filter(self._should_include, trains))
+
+    def _should_include(self, train: Train) -> bool:
+        if self.maximum_weight == MaximumWeight.FULL:
+            if train.weight_full > train.recommended_weight:
+                return False
+        elif self.maximum_weight == MaximumWeight.EMPTY:
+            if train.weight_empty > train.recommended_weight:
+                return False
+
+        if self.maximum_length == MaximumLength.SHORT:
+            if train.length > self.station_length_short:
+                return False
+        elif self.maximum_length == MaximumLength.LONG:
+            if train.length > self.station_length_long:
+                return False
 
         return True

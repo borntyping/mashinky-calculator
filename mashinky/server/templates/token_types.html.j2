@@ -5,18 +5,28 @@
     <h1>Token types {{ macros.count(token_types) }}</h1>
     <div class="d-flex flex-wrap align-self-stretch">
       {% for token_type in token_types %}
-        <div class="w-25 p-1">
+        <div class="w-25 p-2">
           <div class="card h-100">
-            <div class="card-body d-flex align-items-center p-1">
-              <img class="mx-1" src="{{ url_for('static', filename=token_type.icon) }}" alt="{{ token_type.name or token_type.icon }}" width="32px" height="32px">
-              <div class="mx-1">
-                {% if token_type.name %}
-                  <div class="card-text text-info">{{ token_type.name }}</div>
-                {% else %}
-                  <div class="card-text text-muted">{{ undefined }}</div>
-                {% endif %}
-                <code class="card-text text-muted">{{ token_type.id }}</code>
-              </div>
+            <div class="card-header text-center">
+              <img class="mx-1" src="{{ url_for('static', filename=token_type.icon) }}" alt="{{ token_type.name }}" width="32px" height="32px">
+            </div>
+            <div class="card-body p-0">
+              <table class="table table-sm table-hover mb-0">
+                <tr>
+                  <th class="ps-3 w-50">ID</th>
+                  <td class="pe-3 w-50"><code class="text-muted">{{ token_type.id }}</code></td>
+                </tr>
+                <tr>
+                  <th class="ps-3">Name</th>
+                  <td class="pe-3">
+                    {% if token_type.name %}
+                      <span class="text-info">{{ token_type.name }}</span>
+                    {% else %}
+                      <span class="app-text-faded">&mdash;</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              </table>
             </div>
           </div>
         </div>

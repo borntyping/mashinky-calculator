@@ -49,7 +49,7 @@ class ModelFactory:
 
         logger.info(
             "Wrote models to database",
-            cargo_types=session.query(mashinky.models.CargoType).count(),
+            cargo_types=session.query(mashinky.models.Cargo).count(),
             token_types=session.query(mashinky.models.TokenType).count(),
             wagon_types=session.query(mashinky.models.WagonType).count(),
             colors=session.query(mashinky.models.Color).count(),
@@ -58,15 +58,37 @@ class ModelFactory:
             fuel=session.query(mashinky.models.Fuel).count(),
         )
 
-    def build_cargo_type(self, attrs: dict[str, str]) -> mashinky.models.CargoType:
+    def build_cargo_type(self, attrs: dict[str, str]) -> mashinky.models.Cargo:
         name = self.config.english.get(attrs.get("name"))
         icon = self.images.extract_icon(
             icon_texture=attrs["icon_texture"],
             icon=attrs["icon"],
-            name=name or attrs["id"],
+            name=attrs["id"],
             group="cargo_type",
         )
-        return mashinky.models.CargoType(id=attrs["id"], icon=icon, name=name)
+        if "icon_mini" in attrs:
+            icon_mini = self.images.extract_icon(
+                icon_texture=attrs["icon_texture"],
+                icon=attrs["icon_mini"],
+                name=attrs["id"],
+                group="cargo_type_mini",
+            )
+        else:
+            icon_mini = None
+        return mashinky.models.Cargo(
+            id=attrs["id"],
+            name=name,
+            color=attrs["color"],
+            icon=icon,
+            icon_mini=icon_mini,
+            type=attrs.get("type"),
+            load_speed=optional(int, attrs.get("load_speed")),
+            sell_immediately=attrs.get("sell_immediately") == "1",
+            affect_city_grow=optional(int, attrs.get("affect_city_grow")),
+            train_stop_capacity=optional(int, attrs.get("train_stop_capacity")),
+            road_stop_capacity=optional(int, attrs.get("road_stop_capacity")),
+            stop_capacity=optional(int, attrs.get("stop_capacity")),
+        )
 
     def build_token_type(self, attrs: dict[str, str]) -> mashinky.models.TokenType:
         name = self.config.english.get(attrs["name"])

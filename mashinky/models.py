@@ -86,12 +86,25 @@ class ConfigMixin:
         return query.all()
 
 
-class CargoType(Base, ConfigMixin):
+class Cargo(Base, ConfigMixin):
     __tablename__ = "cargo_type"
 
     id = Column(String, primary_key=True)
-    icon = Column(String, nullable=False)
     name = Column(String)
+    color = Column(String, nullable=False)
+    icon = Column(String, nullable=False)
+    icon_mini = Column(String)
+    type = Column(String)
+    load_speed = Column(Integer)
+    sell_immediately = Column(Boolean, nullable=False)
+    affect_city_grow = Column(Integer, nullable=True)
+    train_stop_capacity = Column(Integer, nullable=True)
+    road_stop_capacity = Column(Integer, nullable=True)
+    stop_capacity = Column(Integer, nullable=True)
+
+    @property
+    def css_color(self) -> str:
+        return f"#{self.color}"
 
 
 class TokenType(Base, ConfigMixin):
@@ -181,9 +194,10 @@ class WagonType(Base, ConfigMixin):
     # All wagon types can have cargo. No engines use this yet.
     # https://store.steampowered.com/news/app/598960/view/4738306083311895973
     cargo_type_id = Column(String, ForeignKey("cargo_type.id"), nullable=True)
+    cargo_type = relationship(Cargo, lazy="joined", backref="wagon_types")
+
     capacity = Column(Integer, nullable=False)
 
-    cargo_type = relationship(CargoType, lazy="joined", backref="wagon_types")
     cost: list[Cost] = relationship(Cost, uselist=True, lazy="joined", back_populates="wagon_type")
     sell: list[Sell] = relationship(Sell, uselist=True, lazy="joined", back_populates="wagon_type")
     fuel: list[Fuel] = relationship(Fuel, uselist=True, lazy="joined", back_populates="wagon_type")

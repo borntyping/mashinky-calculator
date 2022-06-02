@@ -56,6 +56,9 @@ class ConfigFactory:
             if id in config.cargo_types and config.cargo_types[id]["name"] == "0BA4580F":
                 del config.cargo_types[id]["name"]
 
+        config.cargo_types["B388ED8C"].setdefault("name", "mashinky-calculator-patch-goods")
+        config.texts["English"]["mashinky-calculator-patch-goods"] = "Goods"
+
         return config
 
     def load_config(self) -> Config:

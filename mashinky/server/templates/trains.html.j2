@@ -26,70 +26,85 @@
       <div class="row row-cols-2 g-3">
 
         <!-- Options -->
-        <div class="col col-md-3">
+        <div class="col col-lg-3">
           <div class="card h-100">
             <div class="card-header">
               Options
             </div>
-            <div class="card-body">
+            <div class="card-body d-flex flex-column justify-content-between">
+
+              <!-- Maximum Weight -->
+              <div>
+                <small>
+                  <div class="mb-1">
+                    <strong class="form-label">Weight limit</strong>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="maximum_weight" value="full" id="maximum_weight_full" {% if options.maximum_weight.value == "full" %}checked{% endif %}>
+                    <label class="form-check-label app-text-low" for="maximum_weight_full">
+                      Train must be below the recommended weight when full.
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="maximum_weight" value="empty" id="maximum_weight_empty" {% if options.maximum_weight.value == "empty" %}checked{% endif %}>
+                    <label class="form-check-label app-text-med" for="maximum_weight_empty">
+                      Train must be below the recommended weight when empty.
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="maximum_weight" value="infinite" id="maximum_weight_infinite" {% if options.maximum_weight.value == "infinite" %}checked{% endif %}>
+                    <label class="form-check-label app-text-high" for="maximum_weight_infinite">
+                      No limit on train weight.
+                    </label>
+                  </div>
+                </small>
+              </div>
+
+              <!-- Maximum Length -->
+              <div class="my-3">
+                <small>
+                  <div class="mb-1">
+                    <strong class="form-label">Length limit</strong>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="maximum_length" value="short" id="maximum_length_short" {% if options.maximum_length.value == "short" %}checked{% endif %}>
+                    <label class="form-check-label app-text-low" for="maximum_length_short">
+                      Train must fit in a short station ({{ options.station_length_short }} tiles).
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="maximum_length" value="long" id="maximum_length_long" {% if options.maximum_length.value == "long" %}checked{% endif %}>
+                    <label class="form-check-label app-text-med" for="maximum_length_long">
+                      Train must fit in a long station ({{ options.station_length_long }} tiles).
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="maximum_length" value="infinite" id="maximum_length_infinite" {% if options.maximum_length.value == "infinite" %}checked{% endif %}>
+                    <label class="form-check-label app-text-high" for="maximum_length_infinite">
+                      No limit on train length.
+                    </label>
+                  </div>
+                </small>
+              </div>
 
               <!-- Station length -->
-              <div class="input-group input-group-sm mb-3">
-                <input class="form-control" type="number" id="station_length_short" name="station_length_short" min="1" value="{{ options.station_length_short }}">
-                <label class="input-group-text" for="station_length_short">Station length (short)</label>
+              <div>
+                <div class="input-group input-group-sm mb-1">
+                  <label class="input-group-text w-50" for="station_length_short">Station length (short)</label>
+                  <input class="form-control" type="number" id="station_length_short" name="station_length_short" min="1" value="{{ options.station_length_short }}">
+                </div>
+                <div class="input-group input-group-sm">
+                  <label class="input-group-text w-50" for="station_length_long">Station length (long)</label>
+                  <input class="form-control" type="number" id="station_length_long" name="station_length_long" min="1" value="{{ options.station_length_long }}">
+                </div>
               </div>
-              <div class="input-group input-group-sm mb-3">
-                <input class="form-control" type="number" id="station_length_long" name="station_length_long" min="1" value="{{ options.station_length_long }}">
-                <label class="input-group-text" for="station_length_long">Station length (long)</label>
-              </div>
-
-              <!-- Overlong -->
-              <small>
-                <strong class="form-label">Length limit</strong>
-
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="include_overlong" id="include_overlong_no">
-                  <label class="form-check-label" for="include_overlong_no">
-                    Station length or shorter
-                  </label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="include_overlong" id="include_overlong_station" checked>
-                  <label class="form-check-label" for="include_overlong_station">
-                    Maximum length or shorter
-                  </label>
-                </div>
-              </small>
-
-              <!-- Overweight -->
-              <small>
-                <strong class="form-label">Weight limit</strong>
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="include_overweight" id="include_overweight_no">
-                  <label class="form-check-label" for="include_overweight_no">
-                    Below recommended weight when full
-                  </label>
-                </div>
-                <div class="form-check text-warning">
-                  <input class="form-check-input" type="radio" name="include_overweight" id="include_overweight_full" checked>
-                  <label class="form-check-label" for="include_overweight_full">
-                    Below recommended weight when empty
-                  </label>
-                </div>
-                <div class="form-check text-danger">
-                  <input class="form-check-input" type="radio" name="include_overweight" id="include_overweight_empty" checked>
-                  <label class="form-check-label" for="include_overweight_empty">
-                    Never below recommended weight
-                  </label>
-                </div>
-              </small>
 
             </div>
           </div>
         </div>
 
         <!-- Selection -->
-        <div class="col col-md-6">
+        <div class="col col-lg-6">
           <div class="card h-100">
             <div class="card-header">Selection</div>
             <div class="card-body">
@@ -135,26 +150,46 @@
         </div>
 
         <!-- Results -->
-        <div class="col col-md-3">
+        <div class="col col-lg-3">
           <div class="card h-100">
             <div class="card-header">
               Results
             </div>
             <div class="card-body">
               <p>
-                Generated {{ trains|length }} trains.</p>
+                Collected {{ results.trains|length }} trains
+                <span class="text-muted">(
+                  {{- results.after_generation|length }} after generation,
+                  {{ results.after_deduplication|length }} after deduplication,
+                  {{ results.after_applying_rules|length }} after applying rules)</span>.
+              </p>
               <p>
-                Selecting from {{ engines|length }} engines:
-                {% for wagon_type in engines %}
-                  {{- macros_wagon_type.name(wagon_type) -}}
-                  {{- macros.comma(loop) -}}
-                {% endfor %}. </p>
+                <span>
+                  Using {{ engines|length }} engines:
+                  {% for wagon_type in engines %}
+                    {{- macros_wagon_type.name(wagon_type) -}}
+                    {{- macros.comma(loop) -}}
+                  {% endfor %}.
+                </span>
+              </p>
               <p>
-                Selecting from {{ wagons|length }} wagons:
-                {% for wagon_type in wagons %}
-                  {{- macros_wagon_type.name(wagon_type) -}}
-                  {{- macros.comma(loop) -}}
-                {% endfor %}. </p>
+                <span>
+                  Using {{ wagons|length }} wagons:
+                  {% for wagon_type in wagons %}
+                    {{- macros_wagon_type.name(wagon_type) -}}
+                    {{- macros.comma(loop) -}}
+                  {% endfor %}.
+                </span>
+              </p>
+              <p>
+                <span>
+                  Using {{ cargo_types|length }} types of cargo:
+                  {% for cargo_type in cargo_types -%}
+                    <span class="app-text-cargo">{{- cargo_type -}}</span>
+                    {{- macros.comma(loop) -}}
+                  {%- endfor %}.
+                </span>
+              </p>
             </div>
           </div>
         </div>
@@ -177,7 +212,7 @@
       </tr>
       </thead>
       <tbody class="table-group-divider">
-      {% for train in trains %}
+      {% for train in results.trains %}
         {% set long = train.length > options.station_length_long %}
         {% if long %}
           <tr>
@@ -195,7 +230,7 @@
           <td class="text-start">
             {{ macros_wagon_type.description(train) }}
           </td>
-          <td class="text-start">{{ macros_wagon_type.cargo(train) }}</td>
+          <td class="text-start">{{ macros_train.cargo_types(train) }}</td>
           <td class="text-center">{{ macros_wagon_type.epoch(train) }}</td>
           <td class="text-end">{{ macros_train.weight(train) }}</td>
           <td class="text-end">{{ macros_train.length(train, options) }}</td>

@@ -1,24 +1,36 @@
 {% macro weight(train) -%}
   {% set empty = train.is_over_recommended_weight_empty() %}
   {% set full = train.is_over_recommended_weight_full() %}
-  <span class="text-truncate">
-    {% if empty or full %}
-      <span>⚠</span>
-    {% endif %}
+  <span class="text-truncate" title="Recommended weight: {{ train.recommended_weight }} tons&#10;
+    Weight when empty: {{ train.weight_empty }} tons&#10;
+    {%- if empty -%}
+    Train is over the recommended weight when empty.
+    {%- else -%}
+    Train is under the recommended weight when empty.
+    {%- endif -%}
+    &#10;Weight when full: {{ train.weight_full }} tons&#10;
+    {%- if full -%}
+    Train is over the recommended weight when full.
+    {%- else -%}
+    Train is under the recommended weight when full.
+    {%- endif %}-">
+    {%- if empty or full -%}
+      <span>⚠ </span>
+    {%- endif -%}
     <span>
       {%- if empty -%}
-        <span class="text-red" title="Weight when empty.&#10;Train is over the recommended weight when empty.">{{ train.weight_empty }}</span>
+        <span class="app-app-text-high">{{ train.weight_empty }}</span>
       {%- else -%}
-        <span class="" title="Weight when empty.&#10;Train is under the recommended weight when empty.">{{ train.weight_empty }}</span>
+        <span class="app-text-low">{{ train.weight_empty }}</span>
       {%- endif -%}
       &ndash;
       {%- if full -%}
-        <span class="text-red" title="Weight when full. Train is over the recommended weight when full.">{{ train.weight_full }}</span>
+        <span class="app-text-high">{{ train.weight_full }}</span>
       {%- else -%}
-        <span class="" title="Weight when full. Train is under the recommended weight when full.">{{ train.weight_full }}</span>
+        <span class="app-text-low">{{ train.weight_full }}</span>
       {%- endif -%}
     </span>
-    <span class="text-turquoise" title="Recommended weight">({{ train.recommended_weight }})</span> tons
+    <span class="app-text-turquoise">({{ train.recommended_weight }})</span> tons
   </span>
 {%- endmacro %}
 
@@ -33,4 +45,15 @@
     &#10;Train will not fit in a long station ({{ options.station_length_long }} tiles).
     {%- endif -%}
   ">{% if long %}⚠{% endif %} {{ "%.2f"|format(train.length) }} tiles</span>
+{%- endmacro %}
+
+{% macro cargo_types(wagon_type) -%}
+  {%- for cargo_type in wagon_type.cargo_types -%}
+    <div class="d-inline-flex justify-content-start align-items-center">
+      <img class="d-block mx-1 app-icon-sm" src="{{ url_for('static', filename=cargo_type.icon) }}" alt="{{ cargo_type }}">
+      <span class="d-block">{{ wagon_type.capacity }} {{ cargo_type.name.lower() }}</span>
+    </div>
+  {%- else -%}
+    {{ empty("No cargo") }}
+  {%- endfor -%}
 {%- endmacro %}
