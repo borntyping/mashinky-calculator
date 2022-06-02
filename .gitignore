@@ -131,3 +131,4 @@ dmypy.json
 # Generated data
 /assets/*
 /static/images/*
+/.logs/
