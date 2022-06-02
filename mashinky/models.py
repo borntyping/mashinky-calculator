@@ -12,6 +12,8 @@ from mashinky.ext.sqlalchemy import IntEnum
 
 Base = declarative_base()
 
+T = typing.TypeVar("T")
+
 
 class Payment:
     wagon_type: WagonType
@@ -65,6 +67,23 @@ class ConfigMixin:
 
     def __str__(self):
         return self.name or self.id
+
+    @classmethod
+    def search(
+        cls: typing.Type[T],
+        *,
+        ids: typing.Collection[str] = (),
+        names: typing.Collection[str] = (),
+    ) -> typing.List[T]:
+        query = cls.query.filter(cls.name != None).order_by(cls.name)
+
+        if ids:
+            query = query.filter(cls.id.in_(ids))
+
+        if names:
+            query = query.filter(cls.id.in_(names))
+
+        return query.all()
 
 
 class CargoType(Base, ConfigMixin):
@@ -187,12 +206,12 @@ class WagonType(Base, ConfigMixin):
 
     @classmethod
     def search(
-        cls,
+        cls: typing.Type[T],
         *,
         ids: typing.Collection[str] = (),
         names: typing.Collection[str] = (),
         epoch: typing.Optional[Epoch] = None,
-    ) -> sqlalchemy.orm.Query:
+    ) -> typing.List[T]:
         query = cls.query.order_by(cls.id)
 
         if ids:
@@ -204,7 +223,7 @@ class WagonType(Base, ConfigMixin):
         if epoch is not None:
             query = query.filter(cls.epoch_start <= epoch, epoch <= cls.epoch_end)
 
-        return query
+        return query.all()
 
 
 class Engine(WagonType, ConfigMixin):

@@ -1,0 +1,9 @@
+{% macro count(seq) -%}
+  <span class="badge bg-secondary">{{ seq|count }}</span>
+{%- endmacro %}
+
+{% macro comma(loop) -%}
+  {%- if not loop.last -%}
+    <span class="comma">, </span>
+  {%- endif -%}
+{%- endmacro %}

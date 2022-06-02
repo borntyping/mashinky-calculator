@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import collections
-import copy
 import dataclasses
 import itertools
 import math
@@ -9,14 +8,12 @@ import typing
 
 from mashinky.models import Engine, Epoch, Payment, TokenType, Track, Wagon, CargoType, WagonType
 
+T = typing.TypeVar("T")
+
 
 @dataclasses.dataclass(frozen=True)
 class Train:
     wagon_types: typing.Sequence[WagonType]
-
-    station_length: typing.Optional[int] = None
-    limited_by_length: bool = False
-    limited_by_weight: bool = False
 
     def __iter__(self) -> typing.Iterator[WagonType]:
         return iter(self.wagon_types)
@@ -145,83 +142,101 @@ class Train:
     def extend(self, wagon_types: typing.Sequence[WagonType], **kwargs):
         return dataclasses.replace(self, wagon_types=[*self.wagon_types, *wagon_types], **kwargs)
 
-    def add_wagons_to_recommended_weight(self, wagon: Wagon):
-        count = math.floor((self.recommended_weight - self.weight_full) / wagon.weight_full)
-        return self.extend(wagon.times(count), limited_by_weight=True)
+    def add_wagons_to_weight(self: T, wagon: Wagon, weight: int) -> T:
+        return self.extend(wagon.times(math.floor((weight - self.weight_full) / wagon.weight_full)))
 
-    def add_wagons_to_station_length(self, wagon: Wagon):
-        count = math.floor((self.station_length - self.length) / wagon.length)
-        return self.extend(wagon.times(count), limited_by_length=True)
+    def add_wagons_to_length(self: T, wagon: Wagon, length: int) -> T:
+        return self.extend(wagon.times(math.floor((length - self.length) / wagon.length)))
 
-    def add_wagons_within_limits(self, wagon: Wagon) -> Train:
-        length_max = self.station_length - self.length
-        weight_max = self.recommended_weight - self.weight_full
+    # def add_wagons_within_limits(self, wagon: Wagon) -> Train:
+    #     length_max = self.station_length - self.length
+    #     weight_max = self.recommended_weight - self.weight_full
+    #
+    #     length_count = math.floor(length_max / wagon.length)
+    #     weight_count = math.floor(weight_max / wagon.weight_full)
+    #
+    #     if length_count < weight_count:
+    #         count = length_count
+    #         limited_by_length = True
+    #         limited_by_weight = False
+    #     elif length_count > weight_count:
+    #         count = weight_count
+    #         limited_by_length = False
+    #         limited_by_weight = True
+    #     else:
+    #         count = length_count
+    #         limited_by_length = True
+    #         limited_by_weight = True
+    #
+    #     wagons = [wagon for _ in range(count)]
+    #     return Train(
+    #         wagon_types=[*self, *wagons],
+    #         station_length=self.station_length,
+    #         limited_by_length=limited_by_length,
+    #         limited_by_weight=limited_by_weight,
+    #     )
 
-        length_count = math.floor(length_max / wagon.length)
-        weight_count = math.floor(weight_max / wagon.weight_full)
-
-        if length_count < weight_count:
-            count = length_count
-            limited_by_length = True
-            limited_by_weight = False
-        elif length_count > weight_count:
-            count = weight_count
-            limited_by_length = False
-            limited_by_weight = True
-        else:
-            count = length_count
-            limited_by_length = True
-            limited_by_weight = True
-
-        wagons = [wagon for _ in range(count)]
-        return Train(
-            wagon_types=[*self, *wagons],
-            station_length=self.station_length,
-            limited_by_length=limited_by_length,
-            limited_by_weight=limited_by_weight,
-        )
-
-    @property
-    def is_overweight_full(self) -> bool:
-        return self.weight_full > self.recommended_weight
-
-    @property
-    def is_overweight_empty(self) -> bool:
+    def is_over_recommended_weight_empty(self) -> bool:
         return self.weight_empty > self.recommended_weight
 
-    @property
-    def is_overlong(self) -> bool:
-        return self.length > self.station_length
+    def is_over_recommended_weight_full(self) -> bool:
+        return self.weight_full > self.recommended_weight
 
 
-def combinations(
-    engines: typing.Iterable[Engine],
-    wagons: typing.Iterable[Wagon],
-    *,
-    station_length: int,
-) -> typing.Iterable[Train]:
-    """
-    - Skips double-engine trains that use a unique engine.
-    - Skips double-engine trains that have a lower capacity.
-    """
+@dataclasses.dataclass(frozen=True)
+class Options:
+    epoch: Epoch
+    engines: typing.Sequence[Engine]
+    wagons: typing.Sequence[Wagon]
+    cargo_types: typing.Sequence[CargoType]
 
-    for engine, wagon in itertools.product(engines, wagons):
-        # Dedupe trains with the same capacity
-        capacities: dict[int, Train] = {}
+    station_length_short: int = 6
+    station_length_long: int = 8
+    maximum_engines: int = 2
 
-        single_head = Train(engine.times(1), station_length)
-        double_head = Train(engine.times(2), station_length)
+    include_over_station_length_short: bool = True
+    include_over_station_length_long: bool = False
 
-        single_length = single_head.add_wagons_to_station_length(wagon)
-        single_weight = single_head.add_wagons_to_recommended_weight(wagon)
+    include_over_recommended_weight_full: bool = True
+    include_over_recommended_weight_empty: bool = False
 
-        capacities.setdefault(single_length.capacity, single_length)
-        capacities.setdefault(single_weight.capacity, single_weight)
+    def collect(self) -> typing.Sequence[Train]:
+        # Dedupe engine+wagon variations with the same capacity
+        capacities: dict[tuple[Engine, Wagon, int], Train] = {}
 
-        if not engine.unique:
-            double_length = double_head.add_wagons_to_station_length(wagon)
-            double_weight = double_head.add_wagons_to_recommended_weight(wagon)
-            capacities.setdefault(double_length.capacity, double_length)
-            capacities.setdefault(double_weight.capacity, double_weight)
+        wagons = [wagon for wagon in self.wagons if wagon.cargo_type in self.cargo_types]
 
-        yield from capacities.values()
+        for engine, wagon in itertools.product(self.engines, wagons):
+            for train in self.variations(engine, wagon):
+                # This uses setdefault instead of []=, so the first train generated wins.
+                capacities.setdefault((engine, wagon, train.capacity), train)
+
+        trains = filter(self.should_include, capacities.values())
+        trains = sorted(trains, key=lambda t: t.capacity, reverse=True)
+        return trains
+
+    def variations(
+        self,
+        engine: Engine,
+        wagon: Wagon,
+    ) -> typing.Generator[Train]:
+        for engine_count in range(1, self.maximum_engines + 1):
+            train = Train(engine.times(engine_count))
+            yield train.add_wagons_to_weight(wagon, train.recommended_weight)
+            yield train.add_wagons_to_length(wagon, self.station_length_short)
+            yield train.add_wagons_to_length(wagon, self.station_length_long)
+
+    def should_include(self, train: Train) -> bool:
+        if self.include_over_station_length_short and train.length > self.station_length_short:
+            return False
+
+        if self.include_over_station_length_long and train.length > self.station_length_long:
+            return False
+
+        if self.include_over_recommended_weight_full and train.is_over_recommended_weight_full():
+            return False
+
+        if self.include_over_recommended_weight_empty and train.is_over_recommended_weight_empty():
+            return False
+
+        return True

@@ -26,6 +26,9 @@
     --willow-green: rgb(122, 149, 108); /* Willow green */
     --yellow: rgb(235, 220, 61); /* Yellow */
     --red: rgb(179, 10, 0); /* Red */
+
+    --bs-nav-pills-link-active-bg: var(--royal-blue);
+    --bs-nav-link-color: var(--royal-blue);
 }
 
 code {

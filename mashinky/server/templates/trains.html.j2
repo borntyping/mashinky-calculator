@@ -1,46 +1,204 @@
-{% extends '_base.html.j2' %}{% import '_macros.html.j2' as macros %}{% import '_macros_wagon_type.html.j2' as macros_wagon_type with context %}
-{% block page %}
-  <section class="">
-    <h1>Trains {{ macros.count(trains) }}</h1>
+{% extends '_base.html.j2' %}{% import 'macros/common.html.j2' as macros %}{% import 'macros/wagon_type.html.j2' as macros_wagon_type with context %}{% import 'macros/train.html.j2' as macros_train %}
+{% block content %}
+  <section class="container-fluid">
+    <div class="row my-3">
+      <div class="col">
+        <div class="card">
+          <div class="card-header">
+            Epoch
+          </div>
+          <div class="card-body">
+            <ul class="nav nav-pills nav-fill">
+              {% for epoch in Epoch %}
+                <li class="nav-item">
+                  <a class="nav-link {% if epoch == options.epoch %}active{% endif %}" href="{{ url_for('trains', epoch=epoch.value) }}">
+                    {{ epoch.numeral }}. {{ epoch }}
+                  </a>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <p>Selecting from {{ engines|length }} engines ({{ engines|map(attribute='name')|join(', ') }}).</p>
-    <p>Selecting from {{ wagons|length }} wagons ({{ wagons|map(attribute='name')|join(', ') }}).</p>
+    <form action="" method="get">
+      <div class="row row-cols-2 g-3">
 
+        <!-- Options -->
+        <div class="col col-md-3">
+          <div class="card h-100">
+            <div class="card-header">
+              Options
+            </div>
+            <div class="card-body">
+
+              <!-- Station length -->
+              <div class="input-group input-group-sm mb-3">
+                <input class="form-control" type="number" id="station_length_short" name="station_length_short" min="1" value="{{ options.station_length_short }}">
+                <label class="input-group-text" for="station_length_short">Station length (short)</label>
+              </div>
+              <div class="input-group input-group-sm mb-3">
+                <input class="form-control" type="number" id="station_length_long" name="station_length_long" min="1" value="{{ options.station_length_long }}">
+                <label class="input-group-text" for="station_length_long">Station length (long)</label>
+              </div>
+
+              <!-- Overlong -->
+              <small>
+                <strong class="form-label">Length limit</strong>
+
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="include_overlong" id="include_overlong_no">
+                  <label class="form-check-label" for="include_overlong_no">
+                    Station length or shorter
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="include_overlong" id="include_overlong_station" checked>
+                  <label class="form-check-label" for="include_overlong_station">
+                    Maximum length or shorter
+                  </label>
+                </div>
+              </small>
+
+              <!-- Overweight -->
+              <small>
+                <strong class="form-label">Weight limit</strong>
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="include_overweight" id="include_overweight_no">
+                  <label class="form-check-label" for="include_overweight_no">
+                    Below recommended weight when full
+                  </label>
+                </div>
+                <div class="form-check text-warning">
+                  <input class="form-check-input" type="radio" name="include_overweight" id="include_overweight_full" checked>
+                  <label class="form-check-label" for="include_overweight_full">
+                    Below recommended weight when empty
+                  </label>
+                </div>
+                <div class="form-check text-danger">
+                  <input class="form-check-input" type="radio" name="include_overweight" id="include_overweight_empty" checked>
+                  <label class="form-check-label" for="include_overweight_empty">
+                    Never below recommended weight
+                  </label>
+                </div>
+              </small>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Selection -->
+        <div class="col col-md-6">
+          <div class="card h-100">
+            <div class="card-header">Selection</div>
+            <div class="card-body">
+              <div class="row">
+                <!-- Engines -->
+                <div class="col">
+                  <select class="form-select form-select-sm" id="engines" name="engine_id" multiple size="10">
+                    {% for engine in engines %}
+                      <option value="{{ engine.id }}" {% if engine in options.engines %}selected{% endif %}>{{ macros_wagon_type.name(engine) }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <!-- Wagons -->
+                <div class="col">
+                  <select class="form-select form-select-sm" id="wagons" name="wagon_id" multiple size="10">
+                    {% for wagon in wagons %}
+                      <option value="{{ wagon.id }}" {% if wagon in options.wagons %}selected{% endif %}>{{ macros_wagon_type.name(wagon) }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <!-- Cargo -->
+                <div class="col">
+                  <select class="form-select form-select-sm" id="wagons" name="cargo_type_id" multiple size="10">
+                    {% for cargo_type in cargo_types %}
+                      <option value="{{ cargo_type.id }}" {% if cargo_type in options.cargo_types %}selected{% endif %}>{{ cargo_type.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+              <div class="row mt-3">
+                <div class="input-group">
+                  <button class="btn btn-outline-primary flex-fill" type="submit">Search</button>
+                  <button class="btn btn-outline-secondary" type="reset">Clear</button>
+                  <a class="btn btn-outline-secondary" href="{{ url_for('trains', epoch=options.epoch.value) }}">Reset</a>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div class="col col-md-3">
+          <div class="card h-100">
+            <div class="card-header">
+              Results
+            </div>
+            <div class="card-body">
+              <p>
+                Generated {{ trains|length }} trains.</p>
+              <p>
+                Selecting from {{ engines|length }} engines:
+                {% for wagon_type in engines %}
+                  {{- macros_wagon_type.name(wagon_type) -}}
+                  {{- macros.comma(loop) -}}
+                {% endfor %}. </p>
+              <p>
+                Selecting from {{ wagons|length }} wagons:
+                {% for wagon_type in wagons %}
+                  {{- macros_wagon_type.name(wagon_type) -}}
+                  {{- macros.comma(loop) -}}
+                {% endfor %}. </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </form>
+  </section>
+
+
+  <section class="container-fluid my-5">
     <table class="table table-sm table-hover table-responsive align-middle">
       <thead class="thead-light align-top">
       <tr>
         <th class="text-start">Train</th>
         <th class="text-start">Description</th>
+        <th class="text-start">Cargo</th>
         <th class="text-center">Epoch</th>
-        <th class="text-end">Recommended<br>weight</th>
         <th class="text-end">Weight</th>
         <th class="text-end">Length</th>
-        <th class="text-center w-10">Cargo</th>
-        <th class="text-end w-10">Warnings</th>
       </tr>
       </thead>
       <tbody class="table-group-divider">
       {% for train in trains %}
-        {% if train.is_overlong %}
+        {% set long = train.length > options.station_length_long %}
+        {% if long %}
           <tr>
             <td class="text-start px-0 border-bottom-0 app-tiles-container" colspan="100%">
-              {{- macros_wagon_type.icon_train(train, tile_width) -}}
+              {{- macros_wagon_type.icon_train(train, tile_width, options.station_length_long) -}}
             </td>
           </tr>
         {% endif %}
         <tr>
           <td class="text-start px-0 app-tiles-container">
-            {% if not train.is_overlong %}
-              {{- macros_wagon_type.icon_train(train, tile_width) -}}
+            {% if not long %}
+              {{- macros_wagon_type.icon_train(train, tile_width, options.station_length_long) -}}
             {% endif %}
           </td>
-          <td class="text-start text-truncate">{{ macros_wagon_type.description(train) }}</td>
-          <td class="text-center">{{ macros_wagon_type.epoch(train) }}</td>
-          <td class="text-end">{{ macros_wagon_type.recommended_weight(train) }}</td>
-          <td class="text-end">{{ macros_wagon_type.weight(train) }}</td>
-          <td class="text-end">{{ macros_wagon_type.length(train) }}</td>
+          <td class="text-start">
+            {{ macros_wagon_type.description(train) }}
+          </td>
           <td class="text-start">{{ macros_wagon_type.cargo(train) }}</td>
-          <td class="text-end">{{ macros_wagon_type.warnings(train) }}</td>
+          <td class="text-center">{{ macros_wagon_type.epoch(train) }}</td>
+          <td class="text-end">{{ macros_train.weight(train) }}</td>
+          <td class="text-end">{{ macros_train.length(train, options) }}</td>
         </tr>
       {% endfor %}
       </tbody>

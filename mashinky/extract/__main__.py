@@ -20,7 +20,8 @@ structlog.configure(
     wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
 )
 
-game_data = pathlib.Path(os.environ["MASHINKY_GAME_DATA"])
+default_game_data = pathlib.Path("C:/Program Files (x86)/Steam/steamapps/common/Mashinky")
+game_data = pathlib.Path(os.environ.get("MASHINKY_GAME_DATA", default_game_data))
 factory = mashinky.extract.factory.Factory(
     readers=[
         mashinky.extract.reader.DirReader(game_data / "media"),

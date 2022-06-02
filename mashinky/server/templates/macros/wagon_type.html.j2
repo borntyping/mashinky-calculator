@@ -11,31 +11,31 @@
 {%- endmacro %}
 
 {% macro name(wagon_type) -%}
-  {% if wagon_type.type == "engine" %}
-    {% set class="text-royal-blue" %}
-  {% elif wagon_type.type == "wagon" %}
-    {% set class="text-sage-green" %}
-  {% elif wagon_type.type == "road_vehicle" %}
-    {% set class="text-chocolate" %}
-  {% endif %}
+  {%- if wagon_type.type == "engine" -%}
+    {%- set class="text-royal-blue" -%}
+  {%- elif wagon_type.type == "wagon" -%}
+    {%- set class="text-sage-green" -%}
+  {%- elif wagon_type.type == "road_vehicle" -%}
+    {%- set class="text-chocolate" -%}
+  {%- endif -%}
   <span class="{{ class }}">{{ wagon_type.name }}</span>
-  {% if wagon_type.is_quest_reward %}
-    <span title="Quest Reward">★</span>
-  {% endif %}
+  {%- if wagon_type.is_quest_reward -%}
+    <span class="ml-1" title="Quest Reward">★</span>
+  {%- endif -%}
 {%- endmacro %}
 
 {% macro icon(wagon_type, tile_width) -%}
   <img src="{{ url_for('static', filename=wagon_type.icon) }}" alt="{{ wagon_type.name }}" title="{{ wagon_type.name }} [{{ wagon_type.id }}]" width="{{ tile_width * wagon_type.length }}px">
 {%- endmacro %}
 
-{% macro icon_single(wagon_type, tile_width) -%}
-  <div class="app-tiles" style="width: {{ tile_width * 2 }}px;">
+{% macro icon_single(wagon_type, tile_width, station_length=2) -%}
+  <div class="app-tiles" style="width: {{ tile_width * station_length + 1 }}px;">
     {{ icon(wagon_type, tile_width) }}
   </div>
 {%- endmacro %}
 
-{% macro icon_train(train, tile_width) %}
-  <div class="app-tiles" style="width: {{ (tile_width * train.station_length) + 1 }}px;">
+{% macro icon_train(train, tile_width, station_length) %}
+  <div class="app-tiles" style="width: {{ (tile_width * station_length) + 1 }}px;">
     {%- for wagon_type in train -%}
       {{- icon(wagon_type, tile_width) -}}
     {%- endfor -%}
@@ -44,9 +44,9 @@
 
 {% macro epoch(wagon_type) -%}
   {%- if wagon_type.epoch_start and wagon_type.epoch_end -%}
-    <span title="{{ wagon_type.epoch_start }} to {{ wagon_type.epoch_end|lower }}">{{ wagon_type.epoch_start.numeral }}&ndash;{{ wagon_type.epoch_end.numeral }}</span>
+    <span class="app-epoch" title="{{ wagon_type.epoch_start|title }} to {{ wagon_type.epoch_end|title }}">{{ wagon_type.epoch_start.value }}&ndash;{{ wagon_type.epoch_end.value }}</span>
   {%- elif wagon_type.epoch_start -%}
-    <span title="{{ wagon_type.epoch_start }} onwards">{{ wagon_type.epoch_start.numeral }}</span>
+    <span class="app-epoch" title="{{ wagon_type.epoch_start|title }} onwards">{{ wagon_type.epoch_start.value }}</span>
   {%- else -%}
     {{ empty("Quest reward") }}
   {%- endif -%}
@@ -67,10 +67,6 @@
     <span class="text-truncate">{{ wagon_type.weight_empty }} tons</span>
   {% endif %}
 
-{%- endmacro %}
-
-{% macro recommended_weight(wagon_type) -%}
-  <span class="text-truncate">{{ wagon_type.recommended_weight }} tons</span>
 {%- endmacro %}
 
 {% macro length(wagon_type) -%}
@@ -113,7 +109,7 @@
   {%- for cargo_type in wagon_type.cargo_types -%}
     <div class="d-inline-flex justify-content-start align-items-center">
       <img class="d-block mx-1 app-icon-sm" src="{{ url_for('static', filename=cargo_type.icon) }}" alt="{{ cargo_type }}">
-      <span class="d-block">{{ wagon_type.capacity }}</span>
+      <span class="d-block">{{ wagon_type.capacity }} {{ cargo_type.name.lower() }}</span>
     </div>
   {%- else -%}
     {{ empty("No cargo") }}
@@ -134,30 +130,4 @@
       {%- endif -%}
     </span>
   {% endfor %}
-{% endmacro %}
-
-{% macro warnings(train) %}
-  {% if train.is_overweight_empty %}
-    <span class="badge bg-red" title="Train is overweight when empty.{{ line_break }}It may slow down and struggle to go uphill.{{ line_break }}Recommended weight: {{ train.recommended_weight }} tons.">Overweight</span>
-  {% elif train.is_overweight_full %}
-    <span class="badge bg-peach" title="Train is overweight when full.{{ line_break }}It may slow down and struggle to go uphill.{{ line_break }}Recommended weight: {{ train.recommended_weight }} tons.">Overweight</span>
-  {% endif %}
-
-  {% if train.is_overlong %}
-    <span class="badge bg-chocolate" title="Train is longer than the configured station length ({{ train.station_length }} tiles).{{ line_break }}It will take longer to load and unload cargo.">Overlong</span>
-  {% endif %}
-{% endmacro %}
-
-{% macro limits(train) %}
-  {% if train.limited_by_length %}
-    <span class="app-limit-length badge">Station length</span>
-  {% endif %}
-
-  {% if train.limited_by_weight %}
-    <span class="app-limit-weight badge">Recommended weight</span>
-  {% endif %}
-
-  {% if not train.limited_by_length and not train.limited_by_weight %}
-    {{ empty("Not limited by length or weight") }}
-  {% endif %}
 {% endmacro %}

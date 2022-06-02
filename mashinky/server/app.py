@@ -1,4 +1,6 @@
-from flask import Flask, render_template, request, url_for, redirect
+import time
+
+from flask import Flask, g, render_template, request
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_sqlalchemy import SQLAlchemy
 from jinja2 import StrictUndefined
@@ -16,7 +18,7 @@ from mashinky.models import (
     WagonType,
 )
 from mashinky.paths import sqlalchemy_database_url, static_folder
-from mashinky.trains import combinations
+from mashinky.trains import Options
 
 app = Flask(import_name=__name__, static_folder=static_folder)
 app.jinja_env.undefined = StrictUndefined
@@ -35,6 +37,7 @@ def variables():
         "undefined": "—",
         "tile_width": 100,
         "line_break": "\n",
+        "Epoch": Epoch,
     }
 
 
@@ -46,28 +49,32 @@ def home():
 @app.route("/trains")
 def trains():
     epoch = Epoch(request.args.get("epoch", default=1, type=int))
-    station_length: int = request.args.get("station_length", default=6, type=int)
 
-    engine_ids = request.args.getlist("engine_id")
-    engine_names = request.args.getlist("engine_name")
+    options = Options(
+        epoch=epoch,
+        engines=Engine.search(epoch=epoch, ids=request.args.getlist("engine_id")),
+        wagons=Wagon.search(epoch=epoch, ids=request.args.getlist("wagon_id")),
+        cargo_types=CargoType.search(ids=request.args.getlist("cargo_type_id")),
+        station_length_short=request.args.get("station_length_short", default=6, type=int),
+        station_length_long=request.args.get("station_length_long", default=8, type=int),
+        maximum_engines=request.args.get("maximum_engines", default=2, type=int),
+    )
 
-    wagon_ids = request.args.getlist("wagon_id")
-    wagon_names = request.args.getlist("wagon_name")
-
-    engines = Engine.search(epoch=epoch, ids=engine_ids, names=engine_names).all()
-    wagons = Wagon.search(epoch=epoch, ids=wagon_ids, names=wagon_names).all()
-
-    combos = list(combinations(engines, wagons, station_length=station_length))
-    combos = sorted(combos, key=lambda train: train.capacity, reverse=True)
-
-    return render_template("trains.html.j2", trains=combos, engines=engines, wagons=wagons)
+    return render_template(
+        "trains.html.j2",
+        options=options,
+        trains=options.collect(),
+        engines=Engine.search(epoch=options.epoch),
+        wagons=Wagon.search(epoch=options.epoch),
+        cargo_types=CargoType.search(),
+    )
 
 
 @app.route("/wagon_types")
 def wagon_types():
     results = WagonType.query.order_by(WagonType.id).all()
     return render_template(
-        "wagon_types.j2",
+        "wagon_types.html.j2",
         wagon_types=results,
         engines=[v for v in results if isinstance(v, Engine)],
         wagons=[v for v in results if isinstance(v, Wagon)],
