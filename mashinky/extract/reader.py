@@ -1,6 +1,9 @@
 import abc
 import dataclasses
+import json
 import pathlib
+import pprint
+import textwrap
 import zipfile
 
 import typing.io
@@ -22,15 +25,20 @@ class Reader(abc.ABC):
         if not path.exists():
             raise FileNotFoundError(f"{filename} does not exist")
 
-        errors = []
+        errors = {}
 
-        for encoding in (None, "utf-16-le"):
+        for encoding in (None, "utf-8", "utf-16-le", "utf-16-be"):
             try:
                 return path.read_text(encoding=encoding)
             except UnicodeDecodeError as error:
-                errors.append(error)
+                errors[encoding] = {
+                    "reason": error.reason,
+                    "encoding": error.encoding,
+                    "start": error.start,
+                    "end": error.end,
+                }
 
-        raise RuntimeError(f"Could not load {filename} from {path} {errors!r}")
+        raise RuntimeError(f"Could not load {filename} from {path} {json.dumps(errors, indent=2)}")
 
     def open(self, filename: str, mode: typing.Literal["r", "w"]) -> typing.io.IO:
         path = self.path_object(filename)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import collections
 import copy
 import dataclasses
 import itertools
@@ -21,32 +22,40 @@ class Train:
         return iter(self.wagon_types)
 
     @property
-    def engines(self) -> typing.Sequence[Engine]:
-        return [wagon_type for wagon_type in self.wagon_types if isinstance(wagon_type, Engine)]
+    def counter(self) -> collections.Counter[WagonType]:
+        return collections.Counter(self.wagon_types)
 
     @property
-    def engines_set(self) -> typing.Set[Engine]:
-        return {wagon_type for wagon_type in self.wagon_types if isinstance(wagon_type, Engine)}
+    def engines(self) -> typing.Generator[Engine]:
+        return (wagon_type for wagon_type in self.wagon_types if isinstance(wagon_type, Engine))
+
+    # @property
+    # def engines_as_counter(self) -> typing.Set[Engine]:
+    #     return collections.Counter(self.engines)
 
     @property
     def engine(self) -> typing.Optional[Engine]:
-        if len(self.engines_set) == 1:
-            return self.engines[0]
+        engines = list(self.engines)
+
+        if len(engines) == 1:
+            return engines[0]
 
         return None
 
     @property
-    def wagons(self) -> typing.Sequence[Wagon]:
-        return [wagon_type for wagon_type in self.wagon_types if isinstance(wagon_type, Wagon)]
+    def wagons(self) -> typing.Generator[Wagon]:
+        return (wagon_type for wagon_type in self.wagon_types if isinstance(wagon_type, Wagon))
 
-    @property
-    def wagons_set(self) -> typing.Set[Wagon]:
-        return {wagon_type for wagon_type in self.wagon_types if isinstance(wagon_type, Wagon)}
+    # @property
+    # def wagons_as_counter(self) -> typing.Set[Engine]:
+    #     return collections.Counter(self.wagons)
 
     @property
     def wagon(self) -> typing.Optional[Wagon]:
-        if len(self.wagons_set) == 1:
-            return self.wagons[0]
+        wagons = list(self.wagons)
+
+        if len(wagons) == 1:
+            return wagons[0]
 
         return None
 
@@ -173,15 +182,15 @@ class Train:
         )
 
     @property
-    def overweight_full(self) -> bool:
+    def is_overweight_full(self) -> bool:
         return self.weight_full > self.recommended_weight
 
     @property
-    def overweight_empty(self) -> bool:
+    def is_overweight_empty(self) -> bool:
         return self.weight_empty > self.recommended_weight
 
     @property
-    def overlong(self) -> bool:
+    def is_overlong(self) -> bool:
         return self.length > self.station_length
 
 

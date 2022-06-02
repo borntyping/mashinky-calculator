@@ -38,6 +38,7 @@ class ImageFactory:
         )
 
         if not output_path.exists():
+            output_path.parent.parent.mkdir(exist_ok=True)
             output_path.parent.mkdir(exist_ok=True)
 
             paths = [reader.path_object(icon_texture) for reader in self.readers]
@@ -46,12 +47,10 @@ class ImageFactory:
             if not paths:
                 raise FileNotFoundError(icon_texture)
 
-            tcoord = self.tcoords[icon]
-
-            x = int(tcoord["x"]) * 2
-            y = int(tcoord["y"]) * 2
-            w = int(tcoord["w"]) * 2
-            h = int(tcoord["h"]) * 2
+            x = int(self.tcoords[icon]["x"]) * 2
+            y = int(self.tcoords[icon]["y"]) * 2
+            w = int(self.tcoords[icon]["w"]) * 2
+            h = int(self.tcoords[icon]["h"]) * 2
 
             texture = PIL.Image.open(paths[0])
             image = texture.crop((x, y, x + w, y + h))

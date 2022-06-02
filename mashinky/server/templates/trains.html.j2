@@ -1,6 +1,4 @@
-{% extends '_base.html.j2' %}
-{% import '_macros.html.j2' as macros %}
-{% import '_macros_wagon_type.html.j2' as macros_wagon_type with context %}
+{% extends '_base.html.j2' %}{% import '_macros.html.j2' as macros %}{% import '_macros_wagon_type.html.j2' as macros_wagon_type with context %}
 {% block page %}
   <section class="">
     <h1>Trains {{ macros.count(trains) }}</h1>
@@ -9,26 +7,35 @@
     <p>Selecting from {{ wagons|length }} wagons ({{ wagons|map(attribute='name')|join(', ') }}).</p>
 
     <table class="table table-sm table-hover table-responsive align-middle">
-      <thead class="thead-light">
+      <thead class="thead-light align-top">
       <tr>
-        <th class="text-center">Epoch</th>
-        <th class="text-start">Engine</th>
-        <th class="text-start">Wagon</th>
         <th class="text-start">Train</th>
-        <th class="text-end">Recommended weight</th>
+        <th class="text-start">Description</th>
+        <th class="text-center">Epoch</th>
+        <th class="text-end">Recommended<br>weight</th>
         <th class="text-end">Weight</th>
         <th class="text-end">Length</th>
-        <th class="text-start">Cargo</th>
-        <th class="text-end">Warnings</th>
+        <th class="text-center w-10">Cargo</th>
+        <th class="text-end w-10">Warnings</th>
       </tr>
       </thead>
       <tbody class="table-group-divider">
       {% for train in trains %}
+        {% if train.is_overlong %}
+          <tr>
+            <td class="text-start px-0 border-bottom-0 app-tiles-container" colspan="100%">
+              {{- macros_wagon_type.icon_train(train, tile_width) -}}
+            </td>
+          </tr>
+        {% endif %}
         <tr>
+          <td class="text-start px-0 app-tiles-container">
+            {% if not train.is_overlong %}
+              {{- macros_wagon_type.icon_train(train, tile_width) -}}
+            {% endif %}
+          </td>
+          <td class="text-start text-truncate">{{ macros_wagon_type.description(train) }}</td>
           <td class="text-center">{{ macros_wagon_type.epoch(train) }}</td>
-          <td class="text-start text-truncate">{{ macros_wagon_type.name(train.engine) if train.engine else undefined  }}</td>
-          <td class="text-start text-truncate">{{ macros_wagon_type.name(train.wagon) if train.wagon else undefined }}</td>
-          <td class="text-start app-tiles-container">{{- macros_wagon_type.icon_train(train, tile_width) -}}</td>
           <td class="text-end">{{ macros_wagon_type.recommended_weight(train) }}</td>
           <td class="text-end">{{ macros_wagon_type.weight(train) }}</td>
           <td class="text-end">{{ macros_wagon_type.length(train) }}</td>

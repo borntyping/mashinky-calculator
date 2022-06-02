@@ -11,14 +11,21 @@
 {%- endmacro %}
 
 {% macro name(wagon_type) -%}
-  <strong class="text-success">{{ wagon_type.name }}</strong>
+  {% if wagon_type.type == "engine" %}
+    {% set class="text-royal-blue" %}
+  {% elif wagon_type.type == "wagon" %}
+    {% set class="text-sage-green" %}
+  {% elif wagon_type.type == "road_vehicle" %}
+    {% set class="text-chocolate" %}
+  {% endif %}
+  <span class="{{ class }}">{{ wagon_type.name }}</span>
   {% if wagon_type.is_quest_reward %}
     <span title="Quest Reward">★</span>
   {% endif %}
 {%- endmacro %}
 
 {% macro icon(wagon_type, tile_width) -%}
-    <img src="{{ url_for('static', filename=wagon_type.icon) }}" alt="{{ wagon_type.name }}" title="{{ wagon_type.name }} [{{ wagon_type.id }}]" width="{{ tile_width * wagon_type.length }}px">
+  <img src="{{ url_for('static', filename=wagon_type.icon) }}" alt="{{ wagon_type.name }}" title="{{ wagon_type.name }} [{{ wagon_type.id }}]" width="{{ tile_width * wagon_type.length }}px">
 {%- endmacro %}
 
 {% macro icon_single(wagon_type, tile_width) -%}
@@ -115,15 +122,29 @@
 
 {# Trains #}
 
+{% macro description(train) %}
+  {% for wagon_type, count in train.counter.items() %}
+    <span class="app-train-description">
+      {{ name(wagon_type) }}
+      {%- if count > 1 -%}
+        <span> x{{ count }}</span>
+      {%- endif -%}
+      {%- if not loop.last -%}
+        <span>, </span>
+      {%- endif -%}
+    </span>
+  {% endfor %}
+{% endmacro %}
+
 {% macro warnings(train) %}
-  {% if train.overweight_empty %}
-    <span class="badge bg-danger" title="Train is overweight when empty.{{ line_break }}It may slow down and struggle to go uphill.{{ line_break }}Recommended weight: {{ train.recommended_weight }} tons.">Overweight</span>
-  {% elif train.overweight_full %}
-    <span class="badge bg-warning" title="Train is overweight when empty.{{ line_break }}It may slow down and struggle to go uphill.{{ line_break }}Recommended weight: {{ train.recommended_weight }} tons.">Overweight</span>
+  {% if train.is_overweight_empty %}
+    <span class="badge bg-red" title="Train is overweight when empty.{{ line_break }}It may slow down and struggle to go uphill.{{ line_break }}Recommended weight: {{ train.recommended_weight }} tons.">Overweight</span>
+  {% elif train.is_overweight_full %}
+    <span class="badge bg-peach" title="Train is overweight when full.{{ line_break }}It may slow down and struggle to go uphill.{{ line_break }}Recommended weight: {{ train.recommended_weight }} tons.">Overweight</span>
   {% endif %}
 
-  {% if train.overlong %}
-    <span class="badge bg-dark" title="Train is longer than the configured station length ({{ train.station_length }} tiles).{{ line_break }}It will take longer to load and unload cargo.">Overlong</span>
+  {% if train.is_overlong %}
+    <span class="badge bg-chocolate" title="Train is longer than the configured station length ({{ train.station_length }} tiles).{{ line_break }}It will take longer to load and unload cargo.">Overlong</span>
   {% endif %}
 {% endmacro %}
 
