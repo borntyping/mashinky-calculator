@@ -232,8 +232,8 @@ class WagonType(Base, ConfigMixin):
         """TODO: Special cases for quest rewards that give multiple engines."""
         return self.is_quest_reward
 
-    def times(self, count: int) -> typing.Sequence[WagonType]:
-        return [self for _ in range(count)]
+    def times(self, count: int) -> tuple[WagonType, ...]:
+        return tuple(self for _ in range(count))
 
     @classmethod
     def search(

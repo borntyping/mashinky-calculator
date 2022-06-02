@@ -38,7 +38,7 @@
               <div>
                 <small>
                   <div class="mb-1">
-                    <strong class="form-label">Weight limit</strong>
+                    <strong class="form-label">Maximum weight</strong>
                   </div>
                   <div class="form-check">
                     <input class="form-check-input" type="radio" name="maximum_weight" value="full" id="maximum_weight_full" {% if options.maximum_weight.value == "full" %}checked{% endif %}>
@@ -65,7 +65,7 @@
               <div class="my-3">
                 <small>
                   <div class="mb-1">
-                    <strong class="form-label">Length limit</strong>
+                    <strong class="form-label">Maximum length</strong>
                   </div>
                   <div class="form-check">
                     <input class="form-check-input" type="radio" name="maximum_length" value="short" id="maximum_length_short" {% if options.maximum_length.value == "short" %}checked{% endif %}>
@@ -158,11 +158,12 @@
             </div>
             <div class="card-body">
               <p>
-                Collected {{ results.trains|length }} trains
-                <span class="text-muted">(
-                  {{- results.after_generation|length }} after generation,
-                  {{ results.after_deduplication|length }} after deduplication,
-                  {{ results.after_applying_rules|length }} after applying rules)</span>.
+                Collected {{ results.trains|length }} trains.
+                <span class="app-text-faded">Generated {{ results.after_generation|length }} trains,
+                  removed {{ results.after_generation|length - results.after_discarding|length }} trains with unused engines,
+                  removed {{ results.after_discarding|length - results.after_deduplication|length }} identical trains,
+                  removed {{ results.after_deduplication|length - results.after_applying_rules|length }} trains over limits.
+                </span>
               </p>
               <p>
                 <span>
