@@ -7,7 +7,6 @@ import typing
 import PIL.Image
 import structlog
 
-import mashinky.console
 import mashinky.extract.config
 import mashinky.extract.reader
 

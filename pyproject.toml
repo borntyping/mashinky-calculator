@@ -18,6 +18,11 @@ tabulate = "^0.8.7"
 rich = "^12.4.4"
 Pillow = "^9.1.1"
 beautifulsoup4 = "^4.11.1"
+Flask = "^2.1.2"
+Flask-SQLAlchemy = "^2.5.1"
+Flask-DebugToolbar = "^0.13.1"
+structlog = "^21.5.0"
+python-dotenv = "^0.20.0"
 
 [tool.poetry.dev-dependencies]
 types-tabulate = "*"
