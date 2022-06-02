@@ -23,6 +23,7 @@
     </div>
 
     <form action="" method="get">
+      <input type="hidden" name="epoch" value="{{ options.epoch.value }}">
       <div class="row row-cols-2 g-3">
 
         <!-- Options -->
@@ -140,7 +141,7 @@
               <div class="row mt-3">
                 <div class="input-group">
                   <button class="btn btn-outline-primary flex-fill" type="submit">Search</button>
-                  <button class="btn btn-outline-secondary" type="reset">Clear</button>
+                  <button class="btn btn-outline-secondary" type="reset">Undo</button>
                   <a class="btn btn-outline-secondary" href="{{ url_for('trains', epoch=options.epoch.value) }}">Reset</a>
                 </div>
               </div>
@@ -234,6 +235,10 @@
           <td class="text-center">{{ macros_wagon_type.epoch(train) }}</td>
           <td class="text-end">{{ macros_train.weight(train) }}</td>
           <td class="text-end">{{ macros_train.length(train, options) }}</td>
+        </tr>
+      {% else %}
+        <tr>
+          <td class="text-center text-muted fst-italic p-3" colspan="100%">No results</td>
         </tr>
       {% endfor %}
       </tbody>
