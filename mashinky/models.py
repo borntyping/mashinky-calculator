@@ -15,6 +15,54 @@ Base = declarative_base()
 T = typing.TypeVar("T")
 
 
+@enum.unique
+class Epoch(enum.IntEnum):
+    EARLY_STEAM = 1
+    STEAM = 2
+    EARLY_DIESEL = 3
+    DIESEL = 4
+    EARLY_ELECTRIC = 5
+    ELECTRIC = 6
+    LATE_ELECTRIC = 7
+
+    def __str__(self) -> str:
+        names = {
+            self.EARLY_STEAM: "Early steam",
+            self.STEAM: "Steam",
+            self.EARLY_DIESEL: "Early diesel",
+            self.DIESEL: "Diesel",
+            self.EARLY_ELECTRIC: "Early electric",
+            self.ELECTRIC: "Electric",
+            self.LATE_ELECTRIC: "Late electric",
+        }
+
+        return names[self]
+
+    @property
+    def numeral(self) -> str:
+        numerals = {
+            self.EARLY_STEAM: "Ⅰ",
+            self.STEAM: "Ⅱ",
+            self.EARLY_DIESEL: "Ⅲ",
+            self.DIESEL: "Ⅳ",
+            self.EARLY_ELECTRIC: "Ⅴ",
+            self.ELECTRIC: "Ⅵ",
+            self.LATE_ELECTRIC: "Ⅶ",
+        }
+
+        return numerals[self]
+
+
+@enum.unique
+class Track(enum.IntEnum):
+    STANDARD = 0
+    ELECTRIC = 2
+
+    def __str__(self):
+        names = {self.STANDARD: "Standard", self.ELECTRIC: "Electric"}
+        return names[self]
+
+
 class Payment:
     wagon_type: WagonType
     token_type: TokenType
@@ -74,7 +122,7 @@ class ConfigMixin:
         *,
         ids: typing.Collection[str] = (),
         names: typing.Collection[str] = (),
-    ) -> typing.List[T]:
+    ) -> sqlalchemy.orm.Query:
         query = cls.query.filter(cls.name != None).order_by(cls.name)
 
         if ids:
@@ -83,7 +131,7 @@ class ConfigMixin:
         if names:
             query = query.filter(cls.id.in_(names))
 
-        return query.all()
+        return query
 
 
 class Cargo(Base, ConfigMixin):
@@ -102,9 +150,26 @@ class Cargo(Base, ConfigMixin):
     road_stop_capacity = Column(Integer, nullable=True)
     stop_capacity = Column(Integer, nullable=True)
 
+    epoch = Column(IntEnum(Epoch), nullable=True)
+
     @property
     def css_color(self) -> str:
         return f"#{self.color}"
+
+    @classmethod
+    def search(
+        cls: typing.Type[T],
+        *,
+        ids: typing.Collection[str] = (),
+        names: typing.Collection[str] = (),
+        epoch: typing.Optional[Epoch] = None,
+    ) -> sqlalchemy.orm.Query:
+        query = super().search(ids=ids, names=names)
+
+        if epoch is not None:
+            query = query.filter(cls.epoch <= epoch)
+
+        return query
 
 
 class TokenType(Base, ConfigMixin):
@@ -123,54 +188,6 @@ class Color(Base, ConfigMixin):
     red = Column(Integer, nullable=False)
     green = Column(Integer, nullable=False)
     blue = Column(Integer, nullable=False)
-
-
-@enum.unique
-class Track(enum.IntEnum):
-    STANDARD = 0
-    ELECTRIC = 2
-
-    def __str__(self):
-        names = {self.STANDARD: "Standard", self.ELECTRIC: "Electric"}
-        return names[self]
-
-
-@enum.unique
-class Epoch(enum.IntEnum):
-    EARLY_STEAM = 1
-    STEAM = 2
-    EARLY_DIESEL = 3
-    DIESEL = 4
-    EARLY_ELECTRIC = 5
-    ELECTRIC = 6
-    LATE_ELECTRIC = 7
-
-    def __str__(self) -> str:
-        names = {
-            self.EARLY_STEAM: "Early steam",
-            self.STEAM: "Steam",
-            self.EARLY_DIESEL: "Early diesel",
-            self.DIESEL: "Diesel",
-            self.EARLY_ELECTRIC: "Early electric",
-            self.ELECTRIC: "Electric",
-            self.LATE_ELECTRIC: "Late electric",
-        }
-
-        return names[self]
-
-    @property
-    def numeral(self) -> str:
-        numerals = {
-            self.EARLY_STEAM: "Ⅰ",
-            self.STEAM: "Ⅱ",
-            self.EARLY_DIESEL: "Ⅲ",
-            self.DIESEL: "Ⅳ",
-            self.EARLY_ELECTRIC: "Ⅴ",
-            self.ELECTRIC: "Ⅵ",
-            self.LATE_ELECTRIC: "Ⅶ",
-        }
-
-        return numerals[self]
 
 
 class WagonType(Base, ConfigMixin):
@@ -225,7 +242,7 @@ class WagonType(Base, ConfigMixin):
         ids: typing.Collection[str] = (),
         names: typing.Collection[str] = (),
         epoch: typing.Optional[Epoch] = None,
-    ) -> typing.List[T]:
+    ) -> sqlalchemy.orm.Query:
         query = cls.query.order_by(cls.id)
 
         if ids:
@@ -237,7 +254,7 @@ class WagonType(Base, ConfigMixin):
         if epoch is not None:
             query = query.filter(cls.epoch_start <= epoch, epoch <= cls.epoch_end)
 
-        return query.all()
+        return query
 
 
 class Engine(WagonType, ConfigMixin):

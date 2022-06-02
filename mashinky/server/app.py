@@ -50,9 +50,9 @@ def search_trains():
 
     options = Options(
         epoch=epoch,
-        engines=Engine.search(epoch=epoch, ids=request.args.getlist("engine_id")),
-        wagons=Wagon.search(epoch=epoch, ids=request.args.getlist("wagon_id")),
-        cargo_types=Cargo.search(ids=request.args.getlist("cargo_type_id")),
+        engines=Engine.search(epoch=epoch, ids=request.args.getlist("engine_id")).all(),
+        wagons=Wagon.search(epoch=epoch, ids=request.args.getlist("wagon_id")).all(),
+        cargo_types=Cargo.search(epoch=epoch, ids=request.args.getlist("cargo_type_id")).all(),
         station_length_short=request.args.get("station_length_short", default=6, type=int),
         station_length_long=request.args.get("station_length_long", default=8, type=int),
         maximum_engines=request.args.get("maximum_engines", default=2, type=int),
@@ -66,9 +66,9 @@ def search_trains():
         "trains.html.j2",
         options=options,
         results=results,
-        engines=Engine.search(epoch=options.epoch),
-        wagons=Wagon.search(epoch=options.epoch),
-        cargo_types=Cargo.search(),
+        engines=Engine.search(epoch=options.epoch).all(),
+        wagons=Wagon.search(epoch=options.epoch).all(),
+        cargo_types=Cargo.search(epoch=options.epoch).all(),
     )
 
 

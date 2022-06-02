@@ -66,6 +66,7 @@ class ModelFactory:
             name=attrs["id"],
             group="cargo_type",
         )
+
         if "icon_mini" in attrs:
             icon_mini = self.images.extract_icon(
                 icon_texture=attrs["icon_texture"],
@@ -75,6 +76,25 @@ class ModelFactory:
             )
         else:
             icon_mini = None
+
+        # https://mashinky.com/wiki/index.php?title=Materials#Download
+        epochs = {
+            "0BA458C8": mashinky.models.Epoch(1),  # Passengers
+            "0F822763": mashinky.models.Epoch(2),  # Mail
+            "19CFBDA7": mashinky.models.Epoch(3),  # Oil
+            "3199AA74": mashinky.models.Epoch(1),  # Logs
+            "448DDF23": mashinky.models.Epoch(1),  # Timber
+            "53F1B093": mashinky.models.Epoch(3),  # Diesel
+            "61A13BCE": mashinky.models.Epoch(2),  # Iron Ore
+            "6ACBCBA9": mashinky.models.Epoch(1),  # Coal
+            "762F8F3E": mashinky.models.Epoch(6),  # Cobblestone
+            "7C13D1C9": mashinky.models.Epoch(2),  # Iron
+            "88D1A491": mashinky.models.Epoch(4),  # Steel
+            "8DFA75B5": mashinky.models.Epoch(6),  # Cement
+            "94032E35": mashinky.models.Epoch(4),  # Sand
+            "B388ED8C": mashinky.models.Epoch(3),  # Goods
+        }
+
         return mashinky.models.Cargo(
             id=attrs["id"],
             name=name,
@@ -88,6 +108,7 @@ class ModelFactory:
             train_stop_capacity=optional(int, attrs.get("train_stop_capacity")),
             road_stop_capacity=optional(int, attrs.get("road_stop_capacity")),
             stop_capacity=optional(int, attrs.get("stop_capacity")),
+            epoch=epochs.get(attrs["id"]),
         )
 
     def build_token_type(self, attrs: dict[str, str]) -> mashinky.models.TokenType:
