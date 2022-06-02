@@ -208,7 +208,7 @@ class WagonType(Base, ConfigMixin):
 
 
 class Engine(WagonType, ConfigMixin):
-    __tablename__ = "engine"
+    __tablename__ = "wagon_type_engine"
     __mapper_args__ = {
         "polymorphic_identity": "engine",
         "polymorphic_load": "inline",
@@ -231,7 +231,7 @@ class Engine(WagonType, ConfigMixin):
 
 
 class Wagon(WagonType, ConfigMixin):
-    __tablename__ = "wagon"
+    __tablename__ = "wagon_type_wagon"
     __mapper_args__ = {
         "polymorphic_identity": "wagon",
         "polymorphic_load": "inline",
@@ -240,7 +240,7 @@ class Wagon(WagonType, ConfigMixin):
 
 
 class RoadVehicle(WagonType, ConfigMixin):
-    __tablename__ = "road_vehicle"
+    __tablename__ = "wagon_type_road_vehicle"
     __mapper_args__ = {
         "polymorphic_identity": "road_vehicle",
         "polymorphic_load": "inline",
