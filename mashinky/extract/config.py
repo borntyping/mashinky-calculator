@@ -9,7 +9,6 @@ import bs4.element
 import structlog
 
 import mashinky.extract.reader
-import mashinky.console
 
 logger = structlog.get_logger(logger_name=__name__)
 
@@ -123,19 +122,22 @@ class ConfigFactory:
         return element.string[1:-1]
 
     def _soups(self, filename: str) -> typing.Iterable[bs4.BeautifulSoup]:
+        soups = []
         for reader in self.readers:
             try:
                 logger.info("Loading file", filename=filename, base=reader.base.as_posix())
-                yield self._soup(reader.read_text(filename))
+                text = reader.read_text(filename)
             except FileNotFoundError:
-                pass
+                continue
 
-    @staticmethod
-    def _soup(text: str) -> bs4.BeautifulSoup:
-        """
-        XML requires a single root node, and these files have many root nodes.
-        We use an extremely lenient HTML parser instead.
-        """
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", bs4.builder.XMLParsedAsHTMLWarning)
-            return bs4.BeautifulSoup(text, "html.parser")
+            # XML requires a single root node, and these files have many root nodes.
+            # We use an extremely lenient HTML parser instead.
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", bs4.builder.XMLParsedAsHTMLWarning)
+                soup = bs4.BeautifulSoup(text, "html.parser")
+            soups.append(soup)
+
+        if not soups:
+            raise FileNotFoundError(f"No files loaded for {filename}")
+
+        return soups
