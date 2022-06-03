@@ -27,17 +27,15 @@
       <div class="row row-cols-2 g-3">
 
         <!-- Options -->
-        <div class="col col-lg-3 app-options">
+        <div class="col col-lg-3 app-trains-search">
           <div class="card h-100">
-            <div class="card-header">
-              Options
+            <div class="card-header d-flex justify-content-between">
+              <strong>Options</strong>
+              <a href="{{ options.reset_without_options_url() }}">Start again</a>
             </div>
             <div class="card-body d-flex flex-column justify-content-between">
               <!-- Quest rewards and locomotive works -->
               <div class="app-option-group">
-                <div class="mb-1">
-                  <strong class="form-label">Filters</strong>
-                </div>
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" value="true" id="include_depo_upgrade" name="include_depo_upgrade" {% if options.include_depo_upgrade %}checked{% endif %}>
                   <label class="form-check-label" for="include_depo_upgrade">
@@ -103,7 +101,7 @@
               </div>
 
               <!-- Station length -->
-              <div class="app-option-group">
+              <!-- <div class="app-option-group">
                 <div class="input-group input-group-sm mb-1">
                   <label class="input-group-text w-50" for="station_length_short">Station length (short)</label>
                   <input class="form-control" type="number" id="station_length_short" name="station_length_short" min="1" value="{{ options.station_length_short }}">
@@ -112,21 +110,24 @@
                   <label class="input-group-text w-50" for="station_length_long">Station length (long)</label>
                   <input class="form-control" type="number" id="station_length_long" name="station_length_long" min="1" value="{{ options.station_length_long }}">
                 </div>
-              </div>
+              </div> -->
 
             </div>
           </div>
         </div>
 
         <!-- Selection -->
-        <div class="col col-lg-6">
+        <div class="col col-lg-6 app-trains-search">
           <div class="card h-100">
-            <div class="card-header">Selection</div>
+            <div class="card-header d-flex justify-content-between">
+              <strong>Selection</strong>
+              <a href="{{ options.reset_with_options_url() }}" title="Reset everything but epoch and options.">Start again</a>
+            </div>
             <div class="card-body">
               <div class="row">
                 <!-- Engines -->
                 <div class="col">
-                  <select class="form-select form-select-sm" id="engines" name="engine_id" multiple size="13">
+                  <select class="form-select form-select-sm" id="engines" name="engine_id" multiple size="12">
                     {% for engine in results.all_engines %}
                       <option value="{{ engine.id }}" {% if engine in results.selected_engines %}selected{% endif %}>{{ engine.name }}</option>
                     {% endfor %}
@@ -135,7 +136,7 @@
 
                 <!-- Wagons -->
                 <div class="col">
-                  <select class="form-select form-select-sm" id="wagons" name="wagon_id" multiple size="13">
+                  <select class="form-select form-select-sm" id="wagons" name="wagon_id" multiple size="12">
                     {% for wagon in results.all_wagons %}
                       <option value="{{ wagon.id }}" {% if wagon in results.selected_wagons %}selected{% endif %}>{{ wagon.name }}</option>
                     {% endfor %}
@@ -144,7 +145,7 @@
 
                 <!-- Cargo -->
                 <div class="col">
-                  <select class="form-select form-select-sm" id="wagons" name="cargo_type_id" multiple size="13">
+                  <select class="form-select form-select-sm" id="wagons" name="cargo_type_id" multiple size="12">
                     {% for cargo_type in results.all_cargos %}
                       <option value="{{ cargo_type.id }}" {% if cargo_type in results.selected_cargos %}selected{% endif %}>{{ cargo_type.name }}</option>
                     {% endfor %}
@@ -152,60 +153,66 @@
                 </div>
               </div>
 
-              <div class="row mt-3">
-                <div class="input-group">
-                  <button class="btn btn-outline-primary flex-fill" type="submit">Search</button>
-                  <button class="btn btn-outline-secondary" type="reset">Undo</button>
-                  <a class="btn btn-outline-secondary" href="{{ url_for('trains', epoch=options.epoch.value, include_depo_upgrade=options.include_depo_upgrade, include_quest_reward=options.include_quest_reward) }}">Reset</a>
-                </div>
-              </div>
 
             </div>
           </div>
         </div>
 
-        <!-- Results -->
-        <div class="col col-lg-3">
+        <!-- Search -->
+        <div class="col col-lg-3 app-trains-search">
           <div class="card h-100">
-            <div class="card-header">
-              Results
+            <div class="card-header d-flex justify-content-between">
+              <strong>Search</strong>
             </div>
-            <div class="card-body">
-              <p>
-                Collected {{ results.trains|length }} trains.
-                <span class="app-text-faded">Generated {{ results.after_generate|length }} trains,
-                  removed {{ results.after_generate|length - results.after_deduplicate|length }} duplicated trains,
-                  removed {{ results.after_deduplicate|length - results.after_discard|length }} trains with unused engines,
-                  removed {{ results.after_discard|length - results.after_filter|length }} trains over limits.
-                </span>
-              </p>
-              <p>
-                <span>
-                  Using {{ results.selected_engines|length }} engines:
-                  {% for wagon_type in results.selected_engines %}
-                    {{- macros_wagon_type.name(wagon_type) -}}
-                    {{- macros.comma(loop) -}}
-                  {% endfor %}.
-                </span>
-              </p>
-              <p>
-                <span>
-                  Using {{ results.selected_wagons|length }} wagons:
-                  {% for wagon_type in results.selected_wagons %}
-                    {{- macros_wagon_type.name(wagon_type) -}}
-                    {{- macros.comma(loop) -}}
-                  {% endfor %}.
-                </span>
-              </p>
-              <p>
-                <span>
-                  Using {{ results.selected_cargos|length }} types of cargo:
-                  {% for cargo_type in results.selected_cargos -%}
-                    <span class="app-text-cargo">{{- cargo_type -}}</span>
-                    {{- macros.comma(loop) -}}
-                  {%- endfor %}.
-                </span>
-              </p>
+            <div class="card-body d-flex flex-column justify-content-between">
+              <div class="row">
+                <p>
+                  Collected {{ results.trains|length }} trains.
+                  <span class="app-text-faded">Generated {{ results.after_generate|length }} trains,
+                    removed {{ results.after_generate|length - results.after_deduplicate|length }} duplicated trains,
+                    removed {{ results.after_deduplicate|length - results.after_discard|length }} trains with unused engines,
+                    removed {{ results.after_discard|length - results.after_filter|length }} trains over limits.
+                  </span>
+                </p>
+                <p>
+                  {% if results.selected_engines %}
+                    Using {{ results.selected_engines|length }} engines:
+                    {% for wagon_type in results.selected_engines %}
+                      {{- macros_wagon_type.name(wagon_type) -}}
+                      {{- macros.comma(loop) -}}
+                    {% endfor %}.
+                  {% else %}
+                    Using all {{ results.all_engines|length }} engines.
+                  {% endif %}
+                </p>
+                <p>
+                  {% if results.selected_wagons %}
+                    Using {{ results.selected_wagons|length }} wagons:
+                    {% for wagon_type in results.selected_wagons %}
+                      {{- macros_wagon_type.name(wagon_type) -}}
+                      {{- macros.comma(loop) -}}
+                    {% endfor %}.
+                  {% else %}
+                    Using all {{ results.all_wagons|length }} wagons.
+                  {% endif %}
+                </p>
+                <p>
+                  {% if results.selected_cargos %}
+                    Using {{ results.selected_cargos|length }} types of cargo:
+                    {% for cargo_type in results.selected_cargos -%}
+                      <span class="app-text-cargo">{{- cargo_type -}}</span>
+                      {{- macros.comma(loop) -}}
+                    {%- endfor %}.
+                  {% else %}
+                    Using all {{ results.all_cargos|length }} types of cargo.
+                  {% endif %}
+                </p>
+              </div>
+              <div class="row mt-3">
+                <div class="input-group">
+                  <button class="btn btn-outline-primary flex-fill" type="submit">Search</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -256,33 +263,33 @@
     </table>
   </section>
 
-{#  <section class="container-fluid my-5">#}
-{#    <h3>Mixed wagon suggestions used</h3>#}
-{#    <table class="table table-sm table-hover table-responsive align-middle app-table-trains">#}
-{#      <thead class="thead-light align-top">#}
-{#      <tr>#}
-{#        <th colspan="2" class="text-muted">Wagon</th>#}
-{#        <th colspan="2" class="text-muted">Other wagons</th>#}
-{#      </tr>#}
-{#      </thead>#}
-{#      <tbody>#}
-{#      {% for head_wagon, suggestions in results.suggestions.items() %}#}
-{#        {% for suggestion in suggestions %}#}
-{#          <tr>#}
-{#            <td class="text-start">#}
-{#              {{ macros_wagon_type.icon_single(head_wagon, tile_width=tile_width) }}#}
-{#              {{ macros_wagon_type.name(head_wagon) }}#}
-{#            </td>#}
-{#            <td class="text-start">#}
-{#              {% for tail_wagon in suggestion %}#}
-{#                {{ macros_wagon_type.icon_single(tail_wagon, tile_width=tile_width) }}#}
-{#                {{ macros_wagon_type.name(tail_wagon) }}#}
-{#              {% endfor %}#}
-{#            </td>#}
-{#          </tr>#}
-{#        {% endfor %}#}
-{#      {% endfor %}#}
-{#      </tbody>#}
-{#    </table>#}
-{#  </section>#}
+  {#  <section class="container-fluid my-5">#}
+  {#    <h3>Mixed wagon suggestions used</h3>#}
+  {#    <table class="table table-sm table-hover table-responsive align-middle app-table-trains">#}
+  {#      <thead class="thead-light align-top">#}
+  {#      <tr>#}
+  {#        <th colspan="2" class="text-muted">Wagon</th>#}
+  {#        <th colspan="2" class="text-muted">Other wagons</th>#}
+  {#      </tr>#}
+  {#      </thead>#}
+  {#      <tbody>#}
+  {#      {% for head_wagon, suggestions in results.suggestions.items() %}#}
+  {#        {% for suggestion in suggestions %}#}
+  {#          <tr>#}
+  {#            <td class="text-start">#}
+  {#              {{ macros_wagon_type.icon_single(head_wagon, tile_width=tile_width) }}#}
+  {#              {{ macros_wagon_type.name(head_wagon) }}#}
+  {#            </td>#}
+  {#            <td class="text-start">#}
+  {#              {% for tail_wagon in suggestion %}#}
+  {#                {{ macros_wagon_type.icon_single(tail_wagon, tile_width=tile_width) }}#}
+  {#                {{ macros_wagon_type.name(tail_wagon) }}#}
+  {#              {% endfor %}#}
+  {#            </td>#}
+  {#          </tr>#}
+  {#        {% endfor %}#}
+  {#      {% endfor %}#}
+  {#      </tbody>#}
+  {#    </table>#}
+  {#  </section>#}
 {% endblock %}

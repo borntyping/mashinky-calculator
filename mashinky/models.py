@@ -120,16 +120,12 @@ class ConfigMixin:
     def search(
         cls: typing.Type[T],
         *,
-        ids: typing.Collection[str] = (),
-        names: typing.Collection[str] = (),
+        ids: typing.Optional[typing.Collection[str]] = None,
     ) -> sqlalchemy.orm.Query:
         query = cls.query.filter(cls.name != None).order_by(cls.name)
 
-        if ids:
+        if ids is not None:
             query = query.filter(cls.id.in_(ids))
-
-        if names:
-            query = query.filter(cls.id.in_(names))
 
         return query
 
@@ -160,11 +156,10 @@ class CargoType(Base, ConfigMixin):
     def search(
         cls: typing.Type[T],
         *,
-        ids: typing.Collection[str] = (),
-        names: typing.Collection[str] = (),
+        ids: typing.Optional[typing.Collection[str]] = None,
         epoch: typing.Optional[Epoch] = None,
     ) -> sqlalchemy.orm.Query:
-        query = super().search(ids=ids, names=names)
+        query = super().search(ids=ids)
 
         if epoch is not None:
             query = query.filter(cls.epoch <= epoch)
@@ -262,19 +257,15 @@ class WagonType(Base, ConfigMixin):
     def search(
         cls: typing.Type[T],
         *,
-        ids: typing.Collection[str] = (),
-        names: typing.Collection[str] = (),
+        ids: typing.Optional[typing.Collection[str]] = None,
         epoch: typing.Optional[Epoch] = None,
         quest_reward: typing.Optional[bool] = None,
         depo_upgrade: typing.Optional[bool] = None,
     ) -> sqlalchemy.orm.Query:
         query = cls.query.order_by(cls.id)
 
-        if ids:
+        if ids is not None:
             query = query.filter(cls.id.in_(ids))
-
-        if names:
-            query = query.filter(cls.id.in_(names))
 
         if epoch is not None:
             query = query.filter(

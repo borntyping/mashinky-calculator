@@ -53,7 +53,6 @@ def search_trains():
         epoch=Epoch(request.args.get("epoch", default=1, type=int)),
         include_depo_upgrade=request.args.get("include_depo_upgrade", default=False, type=bool),
         include_quest_reward=request.args.get("include_quest_reward", default=False, type=bool),
-        maximum_engines=request.args.get("maximum_engines", default=2, type=int),
         maximum_length=MaximumLength(request.args.get("maximum_length", default="short", type=str)),
         maximum_weight=MaximumWeight(request.args.get("maximum_weight", default="full", type=str)),
         station_length_short=request.args.get("station_length_short", default=6, type=int),

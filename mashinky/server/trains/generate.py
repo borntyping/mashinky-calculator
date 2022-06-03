@@ -22,6 +22,8 @@ class Results:
     selected_wagons: typing.Sequence[Wagon]
     selected_cargos: typing.Sequence[CargoType]
 
+    filtered_wagons: typing.Sequence[Wagon]
+
     suggestions: dict[Wagon, list[list[Wagon]]]
 
     trains: list[Train]
@@ -37,6 +39,15 @@ class Results:
     best_max_speed: int
     best_weight_usage: float
     best_length_usage: float
+
+    def all_engines_are_selected(self):
+        return self.all_engines == self.selected_engines
+
+    def all_wagons_are_selected(self):
+        return self.all_wagons == self.selected_wagons
+
+    def all_cargos_are_selected(self):
+        return self.all_cargos == self.selected_cargos
 
 
 def generate(
@@ -76,24 +87,18 @@ def generate(
         ids=cargo_ids,
     ).all()
 
-    # Filter wagons to only those that carry the cargos we care about.
-    selected_wagons = generate_wagons(selected_wagons, selected_cargos)
+    suggestions = generate_suggestions(all_wagons=all_wagons)
 
-    all_wagons_by_name = {wagon.name: wagon for wagon in all_wagons}
-    suggestions: dict[Wagon, list[list[Wagon]]] = {
-        all_wagons_by_name[name]: [
-            [all_wagons_by_name[n] for n in suggestion]
-            for suggestion in suggestions
-            if all(n in all_wagons_by_name for n in suggestion)
-        ]
-        for name, suggestions in WAGON_SUGGESTIONS.items()
-        if name in all_wagons_by_name
-    }
+    # Filter wagons to only those that carry the cargos we care about.
+    filtered_wagons = generate_wagons(
+        selected_wagons=selected_wagons or all_wagons,
+        selected_cargos=selected_cargos or all_cargos,
+    )
 
     trains = after_generate = list(
         generate_trains(
-            selected_engines=selected_engines,
-            selected_wagons=selected_wagons,
+            selected_engines=selected_engines or all_engines,
+            selected_wagons=filtered_wagons or selected_wagons or all_wagons,
             suggestions=suggestions,
             station_length_short=options.station_length_short,
             station_length_long=options.station_length_long,
@@ -122,6 +127,7 @@ def generate(
         selected_engines=selected_engines,
         selected_wagons=selected_wagons,
         selected_cargos=selected_cargos,
+        filtered_wagons=filtered_wagons,
         suggestions=suggestions,
         trains=trains,
         after_generate=after_generate,
@@ -137,13 +143,24 @@ def generate(
     )
 
 
+def generate_suggestions(all_wagons: list[Wagon]) -> dict[Wagon, list[list[Wagon]]]:
+    all_wagons_by_name = {wagon.name: wagon for wagon in all_wagons}
+    return {
+        all_wagons_by_name[name]: [
+            [all_wagons_by_name[n] for n in suggestion]
+            for suggestion in suggestions
+            if all(n in all_wagons_by_name for n in suggestion)
+        ]
+        for name, suggestions in WAGON_SUGGESTIONS.items()
+        if name in all_wagons_by_name
+    }
+
+
 def generate_wagons(
     selected_wagons: typing.Sequence[Wagon],
     selected_cargos: typing.Sequence[CargoType],
 ) -> typing.Sequence[Wagon]:
-    """Only filter wagons by type if that doesn't return an empty list."""
-    subset = [w for w in selected_wagons if w.cargo_type in selected_cargos]
-    return subset if subset else selected_wagons
+    return [w for w in selected_wagons if w.cargo_type in selected_cargos]
 
 
 def generate_trains(

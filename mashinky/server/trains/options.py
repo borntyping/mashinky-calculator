@@ -3,6 +3,8 @@ from __future__ import annotations
 import dataclasses
 import enum
 
+import flask
+
 from mashinky.models import Epoch
 from mashinky.server.trains.models import Train
 
@@ -57,3 +59,25 @@ class Options:
                 return False
 
         return True
+
+    def reset_without_options_url(self) -> str:
+        return flask.url_for("trains", epoch=self.epoch.value)
+
+    def reset_with_options_url(self) -> str:
+        kwargs = {}
+
+        if self.include_depo_upgrade:
+            kwargs["include_depo_upgrade"] = "true"
+
+        if self.include_quest_reward:
+            kwargs["include_quest_reward"] = "true"
+
+        return flask.url_for(
+            "trains",
+            epoch=self.epoch.value,
+            **kwargs,
+            maximum_weight=self.maximum_weight.value,
+            maximum_length=self.maximum_length.value,
+            station_length_short=self.station_length_short,
+            station_length_long=self.station_length_long,
+        )
