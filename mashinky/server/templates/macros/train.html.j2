@@ -1,4 +1,15 @@
-{% import 'macros/common.html.j2' as macros %}
+{% import 'macros/common.html.j2' as macros %}{% import 'macros/wagon_type.html.j2' as macros_wagon_type %}
+
+{% macro train_description(train) %}
+  {% for wagon_type, count in train.wagon_type_counter.items() %}
+    <span class="app-train-description">
+      {{- macros_wagon_type.name(wagon_type, count) -}}
+      {%- if not loop.last -%}
+        <span>, </span>
+      {%- endif -%}
+    </span>
+  {% endfor %}
+{% endmacro %}
 
 {% macro cargo_description(train, results) -%}
   {%- for cargo_type, amount in train.cargo.items() -%}
@@ -17,14 +28,15 @@
   {%- endfor -%}
   <span class="app-cargo-rewards ml-1">
     {%- if train.bonus_incomes -%}
-      <span class="app-effect" title="
-              {%- for wagon_type in train.bonus_incomes -%}{{- wagon_type.bonus_income -}}% bonus income from {{ wagon_type -}}{{- '' if loop.last else ', ' -}}{%- endfor -%}">★</span>
+      {% for wagon_type in train.bonus_incomes %}
+        {{- macros_wagon_type.star_bonus_income(wagon_type) -}}
+      {% endfor %}
     {%- endif -%}
     {%- if train.bonus_capacity == results.best_bonus_capacity -%}
-      <span class="app-class-gold" title="Highest capacity including bonuses">★</span>
+      {{ macros_wagon_type.star_tier_gold("Highest capacity including bonuses") }}
     {%- endif -%}
-    {%- if train.capacity == results.best_capacity-%}
-      <span class="app-class-silver" title="Highest capacity without bonuses">★</span>
+    {%- if train.capacity == results.best_capacity -%}
+      {{ macros_wagon_type.star_tier_silver("Highest capacity without bonuses") }}
     {%- endif -%}
   </span>
 {%- endmacro %}
@@ -32,7 +44,7 @@
 {% macro speed(train, results) -%}
   <span>{{ train.max_speed }} km/h</span>
   {% if train.max_speed == results.best_max_speed %}
-    <span class="app-class-gold" title="Highest speed">★</span>
+    <span class="app-tier-gold" title="Highest speed">★</span>
   {% endif %}
 {%- endmacro %}
 
@@ -71,9 +83,11 @@
       <span>⚠ </span>
     {%- endif -%}
   </span>
-  {% if train.weight_usage == results.best_weight_usage %}
-    <span class="app-class-gold" title="Highest recommended weight utilization">★</span>
-  {% endif %}
+  <span class="app-rewards">
+    {% if train.weight_usage() == results.best_weight_usage %}
+      {{- macros_wagon_type.star_tier_gold("Highest recommended weight utilization") -}}
+    {% endif %}
+  </span>
 {%- endmacro %}
 
 {% macro length(train, options, results) -%}
@@ -95,7 +109,7 @@
     {% endif %}
   </span>
   {% if usage == results.best_length_usage %}
-    <span class="app-class-gold" title="Highest station length utilization">★</span>
+    <span class="app-tier-gold" title="Highest station length utilization">★</span>
   {% endif %}
 {%- endmacro %}
 

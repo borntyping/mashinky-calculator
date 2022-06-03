@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import enum
+import typing
 
 import flask
 
@@ -60,10 +61,19 @@ class Options:
 
         return True
 
-    def reset_without_options_url(self) -> str:
+    def start_again_from_epoch(self) -> str:
+        return flask.url_for("trains")
+
+    def start_again_from_options(self) -> str:
         return flask.url_for("trains", epoch=self.epoch.value)
 
-    def reset_with_options_url(self) -> str:
+    def start_again_from_selection(self) -> str:
+        return self.clear_selection(self.epoch)
+
+    def switch_epoch(self, epoch: Epoch):
+        return self.clear_selection(epoch)
+
+    def clear_selection(self, epoch) -> str:
         kwargs = {}
 
         if self.include_depo_upgrade:
@@ -74,10 +84,10 @@ class Options:
 
         return flask.url_for(
             "trains",
-            epoch=self.epoch.value,
-            **kwargs,
+            epoch=epoch.value,
             maximum_weight=self.maximum_weight.value,
             maximum_length=self.maximum_length.value,
             station_length_short=self.station_length_short,
             station_length_long=self.station_length_long,
+            **kwargs,
         )

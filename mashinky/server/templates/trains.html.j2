@@ -1,17 +1,18 @@
-{% extends '_base.html.j2' %}{% import 'macros/common.html.j2' as macros %}{% import 'macros/wagon_type.html.j2' as macros_wagon_type with context %}{% import 'macros/train.html.j2' as macros_train %}
+{% extends '_base.html.j2' %}{% import 'macros/common.html.j2' as macros %}{% import 'macros/wagon_type.html.j2' as macros_wagon_type %}{% import 'macros/train.html.j2' as macros_train %}
 {% block content %}
   <section class="container-fluid">
     <div class="row my-3">
       <div class="col">
-        <div class="card">
-          <div class="card-header">
-            Epoch
-          </div>
+        <div class="card app-trains-search">
+          <div class="card-header d-flex justify-content-between">
+              <strong>Epoch</strong>
+              <a href="{{ options.start_again_from_epoch() }}">Start again</a>
+            </div>
           <div class="card-body">
             <ul class="nav nav-pills nav-fill">
               {% for epoch in Epoch %}
                 <li class="nav-item">
-                  <a class="nav-link {% if epoch == options.epoch %}active{% endif %}" href="{{ url_for('trains', epoch=epoch.value) }}">
+                  <a class="nav-link {% if epoch == options.epoch %}active{% endif %}" href="{{ options.switch_epoch(epoch) }}">
                     {{ epoch.numeral }}. {{ epoch }}
                   </a>
                 </li>
@@ -27,11 +28,11 @@
       <div class="row row-cols-2 g-3">
 
         <!-- Options -->
-        <div class="col col-lg-3 app-trains-search">
-          <div class="card h-100">
+        <div class="col col-lg-3">
+          <div class="card h-100 app-trains-search">
             <div class="card-header d-flex justify-content-between">
               <strong>Options</strong>
-              <a href="{{ options.reset_without_options_url() }}">Start again</a>
+              <a href="{{ options.start_again_from_options() }}">Start again</a>
             </div>
             <div class="card-body d-flex flex-column justify-content-between">
               <!-- Quest rewards and locomotive works -->
@@ -117,11 +118,11 @@
         </div>
 
         <!-- Selection -->
-        <div class="col col-lg-6 app-trains-search">
-          <div class="card h-100">
+        <div class="col col-lg-6">
+          <div class="card h-100 app-trains-search">
             <div class="card-header d-flex justify-content-between">
               <strong>Selection</strong>
-              <a href="{{ options.reset_with_options_url() }}" title="Reset everything but epoch and options.">Start again</a>
+              <a href="{{ options.start_again_from_selection() }}" title="Reset everything but epoch and options.">Start again</a>
             </div>
             <div class="card-body">
               <div class="row">
@@ -159,8 +160,8 @@
         </div>
 
         <!-- Search -->
-        <div class="col col-lg-3 app-trains-search">
-          <div class="card h-100">
+        <div class="col col-lg-3">
+          <div class="card h-100 app-trains-search">
             <div class="card-header d-flex justify-content-between">
               <strong>Search</strong>
             </div>
@@ -246,7 +247,7 @@
         <tr>
           <td class="text-start px-0 app-tiles-container">
             {% if not long %}{{- macros_wagon_type.icon_train(train, tile_width, options.station_length) -}}{% endif %}</td>
-          <td class="text-start">{{ macros_wagon_type.description(train) }}</td>
+          <td class="text-start">{{ macros_train.train_description(train) }}</td>
           <td class="text-start">{{ macros_train.cargo_description(train, results=results) }}
           <td class="text-start">{{ macros_train.speed(train, results=results) }}</td>
           <td class="text-start">{{ macros_train.weight(train, results=results) }}</td>

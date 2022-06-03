@@ -92,9 +92,13 @@ tr:hover .app-text-faded,
     /*margin-bottom: 1px;*/
 }
 
-.app-effect { color: var(--royal-blue); }
-.app-class-gold { color: var(--gold); }
-.app-class-silver { color: var(--silver); }
+.app-effect {}
+.app-depo-upgrade { color: var(--royal-blue); }
+.app-quest-reward { color: var(--red); }
+.app-bonus-income { color: var(--royal-blue); }
+.app-tier-gold { color: var(--gold); }
+.app-tier-silver { color: var(--silver); }
+.app-tier-bronze { color: var(--chocolate); }
 
 .app-text-apple-green { color: var(--apple-green); }
 .app-text-black { color: var(--black); }
@@ -123,9 +127,9 @@ tr:hover .app-text-faded,
 .app-text-yellow { color: var(--yellow); }
 .app-text-red { color: var(--red); }
 
-.app-text-engine { color: var(--royal-blue); }
-.app-text-wagon { color: var(--periwinkle); }
-.app-text-road-vehicle { color: var(--sage-green); }
+.app-text-engine { color: var(--dark-green); }
+.app-text-wagon { color: var(--sage-green); }
+.app-text-road-vehicle { color: var(--purple); }
 .app-text-cargo { color: var(--chocolate); }
 
 .app-text-low { }

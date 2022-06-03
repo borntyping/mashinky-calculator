@@ -2,6 +2,13 @@
   <span class="app-text-faded" title="{{ title }}">&mdash;</span>
 {%- endmacro %}
 
+{%- macro star_depo_upgrade() -%}<span class="app-depo-upgrade" title="Requires locomotive works">⌂</span>{%- endmacro -%}
+{%- macro star_quest_reward() -%}<span class="app-quest-reward" title="Quest Reward">★</span>{%- endmacro -%}
+{%- macro star_bonus_income(wagon_type) -%}<span class="app-bonus-income" title="Bonus income ({{ wagon_type.bonus_income }}%)">★</span>{%- endmacro -%}
+{%- macro star_tier_gold(title) -%}<span class="app-tier-gold" title="Gold tier: {{ title }}">★</span>{%- endmacro -%}
+{%- macro star_tier_silver(title) -%}<span class="app-tier-silver" title="Silver tier: {{ title }}">★</span>{%- endmacro -%}
+{%- macro star_tier_bronze(title) -%}<span class="app-tier-bronze" title="Bronze tier: {{ title }}">★</span>{%- endmacro -%}
+
 {% macro id(wagon_type) -%}
   <small class="font-monospace text-muted">{{ wagon_type.id }}</small>
 {%- endmacro %}
@@ -10,7 +17,7 @@
   <small class="font-monospace text-muted">{{ wagon_type.__class__.__name__ }}</small>
 {%- endmacro %}
 
-{% macro name(wagon_type) -%}
+{%- macro name(wagon_type, count=1) -%}
   {%- if wagon_type.type == "engine" -%}
     {%- set class="app-text-engine" -%}
   {%- elif wagon_type.type == "wagon" -%}
@@ -18,16 +25,24 @@
   {%- elif wagon_type.type == "road_vehicle" -%}
     {%- set class="app-text-road-vehicle" -%}
   {%- endif -%}
-  <span title="{{ wagon_type }}{% if wagon_type.bonus_income %} ({{ wagon_type.bonus_income }}% bonus income){% endif %}">
+  <span title="{{- wagon_type -}}">
     <span class="{{ class }}">{{ wagon_type.name }}</span>
-    {% if wagon_type.depo_upgrade -%}
-      <span class="ml-1" title="Requires locomotive works">⌂</span>
-    {%- endif %}
-    {% if wagon_type.is_quest_reward -%}
-      <span class="ml-1" title="Quest Reward">★</span>
-    {%- endif %}
+    {% if count > 1 %}
+      <span class="app-wagon-type-count"> x{{ count }}</span>
+    {% endif %}
+    <span class="app-wagon-rewards">
+      {%- if wagon_type.depo_upgrade -%}
+        {{- star_depo_upgrade() -}}
+      {%- endif %}
+      {%- if wagon_type.is_quest_reward -%}
+        {{- star_quest_reward() -}}
+      {%- endif -%}
+      {%- if wagon_type.bonus_income -%}
+        {{- star_bonus_income(wagon_type) -}}
+      {%- endif -%}
+    </span>
   </span>
-{%- endmacro %}
+{%- endmacro -%}
 
 {% macro icon(wagon_type, tile_width) -%}
   <img src="{{ url_for('static', filename=wagon_type.icon) }}" alt="{{ wagon_type.name }}" title="{{ wagon_type.name }} [{{ wagon_type.id }}]" width="{{ tile_width * wagon_type.length }}px">
@@ -119,19 +134,3 @@
     {{ empty("No cargo") }}
   {%- endif -%}
 {%- endmacro %}
-
-{# Trains #}
-
-{% macro description(train) %}
-  {% for wagon_type, count in train.wagon_type_counter.items() %}
-    <span class="app-train-description">
-      {{ name(wagon_type) }}
-      {%- if count > 1 -%}
-        <span> x{{ count }}</span>
-      {%- endif -%}
-      {%- if not loop.last -%}
-        <span>, </span>
-      {%- endif -%}
-    </span>
-  {% endfor %}
-{% endmacro %}
