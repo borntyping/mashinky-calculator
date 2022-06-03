@@ -1,6 +1,6 @@
 {% import 'macros/common.html.j2' as macros %}
 
-{% macro cargo_description(train, best) -%}
+{% macro cargo_description(train, results) -%}
   {%- for cargo_type, amount in train.cargo.items() -%}
     <span class="app-cargo-description mr-1">
       <img class="d-inline-block app-icon-sm" src="{{ url_for('static', filename=cargo_type.icon) }}" alt="{{ cargo_type }}">
@@ -20,22 +20,23 @@
       <span class="app-effect" title="
               {%- for wagon_type in train.bonus_incomes -%}{{- wagon_type.bonus_income -}}% bonus income from {{ wagon_type -}}{{- '' if loop.last else ', ' -}}{%- endfor -%}">★</span>
     {%- endif -%}
-    {%- if train.bonus_capacity == best['bonus_capacity'] -%}
+    {%- if train.bonus_capacity == results.best_bonus_capacity -%}
       <span class="app-class-gold" title="Highest capacity including bonuses">★</span>
-    {%- elif train.capacity == best['capacity'] -%}
+    {%- endif -%}
+    {%- if train.capacity == results.best_capacity-%}
       <span class="app-class-silver" title="Highest capacity without bonuses">★</span>
     {%- endif -%}
   </span>
 {%- endmacro %}
 
-{% macro speed(train, best) -%}
+{% macro speed(train, results) -%}
   <span>{{ train.max_speed }} km/h</span>
-  {% if train.max_speed == best['max_speed'] %}
+  {% if train.max_speed == results.best_max_speed %}
     <span class="app-class-gold" title="Highest speed">★</span>
   {% endif %}
 {%- endmacro %}
 
-{% macro weight(train, best) -%}
+{% macro weight(train, results) -%}
   {% set empty = train.is_over_recommended_weight_empty() %}
   {% set full = train.is_over_recommended_weight_full() %}
   <span class="text-truncate" title="Weight when empty: {{ train.weight_empty }} tons.&#10;Weight when full: {{ train.weight_full }} tons.&#10;Recommended weight: {{ train.recommended_weight }} tons.&#10;&#10;
@@ -50,7 +51,7 @@
     {%- else -%}
     Under the recommended weight when full.
     {%- endif -%}
-    &#10;Using {{ "{:.0%}".format(train.weight_usage) }} of the recommended weight.">
+    &#10;Using {{ "{:.0%}".format(train.weight_usage()) }} of the recommended weight.">
     <span>
       {%- if empty -%}
         <span class="app-app-text-high">{{ train.weight_empty }}</span>
@@ -65,20 +66,20 @@
       {%- endif -%}
     </span>
     <span>tons</span>
-    <span class="app-text-faded">({{ "{:.0%}".format(train.weight_usage) }})</span>
+    <span class="app-text-faded">({{ "{:.0%}".format(train.weight_usage()) }})</span>
     {%- if empty or full -%}
       <span>⚠ </span>
     {%- endif -%}
   </span>
-  {% if train.weight_usage == best['weight_usage'] %}
+  {% if train.weight_usage == results.best_weight_usage %}
     <span class="app-class-gold" title="Highest recommended weight utilization">★</span>
   {% endif %}
 {%- endmacro %}
 
-{% macro length(train, best, options) -%}
+{% macro length(train, options, results) -%}
   {% set long = train.length > options.station_length_long %}
   {% set short = train.length > options.station_length_short %}
-  {% set usage = train.length_usage(options.display_station_length) %}
+  {% set usage = train.length_usage(options.station_length) %}
   <span class="text-truncate {% if long %}text-red{% elif short %}text-fushia{% endif %}" title="Train is {{ "%.2f"|format(train.length) }} tiles long.
     {%- if short -%}
     &#10;Train will not fit in a short station ({{ options.station_length_short }} tiles).
@@ -93,7 +94,7 @@
       <span>⚠</span>
     {% endif %}
   </span>
-  {% if usage == best['length_usage'] %}
+  {% if usage == results.best_length_usage %}
     <span class="app-class-gold" title="Highest station length utilization">★</span>
   {% endif %}
 {%- endmacro %}

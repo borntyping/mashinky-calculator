@@ -18,7 +18,8 @@ from mashinky.models import (
     WagonType,
 )
 from mashinky.paths import sqlalchemy_database_url, static_folder
-from mashinky.server.trains import MaximumLength, MaximumWeight, Options
+from mashinky.server.trains.generate import generate
+from mashinky.server.trains.options import Options, MaximumLength, MaximumWeight
 
 app = Flask(import_name=__name__, static_folder=static_folder)
 app.jinja_env.undefined = StrictUndefined
@@ -47,65 +48,25 @@ def home():
 
 @app.route("/trains", endpoint="trains")
 def search_trains():
-    epoch = Epoch(request.args.get("epoch", default=1, type=int))
-
-    include_depo_upgrade: bool = request.args.get("include_depo_upgrade") is not None
-    include_quest_reward: bool = request.args.get("include_quest_reward") is not None
-
-    engine_ids = request.args.getlist("engine_id")
-    wagon_ids = request.args.getlist("wagon_id")
-    cargo_ids = request.args.getlist("cargo_type_id")
 
     options = Options(
-        epoch=epoch,
-        all_engines=Engine.search(
-            epoch=epoch,
-            depo_upgrade=include_depo_upgrade,
-            quest_reward=include_quest_reward,
-        ).all(),
-        all_wagons=Wagon.search(
-            epoch=epoch,
-            depo_upgrade=include_depo_upgrade,
-            quest_reward=include_quest_reward,
-        ).all(),
-        all_cargos=CargoType.search(epoch=epoch).all(),
-        selected_engines=Engine.search(
-            epoch=epoch,
-            ids=engine_ids,
-            depo_upgrade=include_depo_upgrade,
-            quest_reward=include_quest_reward,
-        ).all(),
-        selected_wagons=Wagon.search(
-            epoch=epoch,
-            ids=wagon_ids,
-            depo_upgrade=include_depo_upgrade,
-            quest_reward=include_quest_reward,
-        ).all(),
-        include_depo_upgrade=include_depo_upgrade,
-        include_quest_reward=include_quest_reward,
-        selected_cargos=CargoType.search(epoch=epoch, ids=cargo_ids).all(),
-        station_length_short=request.args.get("station_length_short", default=6, type=int),
-        station_length_long=request.args.get("station_length_long", default=8, type=int),
+        epoch=Epoch(request.args.get("epoch", default=1, type=int)),
+        include_depo_upgrade=request.args.get("include_depo_upgrade", default=False, type=bool),
+        include_quest_reward=request.args.get("include_quest_reward", default=False, type=bool),
         maximum_engines=request.args.get("maximum_engines", default=2, type=int),
         maximum_length=MaximumLength(request.args.get("maximum_length", default="short", type=str)),
         maximum_weight=MaximumWeight(request.args.get("maximum_weight", default="full", type=str)),
+        station_length_short=request.args.get("station_length_short", default=6, type=int),
+        station_length_long=request.args.get("station_length_long", default=8, type=int),
     )
 
-    results = options.collect()
-
-    best = {
-        "capacity": max(t.capacity for t in results.trains),
-        "bonus_capacity": max(t.bonus_capacity for t in results.trains),
-        "max_speed": max(t.max_speed for t in results.trains),
-        "weight_usage": max(t.weight_usage for t in results.trains if t.weight_usage <= 1.00),
-        "length_usage": max(
-            t.length_usage(options.display_station_length)
-            for t in results.trains
-            if t.length_usage(options.display_station_length) <= 1.00
-        ),
-    }
-
-    return render_template("trains.html.j2", options=options, results=results, best=best)
+    results = generate(
+        options,
+        engine_ids=request.args.getlist("engine_id"),
+        wagon_ids=request.args.getlist("wagon_id"),
+        cargo_ids=request.args.getlist("cargo_type_id"),
+    )
+    return render_template("trains.html.j2", options=options, results=results)
 
 
 @app.route("/wagon_types")
