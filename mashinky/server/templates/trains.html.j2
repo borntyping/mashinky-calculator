@@ -5,9 +5,9 @@
       <div class="col">
         <div class="card app-trains-search">
           <div class="card-header d-flex justify-content-between">
-              <strong>Epoch</strong>
-              <a href="{{ options.start_again_from_epoch() }}">Start again</a>
-            </div>
+            <strong>Epoch</strong>
+            <a href="{{ options.start_again_from_epoch() }}">Start again</a>
+          </div>
           <div class="card-body">
             <ul class="nav nav-pills nav-fill">
               {% for epoch in Epoch %}
@@ -264,33 +264,42 @@
     </table>
   </section>
 
-  {#  <section class="container-fluid my-5">#}
-  {#    <h3>Mixed wagon suggestions used</h3>#}
-  {#    <table class="table table-sm table-hover table-responsive align-middle app-table-trains">#}
-  {#      <thead class="thead-light align-top">#}
-  {#      <tr>#}
-  {#        <th colspan="2" class="text-muted">Wagon</th>#}
-  {#        <th colspan="2" class="text-muted">Other wagons</th>#}
-  {#      </tr>#}
-  {#      </thead>#}
-  {#      <tbody>#}
-  {#      {% for head_wagon, suggestions in results.suggestions.items() %}#}
-  {#        {% for suggestion in suggestions %}#}
-  {#          <tr>#}
-  {#            <td class="text-start">#}
-  {#              {{ macros_wagon_type.icon_single(head_wagon, tile_width=tile_width) }}#}
-  {#              {{ macros_wagon_type.name(head_wagon) }}#}
-  {#            </td>#}
-  {#            <td class="text-start">#}
-  {#              {% for tail_wagon in suggestion %}#}
-  {#                {{ macros_wagon_type.icon_single(tail_wagon, tile_width=tile_width) }}#}
-  {#                {{ macros_wagon_type.name(tail_wagon) }}#}
-  {#              {% endfor %}#}
-  {#            </td>#}
-  {#          </tr>#}
-  {#        {% endfor %}#}
-  {#      {% endfor %}#}
-  {#      </tbody>#}
-  {#    </table>#}
-  {#  </section>#}
+  <section class="container-fluid my-5">
+    <h4 class="text-muted">Mixed wagon suggestions used</h4>
+    <table class="table table-sm table-hover table-responsive align-middle app-table-trains">
+      <thead class="thead-light align-top">
+      <tr>
+        <th class="text-muted">Primary wagon</th>
+        <th class="text-muted">Secondary wagons</th>
+        <th class="text-muted">Primary wagon</th>
+        <th class="text-muted">Secondary wagons</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for primary, suggestions in results.suggestions.items() %}
+        {% for suggestion in suggestions %}
+          <tr>
+            <td class="text-start">
+              {{ macros_wagon_type.icon(primary, tile_width=tile_width) }}
+            </td>
+            <td class="text-start">
+              {% for secondary in suggestion %}
+                {{ macros_wagon_type.icon(secondary, tile_width=tile_width) }}
+              {% endfor %}
+            </td>
+            <td class="text-start">
+              {{ macros_wagon_type.name(primary) }}
+            </td>
+            <td class="text-start">
+              {% for secondary in suggestion %}
+                {{- macros_wagon_type.name(secondary) -}}
+                {%- if not loop.last %}<span>, </span>{% endif -%}
+              {% endfor %}
+            </td>
+          </tr>
+        {% endfor %}
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
 {% endblock %}

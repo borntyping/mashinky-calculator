@@ -93,7 +93,7 @@ tr:hover .app-text-faded,
 }
 
 .app-effect {}
-.app-depo-upgrade { color: var(--royal-blue); }
+.app-depo-upgrade { color: var(--black); }
 .app-quest-reward { color: var(--red); }
 .app-bonus-income { color: var(--royal-blue); }
 .app-tier-gold { color: var(--gold); }

@@ -199,7 +199,8 @@ def generate_discard(trains: list[Train]) -> typing.Iterable[Train]:
         key = (frozenset(train.engines), tuple(train.wagons))
         count = len(list(train.engines))
         if count <= min(engines[key]):
-            yield train
+            if train.capacity > 0:
+                yield train
 
 
 def generate_deduplicate(trains: list[Train]) -> typing.Iterable[Train]:

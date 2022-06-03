@@ -2,12 +2,18 @@
   <span class="app-text-faded" title="{{ title }}">&mdash;</span>
 {%- endmacro %}
 
-{%- macro star_depo_upgrade() -%}<span class="app-depo-upgrade" title="Requires locomotive works">⌂</span>{%- endmacro -%}
-{%- macro star_quest_reward() -%}<span class="app-quest-reward" title="Quest Reward">★</span>{%- endmacro -%}
-{%- macro star_bonus_income(wagon_type) -%}<span class="app-bonus-income" title="Bonus income ({{ wagon_type.bonus_income }}%)">★</span>{%- endmacro -%}
-{%- macro star_tier_gold(title) -%}<span class="app-tier-gold" title="Gold tier: {{ title }}">★</span>{%- endmacro -%}
-{%- macro star_tier_silver(title) -%}<span class="app-tier-silver" title="Silver tier: {{ title }}">★</span>{%- endmacro -%}
-{%- macro star_tier_bronze(title) -%}<span class="app-tier-bronze" title="Bronze tier: {{ title }}">★</span>{%- endmacro -%}
+{%- macro star_depo_upgrade() -%}
+  <span class="app-depo-upgrade" title="Requires locomotive works">◈</span>{%- endmacro -%}
+{%- macro star_quest_reward() -%}
+  <span class="app-quest-reward" title="Quest Reward">★</span>{%- endmacro -%}
+{%- macro star_bonus_income(wagon_type) -%}
+  <span class="app-bonus-income" title="Bonus income ({{ wagon_type.bonus_income }}%)">🞤</span>{%- endmacro -%}
+{%- macro star_tier_gold(title) -%}
+  <span class="app-tier-gold" title="Gold tier: {{ title }}">★</span>{%- endmacro -%}
+{%- macro star_tier_silver(title) -%}
+  <span class="app-tier-silver" title="Silver tier: {{ title }}">★</span>{%- endmacro -%}
+{%- macro star_tier_bronze(title) -%}
+  <span class="app-tier-bronze" title="Bronze tier: {{ title }}">★</span>{%- endmacro -%}
 
 {% macro id(wagon_type) -%}
   <small class="font-monospace text-muted">{{ wagon_type.id }}</small>
@@ -25,22 +31,20 @@
   {%- elif wagon_type.type == "road_vehicle" -%}
     {%- set class="app-text-road-vehicle" -%}
   {%- endif -%}
-  <span title="{{- wagon_type -}}">
-    <span class="{{ class }}">{{ wagon_type.name }}</span>
-    {% if count > 1 %}
+  <span title="{{- wagon_type -}}"><span class="{{ class }}">{{ wagon_type.name }}</span>
+    {%- if count > 1 %}
       <span class="app-wagon-type-count"> x{{ count }}</span>
-    {% endif %}
-    <span class="app-wagon-rewards">
-      {%- if wagon_type.depo_upgrade -%}
-        {{- star_depo_upgrade() -}}
-      {%- endif %}
-      {%- if wagon_type.is_quest_reward -%}
-        {{- star_quest_reward() -}}
-      {%- endif -%}
-      {%- if wagon_type.bonus_income -%}
-        {{- star_bonus_income(wagon_type) -}}
-      {%- endif -%}
-    </span>
+    {%- endif -%}
+    {%- if wagon_type.depo_upgrade or wagon_type.is_quest_reward %}
+      <span class="app-wagon-rewards">
+        {%- if wagon_type.depo_upgrade -%}
+          {{- star_depo_upgrade() -}}
+        {%- endif %}
+        {%- if wagon_type.is_quest_reward -%}
+          {{- star_quest_reward() -}}
+        {%- endif -%}
+      </span>
+    {%- endif -%}
   </span>
 {%- endmacro -%}
 
