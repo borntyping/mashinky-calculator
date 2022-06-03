@@ -106,28 +106,6 @@ class Fuel(Base, Amount):
     token_type = relationship("TokenType")
 
 
-class Effect(Base, Amount):
-    __tablename__ = "effect"
-
-    wagon_type_id = Column(String, ForeignKey("wagon_type.id"), primary_key=True)
-    cargo_type_id = Column(String, ForeignKey("cargo_type.id"), primary_key=True)
-    name = Column(String, nullable=False, primary_key=True)
-    multiplier = Column(Numeric, nullable=False)
-
-    wagon_type = relationship("WagonType", back_populates="effects")
-    cargo_type = relationship("CargoType")
-
-    @property
-    def bonus(self) -> float:
-        return self.multiplier - 1
-
-    def __str__(self) -> str:
-        if self.name == "profit":
-            return f"{self.bonus:.0%} bonus income"
-
-        raise NotImplementedError
-
-
 class ConfigMixin:
     id: str
     name: typing.Optional[str]
@@ -193,6 +171,10 @@ class CargoType(Base, ConfigMixin):
 
         return query
 
+    @property
+    def is_passengers(self) -> bool:
+        return self.name == "Passengers"
+
 
 class TokenType(Base, ConfigMixin):
     __tablename__ = "token_type"
@@ -255,12 +237,8 @@ class WagonType(Base, ConfigMixin):
         lazy="joined",
         back_populates="wagon_type",
     )
-    effects: list[Effect] = relationship(
-        Effect,
-        uselist=True,
-        lazy="joined",
-        back_populates="wagon_type",
-    )
+
+    bonus_income: typing.Optional[int] = Column(Integer, nullable=True)
 
     __mapper_args__ = {
         "polymorphic_on": type,

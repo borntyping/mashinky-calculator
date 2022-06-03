@@ -193,15 +193,7 @@ class ModelFactory:
             )
             for amount, token_type_id in parse_payments(attrs.get("fuel_cost"))
         ]
-        effects = [
-            mashinky.models.Effect(
-                wagon_type_id=attrs["id"],
-                cargo_type_id=cargo_type_id,
-                name=name,
-                multiplier=multiplier,
-            )
-            for name, cargo_type_id, multiplier in parse_effects(attrs.get("effect"))
-        ]
+        bonus_income = parse_bonus_income(attrs.get("effect"))
 
         kwargs = dict(
             id=id,
@@ -217,7 +209,7 @@ class ModelFactory:
             cost=cost,
             sell=sell,
             fuel=fuel,
-            effects=effects,
+            bonus_income=bonus_income,
             cargo_type_id=cargo_type_id,
             capacity=capacity,
             depo_upgrade=depo_upgrade,
@@ -295,16 +287,16 @@ def parse_payments(
     raise ValueError(f"Could not parse {value} as payments")
 
 
-def parse_effects(value: typing.Optional[str]) -> list[tuple[str, str, float]]:
+def parse_bonus_income(value: typing.Optional[str]) -> typing.Optional[int]:
     # profit[0F822763]*1.15001
 
     if value is None:
-        return []
+        return None
 
     if matches := REGEX_EFFECT.findall(value):
-        return [
-            (effect, cargo_type_id, float(multiplier))
-            for effect, cargo_type_id, multiplier in matches
-        ]
+        if len(matches) == 1:
+            effect, cargo_type_id, multiplier = matches[0]
+            if effect == "profit" and cargo_type_id == "0F822763":
+                return round(float(multiplier) * 100) - 100
 
-    raise ValueError(f"Could not parse {value} as effects")
+    raise ValueError(f"Could not parse {value} as bonus income")

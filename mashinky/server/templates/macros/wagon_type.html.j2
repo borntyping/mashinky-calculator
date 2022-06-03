@@ -18,7 +18,7 @@
   {%- elif wagon_type.type == "road_vehicle" -%}
     {%- set class="app-text-road-vehicle" -%}
   {%- endif -%}
-  <span title="{{ wagon_type }} {{ wagon_type.effects|map('string')|join(', ') }}">
+  <span title="{{ wagon_type }}{% if wagon_type.bonus_income %} ({{ wagon_type.bonus_income }}% bonus income){% endif %}">
     <span class="{{ class }}">{{ wagon_type.name }}</span>
     {%- if wagon_type.is_quest_reward -%}
       <span class="ml-1" title="Quest Reward">★</span>

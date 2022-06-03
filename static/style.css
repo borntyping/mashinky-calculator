@@ -62,6 +62,10 @@ tr:hover .app-text-faded,
     height: 64px;
 }
 
+.app-table-trains {
+    font-size: 0.8em;
+}
+
 .app-tiles-container {
     overflow-x: hidden;
     white-space: nowrap;
@@ -84,13 +88,9 @@ tr:hover .app-text-faded,
     /*margin-bottom: 1px;*/
 }
 
-.app-effect {
-    color: var(--royal-blue);
-}
-
-.app-best {
-    color: var(--gold);
-}
+.app-effect { color: var(--royal-blue); }
+.app-class-gold { color: var(--gold); }
+.app-class-silver { color: var(--silver); }
 
 .app-text-apple-green { color: var(--apple-green); }
 .app-text-black { color: var(--black); }

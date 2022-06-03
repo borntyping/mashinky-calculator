@@ -68,8 +68,14 @@ def search_trains():
 
     best = {
         "capacity": max(t.capacity for t in results.trains),
+        "bonus_capacity": max(t.bonus_capacity for t in results.trains),
         "max_speed": max(t.max_speed for t in results.trains),
-        "utilization": max(t.utilization for t in results.trains if t.utilization <= 1.00),
+        "weight_usage": max(t.weight_usage for t in results.trains if t.weight_usage <= 1.00),
+        "length_usage": max(
+            t.length_usage(options.display_station_length)
+            for t in results.trains
+            if t.length_usage(options.display_station_length) <= 1.00
+        ),
     }
 
     return render_template("trains.html.j2", options=options, results=results, best=best)

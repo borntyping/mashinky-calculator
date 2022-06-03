@@ -200,15 +200,13 @@
     </form>
   </section>
 
-
   <section class="container-fluid my-5">
-    <table class="table table-sm table-hover table-responsive align-middle">
+    <table class="table table-sm table-hover table-responsive align-middle app-table-trains">
       <thead class="thead-light align-top">
       <tr>
         <th class="text-start">Train</th>
         <th class="text-start">Description</th>
         <th class="text-start">Cargo</th>
-        <th class="text-center">Epoch</th>
         <th class="text-start">Speed</th>
         <th class="text-start">Weight</th>
         <th class="text-start">Length</th>
@@ -218,7 +216,7 @@
       </thead>
       <tbody class="table-group-divider">
       {% for train in results.trains %}
-        {% set long = train.length > options.station_length_long %}
+        {% set long = train.length > options.display_station_length %}
         {% if long %}
           <tr>
             <td class="text-start px-0 border-bottom-0 app-tiles-container" colspan="100%">{{- macros_wagon_type.icon_train(train, tile_width, options.station_length_long) -}}</td>
@@ -226,27 +224,12 @@
         {% endif %}
         <tr>
           <td class="text-start px-0 app-tiles-container">
-            {% if not long %}{{- macros_wagon_type.icon_train(train, tile_width, options.station_length_long) -}}{% endif %}</td>
+            {% if not long %}{{- macros_wagon_type.icon_train(train, tile_width, options.display_station_length) -}}{% endif %}</td>
           <td class="text-start">{{ macros_wagon_type.description(train) }}</td>
-          <td class="text-start">
-            {{ macros_train.cargo_description(train) }}
-            {% if train.capacity == best['capacity'] %}
-              <span class="app-best" title="Highest capacity">★</span>
-            {% endif %}
-          </td>
-          <td class="text-center">{{ macros_wagon_type.epoch(train) }}</td>
-          <td class="text-start">
-            {{ macros_wagon_type.speed(train) }}
-            {% if train.max_speed == best['max_speed'] %}
-              <span class="app-best" title="Highest speed">★</span>
-            {% endif %}
-          </td>
-          <td class="text-start">
-            {{ macros_train.weight(train) }}
-            {% if train.utilization == best['utilization'] %}
-              <span class="app-best" title="Highest utilization">★</span>
-            {% endif %}</td>
-          <td class="text-start">{{ macros_train.length(train, options) }}</td>
+          <td class="text-start">{{ macros_train.cargo_description(train, best) }}
+          <td class="text-start">{{ macros_train.speed(train, best) }}</td>
+          <td class="text-start">{{ macros_train.weight(train, best) }}</td>
+          <td class="text-start">{{ macros_train.length(train, best, options) }}</td>
           <td class="text-start">{{ macros_train.costs(train.cost) }}</td>
           <td class="text-start">{{ macros_train.costs(train.fuel) }}</td>
         </tr>

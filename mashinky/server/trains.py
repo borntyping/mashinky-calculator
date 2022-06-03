@@ -7,17 +7,7 @@ import itertools
 import math
 import typing
 
-from mashinky.models import (
-    Effect,
-    Engine,
-    Epoch,
-    Amount,
-    TokenType,
-    Track,
-    Wagon,
-    CargoType,
-    WagonType,
-)
+from mashinky.models import Engine, Epoch, Amount, TokenType, Track, Wagon, CargoType, WagonType
 
 T = typing.TypeVar("T")
 
@@ -120,10 +110,6 @@ class Train:
     def fuel(self) -> dict[TokenType, int]:
         return self._payments(payment for wt in self.wagon_types for payment in wt.fuel)
 
-    @property
-    def effects(self) -> list[Effect]:
-        return [effect for wt in self.wagon_types for effect in wt.effects]
-
     # Engine properties
 
     @property
@@ -139,6 +125,29 @@ class Train:
         return sum(engine.recommended_weight for engine in self.engines)
 
     # Train properties
+
+    @property
+    def bonus_incomes(self) -> list[WagonType]:
+        return [wt for wt in self.wagon_types if wt.bonus_income]
+
+    @property
+    def bonus_cargo(self) -> typing.dict[WagonType, int]:
+        counter = collections.Counter()
+
+        # No idea if this is max or sum or something else.
+        bonuses = [wt.bonus_income for wt in self.wagon_types if wt.bonus_income]
+        bonus = max(bonuses) if bonuses else 0
+        multiplier = (bonus + 100) / 100
+
+        return {cargo_type: round(multiplier * amount) for cargo_type, amount in self.cargo.items()}
+
+    @property
+    def bonus_capacity(self) -> int:
+        return sum(self.bonus_cargo.values())
+
+    @property
+    def estimated_capacity(self) -> int:
+        return sum(self.bonus_cargo[wagon_type] for wagon_type in self.wagon_types)
 
     def add_wagons(self, wagon_types: typing.Sequence[WagonType]):
         """Inserts wagons after the last engine."""
@@ -161,8 +170,11 @@ class Train:
         return self.weight_full > self.recommended_weight
 
     @property
-    def utilization(self) -> float:
+    def weight_usage(self) -> float:
         return self.weight_full / self.recommended_weight
+
+    def length_usage(self, length: int) -> float:
+        return self.length / length
 
 
 class MaximumWeight(enum.Enum):
@@ -207,13 +219,48 @@ class Options:
 
     deduplicate_trains: bool = False
 
-    passenger_wagon_tails = {
-        "1st Class": {"2nd class", "Dining car", "Pwg PR-14"},
-        "2nd class": {"1st Class", "Dining car", "Pwg PR-14"},
-        "SCF": {"SCF Diner", "SCF Mail"},
-        "SCG": {"SCG Diner", "SCG Mail"},
-        "SGV class 1": {"SGV class 2", "SGV bar", "SGV post"},
-        "SGV class 2": {"SGV class 1", "SGV bar", "SGV post"},
+    passenger_wagon_suggestions: typing.ClassVar[dict[str, list[list[str]]]] = {
+        "Coach car": [
+            ["1st Class", "Pwg PR-14"],
+            ["1st Class"],
+            ["Pwg PR-14"],
+        ],
+        "1st Class": [
+            ["2nd class", "Pwg PR-14"],
+            ["Dining car", "Pwg PR-14"],
+            ["2nd class"],
+            ["Dining car"],
+            ["Pwg PR-14"],
+        ],
+        "2nd class": [
+            ["1st Class", "Pwg PR-14"],
+            ["Dining car", "Pwg PR-14"],
+            ["1st Class"],
+            ["Dining car"],
+            ["Pwg PR-14"],
+        ],
+        "SCF": [
+            ["SCF Diner", "SCF Mail"],
+            ["SCF Diner"],
+            ["SCF Mail"],
+        ],
+        "SCG": [
+            ["SCG Diner", "SCF Mail"],
+            ["SCG Diner"],
+            ["SCG Mail"],
+        ],
+        "SGV class 1": [
+            ["SGV Diner", "SCF Mail"],
+            ["SGV Diner"],
+            ["SGV Mail"],
+        ],
+        "SGV class 2": [
+            ["SGV class 1", "SCF post"],
+            ["SGV bar", "SCF post"],
+            ["SGV class 1"],
+            ["SGV bar"],
+            ["SGV post"],
+        ],
     }
 
     def collect(self) -> Results:
@@ -228,7 +275,7 @@ class Options:
         trains = after_discarding = [train for group in groups for train in self.discard(group)]
         trains = after_deduplication = self.deduplicate(trains)
         trains = after_applying_rules = self.apply_rules(trains)
-        trains = sorted(trains, key=lambda t: t.capacity, reverse=True)
+        trains = sorted(trains, key=lambda t: t.bonus_capacity, reverse=True)
 
         return Results(
             trains=trains,
@@ -248,15 +295,15 @@ class Options:
 
         yield from self._groups(heads, wagon)
 
-        if wagon.cargo_type.name == "Passengers" and wagon.name in self.passenger_wagon_tails:
-            wagon_name_map = {wagon.name: wagon for wagon in self.all_wagons}
+        if wagon.cargo_type.is_passengers and wagon.name in self.passenger_wagon_suggestions:
+            wagons_by_name = {wagon.name: wagon for wagon in self.all_wagons}
+            suggestions = [
+                [wagons_by_name[name] for name in names if name in wagons_by_name]
+                for names in self.passenger_wagon_suggestions[wagon.name]
+            ]
 
-            suggestions = self.passenger_wagon_tails[wagon.name]
-
-            wagons = {wagon_name_map[name] for name in suggestions if name in wagon_name_map}
-
-            for suggestion in wagons:
-                yield from self._groups([head.add_wagons([suggestion]) for head in heads], wagon)
+            for suggestion in suggestions:
+                yield from self._groups([head.add_wagons(suggestion) for head in heads], wagon)
 
     def _groups(self, heads: list[Train], wagon: Wagon) -> list[list[Train]]:
         return [
@@ -314,3 +361,10 @@ class Options:
                 return False
 
         return True
+
+    @property
+    def display_station_length(self) -> int:
+        if self.maximum_length == MaximumLength.SHORT:
+            return self.station_length_short
+
+        return self.station_length_long
