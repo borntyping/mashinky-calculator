@@ -5,7 +5,7 @@ import math
 import typing
 
 import sqlalchemy.orm
-from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String, Numeric
+from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String, Numeric, and_, or_
 from sqlalchemy.orm import declarative_base, relationship
 
 from mashinky.ext.sqlalchemy import IntEnum
@@ -210,7 +210,9 @@ class WagonType(Base, ConfigMixin):
     weight_empty = Column(Integer, nullable=False)
     weight_full = Column(Integer, nullable=False)
     length = Column(Integer, nullable=False)
+
     depo_upgrade = Column(Boolean, nullable=False)
+    quest_reward = Column(Boolean, nullable=False)
 
     # All wagon types can have cargo. No engines use this yet.
     # https://store.steampowered.com/news/app/598960/view/4738306083311895973
@@ -263,6 +265,8 @@ class WagonType(Base, ConfigMixin):
         ids: typing.Collection[str] = (),
         names: typing.Collection[str] = (),
         epoch: typing.Optional[Epoch] = None,
+        quest_reward: typing.Optional[bool] = None,
+        depo_upgrade: typing.Optional[bool] = None,
     ) -> sqlalchemy.orm.Query:
         query = cls.query.order_by(cls.id)
 
@@ -273,7 +277,18 @@ class WagonType(Base, ConfigMixin):
             query = query.filter(cls.id.in_(names))
 
         if epoch is not None:
-            query = query.filter(cls.epoch_start <= epoch, epoch <= cls.epoch_end)
+            query = query.filter(
+                or_(
+                    and_(cls.epoch_start <= epoch, epoch <= cls.epoch_end),
+                    and_(cls.epoch_start == None, cls.epoch_end == None),
+                )
+            )
+
+        if quest_reward is False:
+            query = query.filter(cls.quest_reward == False)
+
+        if depo_upgrade is False:
+            query = query.filter(cls.depo_upgrade == False)
 
         return query
 

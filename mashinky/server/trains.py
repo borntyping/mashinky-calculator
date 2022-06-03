@@ -210,14 +210,13 @@ class Options:
     selected_wagons: typing.Sequence[Wagon]
     selected_cargos: typing.Sequence[CargoType]
 
-    station_length_short: int = 6
-    station_length_long: int = 8
-
+    include_depo_upgrade: bool
+    include_quest_reward: bool
     maximum_engines: int = 2
     maximum_weight: MaximumWeight = MaximumWeight.FULL
     maximum_length: MaximumLength = MaximumLength.SHORT
-
-    deduplicate_trains: bool = False
+    station_length_short: int = 6
+    station_length_long: int = 8
 
     passenger_wagon_suggestions: typing.ClassVar[dict[str, list[list[str]]]] = {
         "Coach car": [

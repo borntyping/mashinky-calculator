@@ -160,6 +160,7 @@ class ModelFactory:
         weight_empty: int = int(attrs["weight_empty"])
         weight_full: int = int(attrs["weight_full"])
         depo_upgrade: bool = attrs.get("depo_upgrade") == "0"
+        quest_reward: bool = epoch_start is None and epoch_end is None
 
         main_length = float(attrs["length"])
         head_length = float(attrs.get("head_length", 0.0))
@@ -213,6 +214,7 @@ class ModelFactory:
             cargo_type_id=cargo_type_id,
             capacity=capacity,
             depo_upgrade=depo_upgrade,
+            quest_reward=quest_reward,
         )
 
         if attrs["vehicle_type"] == "0" and attrs.get("power"):

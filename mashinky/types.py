@@ -255,7 +255,7 @@ class Train:
             if include_all_doubles:
                 yield double
             # Skip double-header trains for engines that come from quest rewards.
-            elif engine.quest_reward:
+            elif engine.include_quest_reward:
                 continue
             # Only include double headers when they have a greater capacity.
             elif double.capacity > single.capacity:

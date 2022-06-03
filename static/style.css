@@ -62,6 +62,10 @@ tr:hover .app-text-faded,
     height: 64px;
 }
 
+.app-options {
+    font-size: .875em;
+}
+
 .app-table-trains {
     font-size: 0.8em;
 }
