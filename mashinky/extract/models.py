@@ -33,7 +33,7 @@ class ModelFactory:
         cargo_types = {k: self.build_cargo_type(v) for k, v in self.config.cargo_types.items()}
         token_types = {k: self.build_token_type(v) for k, v in self.config.token_types.items()}
         wagon_types = {
-            id: self.build_wagon_type(attrs, token_types)
+            id: self.build_wagon_type(attrs, cargo_types=cargo_types, token_types=token_types)
             for id, attrs in self.config.wagon_types.items()
         }
         colors = {k: self.build_color(v) for k, v in self.config.colors.items()}
@@ -49,7 +49,7 @@ class ModelFactory:
 
         logger.info(
             "Wrote models to database",
-            cargo_types=session.query(mashinky.models.Cargo).count(),
+            cargo_types=session.query(mashinky.models.CargoType).count(),
             token_types=session.query(mashinky.models.TokenType).count(),
             wagon_types=session.query(mashinky.models.WagonType).count(),
             colors=session.query(mashinky.models.Color).count(),
@@ -58,7 +58,7 @@ class ModelFactory:
             fuel=session.query(mashinky.models.Fuel).count(),
         )
 
-    def build_cargo_type(self, attrs: dict[str, str]) -> mashinky.models.Cargo:
+    def build_cargo_type(self, attrs: dict[str, str]) -> mashinky.models.CargoType:
         name = self.config.english.get(attrs.get("name"))
         icon = self.images.extract_icon(
             icon_texture=attrs["icon_texture"],
@@ -95,7 +95,7 @@ class ModelFactory:
             "B388ED8C": mashinky.models.Epoch(3),  # Goods
         }
 
-        return mashinky.models.Cargo(
+        return mashinky.models.CargoType(
             id=attrs["id"],
             name=name,
             color=attrs["color"],
@@ -132,7 +132,10 @@ class ModelFactory:
 
     def build_wagon_type(
         self,
+        /,
         attrs: dict[str, str],
+        *,
+        cargo_types: dict[str, mashinky.models.CargoType],
         token_types: dict[str, mashinky.models.TokenType],
     ) -> mashinky.models.WagonType:
         id: str = attrs["id"]
@@ -169,7 +172,7 @@ class ModelFactory:
         cost = [
             mashinky.models.Cost(
                 wagon_type_id=attrs["id"],
-                token_type=token_types[token_type_id],
+                token_type_id=token_type_id,
                 amount=amount,
             )
             for amount, token_type_id in parse_payments(attrs.get("cost"))
@@ -177,7 +180,7 @@ class ModelFactory:
         sell = [
             mashinky.models.Sell(
                 wagon_type_id=attrs["id"],
-                token_type=token_types[token_type_id],
+                token_type_id=token_type_id,
                 amount=amount,
             )
             for amount, token_type_id in parse_payments(attrs.get("sell"))
@@ -185,10 +188,19 @@ class ModelFactory:
         fuel = [
             mashinky.models.Fuel(
                 wagon_type_id=attrs["id"],
-                token_type=token_types[token_type_id],
+                token_type_id=token_type_id,
                 amount=amount,
             )
             for amount, token_type_id in parse_payments(attrs.get("fuel_cost"))
+        ]
+        effects = [
+            mashinky.models.Effect(
+                wagon_type_id=attrs["id"],
+                cargo_type_id=cargo_type_id,
+                name=name,
+                multiplier=multiplier,
+            )
+            for name, cargo_type_id, multiplier in parse_effects(attrs.get("effect"))
         ]
 
         kwargs = dict(
@@ -205,6 +217,7 @@ class ModelFactory:
             cost=cost,
             sell=sell,
             fuel=fuel,
+            effects=effects,
             cargo_type_id=cargo_type_id,
             capacity=capacity,
             depo_upgrade=depo_upgrade,
@@ -264,16 +277,34 @@ def parse_track(value: str) -> mashinky.models.Track:
     return mashinky.models.Track(int(value))
 
 
+REGEX_PAYMENT = re.compile(r"(?P<amount>-?\d+)(?:\[(?P<token_type_id>\w+)])?")
+REGEX_EFFECT = re.compile(r"(?P<effect>\w+)\[(?P<cargo_type_id>\w+)\]\*(?P<multiplier>[\d\.]+)")
+
+
 def parse_payments(
-    value: typing.Optional[str],
-    default_token_type: str = "F0000000",
-) -> typing.Sequence[typing.Tuple[int, str]]:
+    value: typing.Optional[str], default_token_type: str = "F0000000"
+) -> list[tuple[int, str]]:
     if value is None or value == "0":
         return []
 
-    if matches := re.findall(r"(?P<amount>-?\d+)(?:\[(?P<token_type_id>\w+)])?", value):
+    if matches := REGEX_PAYMENT.findall(value):
         return [
             (abs(int(amount)), token_type or default_token_type) for amount, token_type in matches
         ]
 
     raise ValueError(f"Could not parse {value} as payments")
+
+
+def parse_effects(value: typing.Optional[str]) -> list[tuple[str, str, float]]:
+    # profit[0F822763]*1.15001
+
+    if value is None:
+        return []
+
+    if matches := REGEX_EFFECT.findall(value):
+        return [
+            (effect, cargo_type_id, float(multiplier))
+            for effect, cargo_type_id, multiplier in matches
+        ]
+
+    raise ValueError(f"Could not parse {value} as effects")

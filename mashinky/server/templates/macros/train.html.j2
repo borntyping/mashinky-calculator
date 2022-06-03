@@ -15,9 +15,6 @@
     Under the recommended weight when full.
     {%- endif -%}
     &#10;Using {{ "{:.0%}".format(usage) }} of the recommended weight.">
-    {%- if empty or full -%}
-      <span>⚠ </span>
-    {%- endif -%}
     <span>
       {%- if empty -%}
         <span class="app-app-text-high">{{ train.weight_empty }}</span>
@@ -33,6 +30,9 @@
     </span>
     <span>tons</span>
     <span class="app-text-faded">({{ "{:.0%}".format(usage) }})</span>
+    {%- if empty or full -%}
+      <span>⚠ </span>
+    {%- endif -%}
   </span>
 {%- endmacro %}
 
@@ -46,18 +46,26 @@
     {%- if long -%}
     &#10;Train will not fit in a long station ({{ options.station_length_long }} tiles).
     {%- endif -%}
-  ">{% if long %}⚠{% endif %} {{ "%.2f"|format(train.length) }} tiles</span>
+  ">
+    <span>{{ "%.2f"|format(train.length) }} tiles</span>
+    {% if long %}
+      <span>⚠</span>
+    {% endif %}
+  </span>
 {%- endmacro %}
 
-{% macro cargo_types(wagon_type) -%}
-  {%- for cargo_type in wagon_type.cargo_types -%}
+{% macro cargo_description(train) -%}
+  {%- for cargo_type, amount in train.cargo.items() -%}
     <div class="d-inline-flex justify-content-start align-items-center">
       <img class="d-block mx-1 app-icon-sm" src="{{ url_for('static', filename=cargo_type.icon) }}" alt="{{ cargo_type }}">
-      <span class="d-block">{{ wagon_type.capacity }} {{ cargo_type.name.lower() }}</span>
+      <span class="d-block">{{ amount }} {{ cargo_type.name.lower() }}</span>
     </div>
   {%- else -%}
     {{ empty("No cargo") }}
   {%- endfor -%}
+  {% if train.effects %}
+    <span class="app-effect" title="{{ train.effects|map('string')|join('&#10;') }}">★</span>
+  {% endif %}
 {%- endmacro %}
 
 {% macro costs(payments) -%}

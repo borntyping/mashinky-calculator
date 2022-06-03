@@ -6,7 +6,7 @@ from sqlalchemy import asc
 
 from mashinky.models import (
     Base,
-    Cargo,
+    CargoType,
     Color,
     Engine,
     Epoch,
@@ -49,9 +49,14 @@ def search_trains():
 
     options = Options(
         epoch=epoch,
-        engines=Engine.search(epoch=epoch, ids=request.args.getlist("engine_id")).all(),
-        wagons=Wagon.search(epoch=epoch, ids=request.args.getlist("wagon_id")).all(),
-        cargo_types=Cargo.search(epoch=epoch, ids=request.args.getlist("cargo_type_id")).all(),
+        all_engines=Engine.search(epoch=epoch).all(),
+        all_wagons=Wagon.search(epoch=epoch).all(),
+        all_cargos=CargoType.search(epoch=epoch).all(),
+        selected_engines=Engine.search(epoch=epoch, ids=request.args.getlist("engine_id")).all(),
+        selected_wagons=Wagon.search(epoch=epoch, ids=request.args.getlist("wagon_id")).all(),
+        selected_cargos=CargoType.search(
+            epoch=epoch, ids=request.args.getlist("cargo_type_id")
+        ).all(),
         station_length_short=request.args.get("station_length_short", default=6, type=int),
         station_length_long=request.args.get("station_length_long", default=8, type=int),
         maximum_engines=request.args.get("maximum_engines", default=2, type=int),
@@ -64,18 +69,10 @@ def search_trains():
     best = {
         "capacity": max(t.capacity for t in results.trains),
         "max_speed": max(t.max_speed for t in results.trains),
-        "utilization": max(t.utilization for t in results.trains),
+        "utilization": max(t.utilization for t in results.trains if t.utilization <= 1.00),
     }
 
-    return render_template(
-        "trains.html.j2",
-        options=options,
-        results=results,
-        best=best,
-        engines=Engine.search(epoch=options.epoch).all(),
-        wagons=Wagon.search(epoch=options.epoch).all(),
-        cargo_types=Cargo.search(epoch=options.epoch).all(),
-    )
+    return render_template("trains.html.j2", options=options, results=results, best=best)
 
 
 @app.route("/wagon_types")
@@ -94,7 +91,7 @@ def wagon_types():
 def cargo_types():
     return render_template(
         "cargo_types.html.j2",
-        cargo_types=Cargo.query.order_by(asc(Cargo.id)).all(),
+        cargo_types=CargoType.query.order_by(asc(CargoType.id)).all(),
     )
 
 

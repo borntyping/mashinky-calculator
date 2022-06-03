@@ -18,10 +18,12 @@
   {%- elif wagon_type.type == "road_vehicle" -%}
     {%- set class="app-text-road-vehicle" -%}
   {%- endif -%}
-  <span class="{{ class }}">{{ wagon_type.name }}</span>
-  {%- if wagon_type.is_quest_reward -%}
-    <span class="ml-1" title="Quest Reward">★</span>
-  {%- endif -%}
+  <span title="{{ wagon_type }} {{ wagon_type.effects|map('string')|join(', ') }}">
+    <span class="{{ class }}">{{ wagon_type.name }}</span>
+    {%- if wagon_type.is_quest_reward -%}
+      <span class="ml-1" title="Quest Reward">★</span>
+    {%- endif -%}
+  </span>
 {%- endmacro %}
 
 {% macro icon(wagon_type, tile_width) -%}
@@ -67,8 +69,6 @@
     <span class="text-truncate">{{ wagon_type.weight_empty }} tons</span>
   {% endif %}
 {%- endmacro %}
-
-
 
 {% macro length(wagon_type) -%}
   <span class="text-truncate">{{ "%.2f"|format(wagon_type.length) }} tiles</span>

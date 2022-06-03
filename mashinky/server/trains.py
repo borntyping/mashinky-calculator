@@ -7,7 +7,17 @@ import itertools
 import math
 import typing
 
-from mashinky.models import Engine, Epoch, Payment, TokenType, Track, Wagon, Cargo, WagonType
+from mashinky.models import (
+    Effect,
+    Engine,
+    Epoch,
+    Amount,
+    TokenType,
+    Track,
+    Wagon,
+    CargoType,
+    WagonType,
+)
 
 T = typing.TypeVar("T")
 
@@ -70,18 +80,27 @@ class Train:
         return any(wagon_type.depo_upgrade for wagon_type in self.wagon_types)
 
     @property
-    def cargo_types(self) -> typing.Set[Cargo]:
-        return {wt.cargo_type for wt in self.wagon_types if wt.cargo_type is not None}
+    def cargo_types(self) -> typing.Sequence[CargoType]:
+        # This relies on dict ordering.
+        unique = {w.cargo_type: None for w in self.wagon_types if w.cargo_type is not None}
+        return list(unique.keys())
+
+    @property
+    def cargo(self) -> typing.Counter[WagonType]:
+        counter = collections.Counter()
+
+        for wagon_type in self.wagon_types:
+            if wagon_type.cargo_type:
+                counter[wagon_type.cargo_type] += wagon_type.capacity
+
+        return counter
 
     @property
     def capacity(self) -> int:
-        if len(self.cargo_types) > 1:
-            raise ValueError("Train has multiple cargo types")
-
         return sum(wagon_type.capacity for wagon_type in self.wagon_types)
 
     @staticmethod
-    def _payments(payments: typing.Iterable[Payment]) -> dict[TokenType, int]:
+    def _payments(payments: typing.Iterable[Amount]) -> dict[TokenType, int]:
         total = collections.Counter()
 
         for payment in sorted(payments, key=lambda p: p.token_type.id):
@@ -101,6 +120,10 @@ class Train:
     def fuel(self) -> dict[TokenType, int]:
         return self._payments(payment for wt in self.wagon_types for payment in wt.fuel)
 
+    @property
+    def effects(self) -> list[Effect]:
+        return [effect for wt in self.wagon_types for effect in wt.effects]
+
     # Engine properties
 
     @property
@@ -118,7 +141,10 @@ class Train:
     # Train properties
 
     def add_wagons(self, wagon_types: typing.Sequence[WagonType]):
-        return dataclasses.replace(self, wagon_types=(*self.wagon_types, *wagon_types))
+        """Inserts wagons after the last engine."""
+        index = max(i for i, wt in enumerate(self.wagon_types, 1) if isinstance(wt, Engine))
+        wagon_types = (*self.wagon_types[:index], *wagon_types, *self.wagon_types[index:])
+        return dataclasses.replace(self, wagon_types=wagon_types)
 
     def add_wagons_to_recommended_weight(self: T, wagon: Wagon) -> T:
         count = math.floor((self.recommended_weight - self.weight_full) / wagon.weight_full)
@@ -164,9 +190,13 @@ class Results:
 @dataclasses.dataclass(frozen=True)
 class Options:
     epoch: Epoch
-    engines: typing.Sequence[Engine]
-    wagons: typing.Sequence[Wagon]
-    cargo_types: typing.Sequence[Cargo]
+    all_engines: typing.Sequence[Engine]
+    all_wagons: typing.Sequence[Wagon]
+    all_cargos: typing.Sequence[CargoType]
+
+    selected_engines: typing.Sequence[Engine]
+    selected_wagons: typing.Sequence[Wagon]
+    selected_cargos: typing.Sequence[CargoType]
 
     station_length_short: int = 6
     station_length_long: int = 8
@@ -177,14 +207,20 @@ class Options:
 
     deduplicate_trains: bool = False
 
-    @property
-    def wagons_for_cargo(self):
-        return [wagon for wagon in self.wagons if wagon.cargo_type in self.cargo_types]
+    passenger_wagon_tails = {
+        "1st Class": {"2nd class", "Dining car", "Pwg PR-14"},
+        "2nd class": {"1st Class", "Dining car", "Pwg PR-14"},
+        "SCF": {"SCF Diner", "SCF Mail"},
+        "SCG": {"SCG Diner", "SCG Mail"},
+        "SGV class 1": {"SGV class 2", "SGV bar", "SGV post"},
+        "SGV class 2": {"SGV class 1", "SGV bar", "SGV post"},
+    }
 
     def collect(self) -> Results:
+        wagons = [w for w in self.selected_wagons if w.cargo_type in self.selected_cargos]
         groups = [
             group
-            for engine, wagon in itertools.product(self.engines, self.wagons_for_cargo)
+            for engine, wagon in itertools.product(self.selected_engines, wagons)
             for group in self.groups(engine, wagon)
         ]
 
@@ -209,6 +245,20 @@ class Options:
         max_engines: int = 2,
     ) -> list[list[Train]]:
         heads = [Train(engine.times(engine_count)) for engine_count in range(1, max_engines + 1)]
+
+        yield from self._groups(heads, wagon)
+
+        if wagon.cargo_type.name == "Passengers" and wagon.name in self.passenger_wagon_tails:
+            wagon_name_map = {wagon.name: wagon for wagon in self.all_wagons}
+
+            suggestions = self.passenger_wagon_tails[wagon.name]
+
+            wagons = {wagon_name_map[name] for name in suggestions if name in wagon_name_map}
+
+            for suggestion in wagons:
+                yield from self._groups([head.add_wagons([suggestion]) for head in heads], wagon)
+
+    def _groups(self, heads: list[Train], wagon: Wagon) -> list[list[Train]]:
         return [
             [head.add_wagons_to_recommended_weight(wagon) for head in heads],
             [head.add_wagons_to_length(wagon, self.station_length_short) for head in heads],
@@ -222,9 +272,14 @@ class Options:
 
         This should remove any trains that add more engines for no improvement.
         """
+        # yield from trains
+        # return
+
         best = trains[0]
 
-        yield trains[0]
+        if best.capacity > 0:
+            yield trains[0]
+
         for train in trains[1:]:
             if train.capacity > best.capacity:
                 yield train

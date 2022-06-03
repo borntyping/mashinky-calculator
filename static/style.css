@@ -84,6 +84,10 @@ tr:hover .app-text-faded,
     /*margin-bottom: 1px;*/
 }
 
+.app-effect {
+    color: var(--royal-blue);
+}
+
 .app-best {
     color: var(--gold);
 }

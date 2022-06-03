@@ -5,7 +5,7 @@ import math
 import typing
 
 import sqlalchemy.orm
-from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String, Numeric
 from sqlalchemy.orm import declarative_base, relationship
 
 from mashinky.ext.sqlalchemy import IntEnum
@@ -63,7 +63,7 @@ class Track(enum.IntEnum):
         return names[self]
 
 
-class Payment:
+class Amount:
     wagon_type: WagonType
     token_type: TokenType
     amount: int
@@ -72,7 +72,7 @@ class Payment:
         return f"{self.__class__.__name__}({self.wagon_type}, {self.token_type}, {self.amount})"
 
 
-class Cost(Base, Payment):
+class Cost(Base, Amount):
     __tablename__ = "cost"
 
     id = Column(Integer, primary_key=True)
@@ -84,7 +84,7 @@ class Cost(Base, Payment):
     token_type = relationship("TokenType")
 
 
-class Sell(Base, Payment):
+class Sell(Base, Amount):
     __tablename__ = "sell"
 
     wagon_type_id = Column(String, ForeignKey("wagon_type.id"), primary_key=True)
@@ -95,7 +95,7 @@ class Sell(Base, Payment):
     token_type = relationship("TokenType")
 
 
-class Fuel(Base, Payment):
+class Fuel(Base, Amount):
     __tablename__ = "fuel"
 
     wagon_type_id = Column(String, ForeignKey("wagon_type.id"), primary_key=True)
@@ -104,6 +104,28 @@ class Fuel(Base, Payment):
 
     wagon_type = relationship("WagonType", back_populates="fuel")
     token_type = relationship("TokenType")
+
+
+class Effect(Base, Amount):
+    __tablename__ = "effect"
+
+    wagon_type_id = Column(String, ForeignKey("wagon_type.id"), primary_key=True)
+    cargo_type_id = Column(String, ForeignKey("cargo_type.id"), primary_key=True)
+    name = Column(String, nullable=False, primary_key=True)
+    multiplier = Column(Numeric, nullable=False)
+
+    wagon_type = relationship("WagonType", back_populates="effects")
+    cargo_type = relationship("CargoType")
+
+    @property
+    def bonus(self) -> float:
+        return self.multiplier - 1
+
+    def __str__(self) -> str:
+        if self.name == "profit":
+            return f"{self.bonus:.0%} bonus income"
+
+        raise NotImplementedError
 
 
 class ConfigMixin:
@@ -134,7 +156,7 @@ class ConfigMixin:
         return query
 
 
-class Cargo(Base, ConfigMixin):
+class CargoType(Base, ConfigMixin):
     __tablename__ = "cargo_type"
 
     id = Column(String, primary_key=True)
@@ -211,13 +233,34 @@ class WagonType(Base, ConfigMixin):
     # All wagon types can have cargo. No engines use this yet.
     # https://store.steampowered.com/news/app/598960/view/4738306083311895973
     cargo_type_id = Column(String, ForeignKey("cargo_type.id"), nullable=True)
-    cargo_type = relationship(Cargo, lazy="joined", backref="wagon_types")
+    cargo_type = relationship(CargoType, lazy="joined", backref="wagon_types")
 
     capacity = Column(Integer, nullable=False)
 
-    cost: list[Cost] = relationship(Cost, uselist=True, lazy="joined", back_populates="wagon_type")
-    sell: list[Sell] = relationship(Sell, uselist=True, lazy="joined", back_populates="wagon_type")
-    fuel: list[Fuel] = relationship(Fuel, uselist=True, lazy="joined", back_populates="wagon_type")
+    cost: list[Cost] = relationship(
+        Cost,
+        uselist=True,
+        lazy="joined",
+        back_populates="wagon_type",
+    )
+    sell: list[Sell] = relationship(
+        Sell,
+        uselist=True,
+        lazy="joined",
+        back_populates="wagon_type",
+    )
+    fuel: list[Fuel] = relationship(
+        Fuel,
+        uselist=True,
+        lazy="joined",
+        back_populates="wagon_type",
+    )
+    effects: list[Effect] = relationship(
+        Effect,
+        uselist=True,
+        lazy="joined",
+        back_populates="wagon_type",
+    )
 
     __mapper_args__ = {
         "polymorphic_on": type,

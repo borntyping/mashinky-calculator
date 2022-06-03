@@ -113,8 +113,8 @@
                 <!-- Engines -->
                 <div class="col">
                   <select class="form-select form-select-sm" id="engines" name="engine_id" multiple size="10">
-                    {% for engine in engines %}
-                      <option value="{{ engine.id }}" {% if engine in options.engines %}selected{% endif %}>{{ macros_wagon_type.name(engine) }}</option>
+                    {% for engine in options.all_engines %}
+                      <option value="{{ engine.id }}" {% if engine in options.selected_engines %}selected{% endif %}>{{ macros_wagon_type.name(engine) }}</option>
                     {% endfor %}
                   </select>
                 </div>
@@ -122,8 +122,8 @@
                 <!-- Wagons -->
                 <div class="col">
                   <select class="form-select form-select-sm" id="wagons" name="wagon_id" multiple size="10">
-                    {% for wagon in wagons %}
-                      <option value="{{ wagon.id }}" {% if wagon in options.wagons %}selected{% endif %}>{{ macros_wagon_type.name(wagon) }}</option>
+                    {% for wagon in options.all_wagons %}
+                      <option value="{{ wagon.id }}" {% if wagon in options.selected_wagons %}selected{% endif %}>{{ macros_wagon_type.name(wagon) }}</option>
                     {% endfor %}
                   </select>
                 </div>
@@ -131,8 +131,8 @@
                 <!-- Cargo -->
                 <div class="col">
                   <select class="form-select form-select-sm" id="wagons" name="cargo_type_id" multiple size="10">
-                    {% for cargo_type in cargo_types %}
-                      <option value="{{ cargo_type.id }}" {% if cargo_type in options.cargo_types %}selected{% endif %}>{{ cargo_type.name }}</option>
+                    {% for cargo_type in options.all_cargos %}
+                      <option value="{{ cargo_type.id }}" {% if cargo_type in options.selected_cargos %}selected{% endif %}>{{ cargo_type.name }}</option>
                     {% endfor %}
                   </select>
                 </div>
@@ -160,15 +160,15 @@
               <p>
                 Collected {{ results.trains|length }} trains.
                 <span class="app-text-faded">Generated {{ results.after_generation|length }} trains,
-                  removed {{ results.after_generation|length - results.after_discarding|length }} trains with unused engines,
+                  removed {{ results.after_generation|length - results.after_discarding|length }} trains with unused engines or zero capacity,
                   removed {{ results.after_discarding|length - results.after_deduplication|length }} identical trains,
                   removed {{ results.after_deduplication|length - results.after_applying_rules|length }} trains over limits.
                 </span>
               </p>
               <p>
                 <span>
-                  Using {{ engines|length }} engines:
-                  {% for wagon_type in engines %}
+                  Using {{ options.selected_engines|length }} engines:
+                  {% for wagon_type in options.selected_engines %}
                     {{- macros_wagon_type.name(wagon_type) -}}
                     {{- macros.comma(loop) -}}
                   {% endfor %}.
@@ -176,8 +176,8 @@
               </p>
               <p>
                 <span>
-                  Using {{ wagons|length }} wagons:
-                  {% for wagon_type in wagons %}
+                  Using {{ options.selected_wagons|length }} wagons:
+                  {% for wagon_type in options.selected_wagons %}
                     {{- macros_wagon_type.name(wagon_type) -}}
                     {{- macros.comma(loop) -}}
                   {% endfor %}.
@@ -185,8 +185,8 @@
               </p>
               <p>
                 <span>
-                  Using {{ cargo_types|length }} types of cargo:
-                  {% for cargo_type in cargo_types -%}
+                  Using {{ options.selected_cargos|length }} types of cargo:
+                  {% for cargo_type in options.selected_cargos -%}
                     <span class="app-text-cargo">{{- cargo_type -}}</span>
                     {{- macros.comma(loop) -}}
                   {%- endfor %}.
@@ -229,7 +229,7 @@
             {% if not long %}{{- macros_wagon_type.icon_train(train, tile_width, options.station_length_long) -}}{% endif %}</td>
           <td class="text-start">{{ macros_wagon_type.description(train) }}</td>
           <td class="text-start">
-            {{ macros_train.cargo_types(train) }}
+            {{ macros_train.cargo_description(train) }}
             {% if train.capacity == best['capacity'] %}
               <span class="app-best" title="Highest capacity">★</span>
             {% endif %}
