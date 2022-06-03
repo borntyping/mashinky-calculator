@@ -23,9 +23,9 @@
       </div>
     </div>
 
-    <form action="" method="get">
-      <input type="hidden" name="epoch" value="{{ options.epoch.value }}">
-      <div class="row row-cols-2 g-3">
+    <form action="" method="get" class="my-3">
+      <div class="row g-3">
+        <input type="hidden" name="epoch" value="{{ options.epoch.value }}">
 
         <!-- Options -->
         <div class="col col-lg-3">
@@ -217,89 +217,108 @@
             </div>
           </div>
         </div>
-
       </div>
     </form>
+
+    <div class="row my-3">
+      <div class="col">
+        <div class="card app-trains-search">
+          <div class="card-header">
+            <strong>Results</strong>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-sm table-hover table-responsive align-middle mb-0">
+              <thead class="thead-light align-top">
+              <tr>
+                <th class="text-start ps-3">Train</th>
+                <th class="text-start">Description</th>
+                <th class="text-start">Cargo</th>
+                <th class="text-start">Speed</th>
+                <th class="text-start">Weight</th>
+                <th class="text-start">Length</th>
+                <th class="text-start">Cost</th>
+                <th class="text-start">Fuel</th>
+              </tr>
+              </thead>
+              <tbody class="table-group-divider">
+              {% for train in results.trains %}
+                {% set long = train.length > options.station_length %}
+                {% if long %}
+                  <tr>
+                    <td class="text-start px-0 border-bottom-0 app-tiles-container" colspan="100%">{{- macros_wagon_type.icon_train(train, tile_width, options.station_length_long) -}}</td>
+                  </tr>
+                {% endif %}
+                <tr>
+                  <td class="text-start ps-2 app-tiles-container">
+                    {% if not long %}{{- macros_wagon_type.icon_train(train, tile_width, options.station_length) -}}{% endif %}</td>
+                  <td class="text-start">{{ macros_train.train_description(train) }}</td>
+                  <td class="text-start">{{ macros_train.cargo_description(train, results=results) }}
+                  <td class="text-start">{{ macros_train.speed(train, results=results) }}</td>
+                  <td class="text-start">{{ macros_train.weight(train, results=results) }}</td>
+                  <td class="text-start">{{ macros_train.length(train, options=options, results=results) }}</td>
+                  <td class="text-start">{{ macros_train.costs(train.cost) }}</td>
+                  <td class="text-start">{{ macros_train.costs(train.fuel) }}</td>
+                </tr>
+              {% else %}
+                <tr>
+                  <td class="text-center text-muted fst-italic p-3" colspan="100%">No results</td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if results.suggestions %}
+      <div class="row">
+        <div class="col">
+          <div class="card app-trains-search">
+            <div class="card-header">
+              <strong>Mixed wagon suggestions used</strong>
+            </div>
+            <div class="card-body p-0">
+              <table class="table table-sm table-hover table-responsive align-middle mb-0">
+                <thead class="thead-light align-top">
+                <tr>
+                  <th class="text-muted ps-3">Primary wagon</th>
+                  <th class="text-muted">Secondary wagons</th>
+                  <th class="text-muted">Primary wagon</th>
+                  <th class="text-muted">Secondary wagons</th>
+                </tr>
+                </thead>
+                <tbody class="table-group-divider">
+                {% for primary, suggestions in results.suggestions.items() %}
+                  {% for suggestion in suggestions %}
+                    <tr>
+                      <td class="text-start ps-3">
+                        {{ macros_wagon_type.icon(primary, tile_width=tile_width) }}
+                      </td>
+                      <td class="text-start">
+                        {% for secondary in suggestion %}
+                          {{ macros_wagon_type.icon(secondary, tile_width=tile_width) }}
+                        {% endfor %}
+                      </td>
+                      <td class="text-start">
+                        {{ macros_wagon_type.name(primary) }}
+                      </td>
+                      <td class="text-start">
+                        {% for secondary in suggestion %}
+                          {{- macros_wagon_type.name(secondary) -}}
+                          {%- if not loop.last %}<span>, </span>{% endif -%}
+                        {% endfor %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
   </section>
 
-  <section class="container-fluid my-5">
-    <table class="table table-sm table-hover table-responsive align-middle app-table-trains">
-      <thead class="thead-light align-top">
-      <tr>
-        <th class="text-start">Train</th>
-        <th class="text-start">Description</th>
-        <th class="text-start">Cargo</th>
-        <th class="text-start">Speed</th>
-        <th class="text-start">Weight</th>
-        <th class="text-start">Length</th>
-        <th class="text-start">Cost</th>
-        <th class="text-start">Fuel</th>
-      </tr>
-      </thead>
-      <tbody class="table-group-divider">
-      {% for train in results.trains %}
-        {% set long = train.length > options.station_length %}
-        {% if long %}
-          <tr>
-            <td class="text-start px-0 border-bottom-0 app-tiles-container" colspan="100%">{{- macros_wagon_type.icon_train(train, tile_width, options.station_length_long) -}}</td>
-          </tr>
-        {% endif %}
-        <tr>
-          <td class="text-start px-0 app-tiles-container">
-            {% if not long %}{{- macros_wagon_type.icon_train(train, tile_width, options.station_length) -}}{% endif %}</td>
-          <td class="text-start">{{ macros_train.train_description(train) }}</td>
-          <td class="text-start">{{ macros_train.cargo_description(train, results=results) }}
-          <td class="text-start">{{ macros_train.speed(train, results=results) }}</td>
-          <td class="text-start">{{ macros_train.weight(train, results=results) }}</td>
-          <td class="text-start">{{ macros_train.length(train, options=options, results=results) }}</td>
-          <td class="text-start">{{ macros_train.costs(train.cost) }}</td>
-          <td class="text-start">{{ macros_train.costs(train.fuel) }}</td>
-        </tr>
-      {% else %}
-        <tr>
-          <td class="text-center text-muted fst-italic p-3" colspan="100%">No results</td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
-  </section>
-
-  <section class="container-fluid my-5">
-    <h4 class="text-muted">Mixed wagon suggestions used</h4>
-    <table class="table table-sm table-hover table-responsive align-middle app-table-trains">
-      <thead class="thead-light align-top">
-      <tr>
-        <th class="text-muted">Primary wagon</th>
-        <th class="text-muted">Secondary wagons</th>
-        <th class="text-muted">Primary wagon</th>
-        <th class="text-muted">Secondary wagons</th>
-      </tr>
-      </thead>
-      <tbody>
-      {% for primary, suggestions in results.suggestions.items() %}
-        {% for suggestion in suggestions %}
-          <tr>
-            <td class="text-start">
-              {{ macros_wagon_type.icon(primary, tile_width=tile_width) }}
-            </td>
-            <td class="text-start">
-              {% for secondary in suggestion %}
-                {{ macros_wagon_type.icon(secondary, tile_width=tile_width) }}
-              {% endfor %}
-            </td>
-            <td class="text-start">
-              {{ macros_wagon_type.name(primary) }}
-            </td>
-            <td class="text-start">
-              {% for secondary in suggestion %}
-                {{- macros_wagon_type.name(secondary) -}}
-                {%- if not loop.last %}<span>, </span>{% endif -%}
-              {% endfor %}
-            </td>
-          </tr>
-        {% endfor %}
-      {% endfor %}
-      </tbody>
-    </table>
-  </section>
 {% endblock %}

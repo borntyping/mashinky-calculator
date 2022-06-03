@@ -89,12 +89,15 @@ def generate(
         ids=cargo_ids,
     ).all()
 
-    suggestions = generate_suggestions(all_wagons=all_wagons)
-
     # Filter wagons to only those that carry the cargos we care about.
     filtered_wagons = generate_wagons(
         selected_wagons=selected_wagons or all_wagons,
         selected_cargos=selected_cargos or all_cargos,
+    )
+
+    suggestions = generate_suggestions(
+        all_wagons=all_wagons,
+        selected_wagons=filtered_wagons or selected_wagons or all_wagons,
     )
 
     trains = after_generate = list(
@@ -145,7 +148,10 @@ def generate(
     )
 
 
-def generate_suggestions(all_wagons: list[Wagon]) -> dict[Wagon, list[list[Wagon]]]:
+def generate_suggestions(
+    all_wagons: list[Wagon],
+    selected_wagons: list[Wagon],
+) -> dict[Wagon, list[list[Wagon]]]:
     all_wagons_by_name = {wagon.name: wagon for wagon in all_wagons}
     return {
         all_wagons_by_name[name]: [
@@ -154,7 +160,7 @@ def generate_suggestions(all_wagons: list[Wagon]) -> dict[Wagon, list[list[Wagon
             if all(n in all_wagons_by_name for n in suggestion)
         ]
         for name, suggestions in WAGON_SUGGESTIONS.items()
-        if name in all_wagons_by_name
+        if name in all_wagons_by_name and all_wagons_by_name[name] in selected_wagons
     }
 
 

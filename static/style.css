@@ -66,10 +66,6 @@ tr:hover .app-text-faded,
     font-size: .875em;
 }
 
-.app-table-trains {
-    font-size: 0.8em;
-}
-
 .app-tiles-container {
     overflow-x: hidden;
     white-space: nowrap;
