@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import collections
 import dataclasses
 import itertools
+import math
 import typing
 
 from mashinky.models import CargoType, Engine, Wagon
@@ -170,7 +172,7 @@ def generate_trains(
     station_length_short: int,
     station_length_long: int,
     maximum_engines: int = 2,
-):
+) -> typing.Iterable[Train]:
     for engine, wagon in itertools.product(selected_engines, selected_wagons):
         heads = [engine.times(n) for n in range(1, maximum_engines + 1)]
         tails = [()] + suggestions.get(wagon, [])
@@ -183,21 +185,24 @@ def generate_trains(
             yield train.add_wagons_to_length(wagon, station_length_long)
 
 
-def generate_discard(trains: list[Train]) -> typing.Generator[Train]:
+def generate_discard(trains: list[Train]) -> typing.Iterable[Train]:
     """Remove trains with unused extra engines."""
-    return trains
 
-    # best = trains[0]
-    #
-    # if best.capacity > 0:
-    #     yield trains[0]
-    #
-    # for train in trains[1:]:
-    #     if train.capacity > best.capacity:
-    #         yield train
+    engines = collections.defaultdict(list)
+
+    for train in trains:
+        key = (frozenset(train.engines), tuple(train.wagons))
+        count = len(list(train.engines))
+        engines[key].append(count)
+
+    for train in trains:
+        key = (frozenset(train.engines), tuple(train.wagons))
+        count = len(list(train.engines))
+        if count <= min(engines[key]):
+            yield train
 
 
-def generate_deduplicate(trains: list[Train]) -> list[Train]:
+def generate_deduplicate(trains: list[Train]) -> typing.Iterable[Train]:
     """Deduplicate identical trains."""
     unique: dict[Train, typing.Literal[None]] = {}
     for train in trains:
@@ -206,9 +211,9 @@ def generate_deduplicate(trains: list[Train]) -> list[Train]:
     return list(unique.keys())
 
 
-def generate_filter(trains: list[Train], options) -> list[Train]:
-    return list(filter(options.should_include, trains))
+def generate_filter(trains: list[Train], options) -> typing.Iterable[Train]:
+    return filter(options.should_include, trains)
 
 
-def generate_sort(trains: list[Train]) -> list[Train]:
+def generate_sort(trains: list[Train]) -> typing.Iterable[Train]:
     return sorted(trains, key=lambda t: t.bonus_capacity, reverse=True)
