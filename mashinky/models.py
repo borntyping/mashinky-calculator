@@ -111,7 +111,7 @@ class ConfigMixin:
     name: typing.Optional[str]
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}[{self.id} {self.name!r}]"
+        return f"{self.__class__.__name__}[{self.name}]"
 
     def __str__(self):
         return self.name or self.id

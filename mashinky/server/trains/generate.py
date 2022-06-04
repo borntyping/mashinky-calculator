@@ -3,6 +3,8 @@ from __future__ import annotations
 import collections
 import dataclasses
 import itertools
+import json
+import logging
 import math
 import typing
 
@@ -32,8 +34,9 @@ class Results:
 
     after_generate: list[Train]
     after_deduplicate: list[Train]
-    after_discard: list[Train]
     after_filter: list[Train]
+    after_discard_empty: list[Train]
+    after_discard_extra: list[Train]
     after_sort: list[Train]
 
     best_capacity: int
@@ -111,8 +114,9 @@ def generate(
         )
     )
     trains = after_deduplicate = list(generate_deduplicate(trains))
-    trains = after_discard = list(generate_discard(trains))
     trains = after_filter = list(generate_filter(trains, options))
+    trains = after_discard_empty = list(generate_discard_empty(trains))
+    trains = after_discard_extra = list(generate_discard_extra(trains))
     trains = after_sort = list(generate_sort(trains))
 
     weight_usage = (t.weight_usage() for t in trains)
@@ -137,7 +141,8 @@ def generate(
         trains=trains,
         after_generate=after_generate,
         after_deduplicate=after_deduplicate,
-        after_discard=after_discard,
+        after_discard_empty=after_discard_empty,
+        after_discard_extra=after_discard_extra,
         after_filter=after_filter,
         after_sort=after_sort,
         best_capacity=best_capacity,
@@ -191,22 +196,29 @@ def generate_trains(
             yield train.add_wagons_to_length(wagon, station_length_long)
 
 
-def generate_discard(trains: list[Train]) -> typing.Iterable[Train]:
+def generate_discard_extra(trains: list[Train]) -> typing.Iterable[Train]:
     """Remove trains with unused extra engines."""
 
-    engines = collections.defaultdict(list)
+    similar = collections.defaultdict(list)
 
     for train in trains:
-        key = (frozenset(train.engines), tuple(train.wagons))
-        count = len(list(train.engines))
-        engines[key].append(count)
+        similar[frozenset(train.wagon_types)].append(train)
 
     for train in trains:
-        key = (frozenset(train.engines), tuple(train.wagons))
-        count = len(list(train.engines))
-        if count <= min(engines[key]):
-            if train.capacity > 0:
-                yield train
+        others = similar[frozenset(train.wagon_types)]
+
+        # Discard trains that have more engines than a similar train but a lower capacity.
+        if not any(
+            train.engine_count > o.engine_count and train.capacity < o.capacity for o in others
+        ):
+            yield train
+
+
+def generate_discard_empty(trains: list[Train]) -> typing.Iterable[Train]:
+    """Discard trains with a capacity of zero."""
+    for train in trains:
+        if train.capacity > 0:
+            yield train
 
 
 def generate_deduplicate(trains: list[Train]) -> typing.Iterable[Train]:

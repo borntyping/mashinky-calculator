@@ -31,6 +31,20 @@ class Train:
     def wagons(self) -> typing.Generator[Wagon]:
         return (wagon_type for wagon_type in self.wagon_types if isinstance(wagon_type, Wagon))
 
+    @property
+    def engine_count(self) -> int:
+        return len(tuple(self.engines))
+
+    def __repr__(self) -> str:
+        return "Train[{}]".format(
+            ", ".join(
+                list(
+                    "{} x{}".format(wagon_type, n)
+                    for wagon_type, n in self.wagon_type_counter.items()
+                )
+            )
+        )
+
     # WagonType properties
 
     @property

@@ -171,8 +171,9 @@
                   Collected {{ results.trains|length }} trains.
                   <span class="app-text-faded">Generated {{ results.after_generate|length }} trains,
                     removed {{ results.after_generate|length - results.after_deduplicate|length }} duplicated trains,
-                    removed {{ results.after_deduplicate|length - results.after_discard|length }} trains with unused engines,
-                    removed {{ results.after_discard|length - results.after_filter|length }} trains over limits.
+                    removed {{ results.after_deduplicate|length - results.after_filter|length }} trains over limits,
+                    removed {{ results.after_filter|length - results.after_discard_empty|length }} empty trains,
+                    removed {{ results.after_discard_empty|length - results.after_discard_extra|length }} trains with too many engines.
                   </span>
                 </p>
                 <p>
