@@ -27,7 +27,7 @@ class Reader(abc.ABC):
 
         errors = {}
 
-        for encoding in (None, "utf-8", "utf-16-le", "utf-16-be"):
+        for encoding in ("utf-8", "utf-16-le", "utf-16-be"):
             try:
                 return path.read_text(encoding=encoding)
             except UnicodeDecodeError as error:

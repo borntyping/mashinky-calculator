@@ -127,17 +127,21 @@ class ConfigFactory:
     def _soups(self, filename: str) -> typing.Iterable[bs4.BeautifulSoup]:
         soups = []
         for reader in self.readers:
+            log = logger.bind(filename=filename, base=reader.base.as_posix())
+
             try:
-                logger.info("Loading file", filename=filename, base=reader.base.as_posix())
                 text = reader.read_text(filename)
             except FileNotFoundError:
+                log.debug("Skipped file")
                 continue
 
+            log.info("Reading file")
             # XML requires a single root node, and these files have many root nodes.
             # We use an extremely lenient HTML parser instead.
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", bs4.builder.XMLParsedAsHTMLWarning)
                 soup = bs4.BeautifulSoup(text, "html.parser")
+
             soups.append(soup)
 
         if not soups:
