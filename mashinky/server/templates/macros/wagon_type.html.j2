@@ -31,7 +31,7 @@
   {%- elif wagon_type.type == "road_vehicle" -%}
     {%- set class="app-text-road-vehicle" -%}
   {%- endif -%}
-  <span title="{{- wagon_type -}}"><span class="{{ class }}">{{ wagon_type.name }}</span>
+  <span class="app-text-stock" title="{{- wagon_type -}}"><span class="{{ class }}">{{ wagon_type.name }}</span>
     {%- if count > 1 %}
       <span class="app-wagon-type-count"> x{{ count }}</span>
     {%- endif -%}

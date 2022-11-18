@@ -123,6 +123,7 @@ tr:hover .app-text-faded,
 .app-text-yellow { color: var(--yellow); }
 .app-text-red { color: var(--red); }
 
+.app-text-stock { white-space: nowrap }
 .app-text-engine { color: var(--dark-green); }
 .app-text-wagon { color: var(--sage-green); }
 .app-text-road-vehicle { color: var(--purple); }
@@ -131,3 +132,9 @@ tr:hover .app-text-faded,
 .app-text-low { }
 .app-text-med { color: var(--fushia); }
 .app-text-high { color: var(--red); }
+
+@media (max-width: 1400px) {
+    .app-usage-hint {
+        display: none;
+    }
+}

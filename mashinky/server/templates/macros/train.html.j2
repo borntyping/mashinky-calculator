@@ -13,7 +13,7 @@
 
 {% macro cargo_description(train, results) -%}
   {%- for cargo_type, amount in train.cargo.items() -%}
-    <span class="app-cargo-description mr-1">
+    <span class="app-cargo-description mr-1 text-truncate">
       <img class="d-inline-block app-icon-sm" src="{{ url_for('static', filename=cargo_type.icon) }}" alt="{{ cargo_type }}">
       <span>{{ amount }}</span>
       <span>
@@ -42,16 +42,18 @@
 {%- endmacro %}
 
 {% macro speed(train, results) -%}
-  <span>{{ train.max_speed }} km/h</span>
-  {% if train.max_speed == results.best_max_speed %}
-    <span class="app-tier-gold" title="Highest speed">★</span>
-  {% endif %}
+  <span class="text-truncate">
+    <span>{{ train.max_speed }} km/h</span>
+    {% if train.max_speed == results.best_max_speed %}
+      <span class="app-tier-gold" title="Highest speed">★</span>
+    {% endif %}
+  </span>
 {%- endmacro %}
 
 {% macro weight(train, results) -%}
   {% set empty = train.is_over_recommended_weight_empty() %}
   {% set full = train.is_over_recommended_weight_full() %}
-  <span class="text-truncate" title="Weight when empty: {{ train.weight_empty }} tons.&#10;Weight when full: {{ train.weight_full }} tons.&#10;Recommended weight: {{ train.recommended_weight }} tons.&#10;&#10;
+  <span class="app-train-weight text-truncate" title="Weight when empty: {{ train.weight_empty }} tons.&#10;Weight when full: {{ train.weight_full }} tons.&#10;Recommended weight: {{ train.recommended_weight }} tons.&#10;&#10;
     {%- if empty -%}
     Over the recommended weight when empty.
     {%- else -%}
@@ -78,15 +80,15 @@
       {%- endif -%}
     </span>
     <span>tons</span>
-    <span class="app-text-faded">({{ "{:.0%}".format(train.weight_usage()) }})</span>
+    <span class="app-usage-hint app-text-faded">({{ "{:.0%}".format(train.weight_usage()) }})</span>
     {%- if empty or full -%}
       <span>⚠ </span>
     {%- endif -%}
-  </span>
-  <span class="app-rewards">
-    {% if train.weight_usage() == results.best_weight_usage %}
-      {{- macros_wagon_type.star_tier_gold("Highest recommended weight utilization") -}}
-    {% endif %}
+    <span class="app-rewards">
+      {% if train.weight_usage() == results.best_weight_usage %}
+        {{- macros_wagon_type.star_tier_gold("Highest recommended weight utilization") -}}
+      {% endif %}
+    </span>
   </span>
 {%- endmacro %}
 
@@ -103,14 +105,14 @@
     {%- endif -%}
   ">
     <span>{{ "%.2f"|format(train.length) }} tiles</span>
-    <span class="app-text-faded">({{ "{:.0%}".format(usage) }})</span>
+    <span class="app-usage-hint app-text-faded">({{ "{:.0%}".format(usage) }})</span>
     {% if long %}
       <span>⚠</span>
     {% endif %}
+    {% if usage == results.best_length_usage %}
+      <span class="app-tier-gold" title="Highest station length utilization">★</span>
+    {% endif %}
   </span>
-  {% if usage == results.best_length_usage %}
-    <span class="app-tier-gold" title="Highest station length utilization">★</span>
-  {% endif %}
 {%- endmacro %}
 
 {% macro costs(payments) -%}
