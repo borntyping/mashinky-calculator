@@ -45,6 +45,8 @@ class Results:
     best_weight_usage: float
     best_length_usage: float
 
+    any_train_has_bonus: bool
+
     def all_engines_are_selected(self):
         return self.all_engines == self.selected_engines
 
@@ -128,6 +130,8 @@ def generate(
     best_weight_usage = max(weight for weight in weight_usage if weight <= 1.00) if trains else None
     best_length_usage = max(length for length in length_usage if length <= 1.00) if trains else None
 
+    any_train_has_bonus = any(train.has_bonus for train in trains)
+
     return Results(
         options=options,
         all_engines=all_engines,
@@ -150,6 +154,7 @@ def generate(
         best_max_speed=best_max_speed,
         best_weight_usage=best_weight_usage,
         best_length_usage=best_length_usage,
+        any_train_has_bonus=any_train_has_bonus,
     )
 
 

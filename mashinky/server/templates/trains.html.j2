@@ -209,6 +209,11 @@
                     Using all {{ results.all_cargos|length }} types of cargo.
                   {% endif %}
                 </p>
+                <p>
+                  {% if results.any_train_has_bonus %}
+                    Some trains have bonuses.
+                  {% endif %}
+                </p>
               </div>
               <div class="row mt-3">
                 <div class="input-group">

@@ -12,33 +12,40 @@
 {% endmacro %}
 
 {% macro cargo_description(train, results) -%}
-  {%- for cargo_type, amount in train.cargo.items() -%}
-    <span class="app-cargo-description mr-1 text-truncate">
-      <img class="d-inline-block app-icon-sm" src="{{ url_for('static', filename=cargo_type.icon) }}" alt="{{ cargo_type }}">
-      <span>{{ amount }}</span>
-      <span>
+  <div class="{% if train.cargo|length <= 1 %}text-truncate{% endif %}">
+    {%- for cargo_type, amount in train.cargo.items() -%}
+      <span class="app-cargo-description mr-1">
+        <img class="app-train-cargo-icon d-inline-block app-icon-sm" src="{{ url_for('static', filename=cargo_type.icon) }}" alt="{{ cargo_type }}">
+        <span class="app-train-cargo-amount">{{ amount }}</span>
         {% if cargo_type.is_passengers and train.bonus_incomes %}
-          ({{ train.bonus_cargo[cargo_type] }})
+          <span class="app-train-bonus-cargo">({{ train.bonus_cargo[cargo_type] }})</span>
         {% endif %}
+        <span class="app-train-cargo-name app-text-elide">{{ cargo_type.name.lower() }}</span>
       </span>
-      <span>{{ cargo_type.name.lower() }}</span>
+    {%- else -%}
+      <span class="mr-1" title="No cargo">&mdash;</span>
+    {%- endfor -%}
+    <span class="app-cargo-rewards ml-1">
+      {%- if train.bonus_incomes -%}
+        {% for wagon_type in train.bonus_incomes %}
+          {{- macros_wagon_type.star_bonus_income(wagon_type) -}}
+        {% endfor %}
+      {%- endif -%}
+
+      {%- if results.any_train_has_bonus -%}
+        {%- if train.bonus_capacity == results.best_bonus_capacity -%}
+          {{ macros_wagon_type.star_tier_gold("Highest capacity including bonuses") }}
+        {%- endif -%}
+        {%- if train.capacity == results.best_capacity -%}
+          {{ macros_wagon_type.star_tier_silver("Highest capacity without bonuses") }}
+        {%- endif -%}
+      {%- else -%}
+        {%- if train.capacity == results.best_capacity -%}
+          {{ macros_wagon_type.star_tier_gold("Highest capacity") }}
+        {%- endif -%}
+      {%- endif -%}
     </span>
-  {%- else -%}
-    <span class="mr-1" title="No cargo">&mdash;</span>
-  {%- endfor -%}
-  <span class="app-cargo-rewards ml-1">
-    {%- if train.bonus_incomes -%}
-      {% for wagon_type in train.bonus_incomes %}
-        {{- macros_wagon_type.star_bonus_income(wagon_type) -}}
-      {% endfor %}
-    {%- endif -%}
-    {%- if train.bonus_capacity == results.best_bonus_capacity -%}
-      {{ macros_wagon_type.star_tier_gold("Highest capacity including bonuses") }}
-    {%- endif -%}
-    {%- if train.capacity == results.best_capacity -%}
-      {{ macros_wagon_type.star_tier_silver("Highest capacity without bonuses") }}
-    {%- endif -%}
-  </span>
+  </div>
 {%- endmacro %}
 
 {% macro speed(train, results) -%}

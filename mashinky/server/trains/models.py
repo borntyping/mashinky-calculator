@@ -137,6 +137,10 @@ class Train:
     # Train properties
 
     @property
+    def has_bonus(self) -> bool:
+        return any((wt.bonus_income for wt in self.wagon_types))
+
+    @property
     def bonus_incomes(self) -> list[WagonType]:
         return [wt for wt in self.wagon_types if wt.bonus_income]
 

@@ -134,7 +134,7 @@ tr:hover .app-text-faded,
 .app-text-high { color: var(--red); }
 
 @media (max-width: 1400px) {
-    .app-usage-hint {
+    .app-usage-hint, .app-text-elide {
         display: none;
     }
 }
