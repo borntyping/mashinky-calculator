@@ -209,7 +209,7 @@ def generate_discard_extra(trains: list[Train]) -> typing.Iterable[Train]:
 
         # Discard trains that have more engines than a similar train but a lower capacity.
         if not any(
-            train.engine_count > o.engine_count and train.capacity < o.capacity for o in others
+            train.engine_count > o.engine_count and train.capacity <= o.capacity for o in others
         ):
             yield train
 
