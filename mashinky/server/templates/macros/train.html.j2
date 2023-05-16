@@ -14,7 +14,7 @@
 {% macro cargo_description(train, results) -%}
   <div class="{% if train.cargo|length <= 1 %}text-truncate{% endif %}">
     {%- for cargo_type, amount in train.cargo.items() -%}
-      <span class="app-cargo-description mr-1">
+      <span class="app-cargo-description mr-1 text-truncate">
         <img class="app-train-cargo-icon d-inline-block app-icon-sm" src="{{ url_for('static', filename=cargo_type.icon) }}" alt="{{ cargo_type }}">
         <span class="app-train-cargo-amount">{{ amount }}</span>
         {% if cargo_type.is_passengers and train.bonus_incomes %}

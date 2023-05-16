@@ -137,4 +137,8 @@ tr:hover .app-text-faded,
     .app-usage-hint, .app-text-elide {
         display: none;
     }
+
+    .app-cargo-description {
+        display: block;
+    }
 }
